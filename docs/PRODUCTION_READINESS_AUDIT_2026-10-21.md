@@ -83,6 +83,9 @@ The custom domain `ncet.paladuguganeshnaidu.tech` still fails TLS negotiation on
 - The `/app` response included HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy.
 - The custom domain `ncet.paladuguganeshnaidu.tech` still fails its TLS handshake. No credentials were sent to it.
 - Render service metadata still identifies `https://github.com/hackerncet/tuxnestsite`, auto-deploy on commits, Free plan, and a blank HTTP health-check path. The Render connector has no service-source update operation; deploying this commit to the old source would redeploy stale code.
+- Read-only logins for the supplied `admin`, `hod` and `testap` accounts all succeeded on the Render hostname. The deployed HOD received 403 from `/complaints` and `/bca/manage`; the staff account also received 403 from those HOD/admin surfaces. Admin and HOD task dashboards returned 200. This confirms the known branch-workspace gap is present in the deployed build.
+- A redacted admin roster/catalog comparison found 6 student rows, all labeled Computer Science & Engineering, with 0 missing/unknown or inconsistent branch labels. Only 1 of the 6 had a public profile available for a second-view comparison; 5 profiles were unavailable, so this is not a complete public-profile accuracy audit.
+- Login checks created no lasting records and did not invoke AI. Each session was logged out after the read-only route checks.
 
 ## Deployment gate order
 
