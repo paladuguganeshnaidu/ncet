@@ -88,24 +88,59 @@ def bca_oversight(user:User=Depends(current),db:Session=Depends(get_db)):
     from .student_models import StudentCase
     from .community import CollaborationPost
     oversight_access(user)
-    state_counts=dict(db.query(StudentCase.status,func.count(StudentCase.id))
-        .filter(StudentCase.department=='Computer Applications')
-        .group_by(StudentCase.status).all())
-    from .student_services import case_department_values
-    bca_departments=case_department_values('Computer Applications',db)
-    project_counts=dict(db.query(CollaborationPost.state,func.count(CollaborationPost.id))
-        .filter(CollaborationPost.hidden.is_(False),CollaborationPost.department.in_(bca_departments))
-        .group_by(CollaborationPost.state).all())
+    from .student_services import case_department_values, department_scope_values
+    from .departments import AcademicDepartment
+    if user.role=='principal':
+        # Principal dashboard is institution-wide and aggregate-only. Keep
+        # complaint bodies and identities inside their department review desk.
+        case_rows=db.query(StudentCase.department,StudentCase.status,func.count(StudentCase.id))\
+            .group_by(StudentCase.department,StudentCase.status).all()
+        project_rows=db.query(CollaborationPost.department,CollaborationPost.state,func.count(CollaborationPost.id))\
+            .filter(CollaborationPost.hidden.is_(False))\
+            .group_by(CollaborationPost.department,CollaborationPost.state).all()
+        labels={}
+        for department in db.query(AcademicDepartment).all():
+            for value in department_scope_values(db,department.code):
+                labels[value]=department.name
+        by_department={}
+        def department_label(value):
+            return labels.get(value,value or 'Unassigned')
+        for department,status,count in case_rows:
+            label=department_label(department)
+            row=by_department.setdefault(label,{'cases_total':0,'cases_by_status':{},'projects_total':0,'projects_open':0})
+            row['cases_total']+=count
+            row['cases_by_status'][status]=count
+        for department,state,count in project_rows:
+            label=department_label(department)
+            row=by_department.setdefault(label,{'cases_total':0,'cases_by_status':{},'projects_total':0,'projects_open':0})
+            row['projects_total']+=count
+            if state=='open':row['projects_open']+=count
+        state_counts={status:sum(row['cases_by_status'].get(status,0) for row in by_department.values())
+                      for status in ('submitted','in_review','resolved','closed')}
+        projects_total=sum(row['projects_total'] for row in by_department.values())
+        projects_open=sum(row['projects_open'] for row in by_department.values())
+    else:
+        state_counts=dict(db.query(StudentCase.status,func.count(StudentCase.id))
+            .filter(StudentCase.department.in_(case_department_values(user.department,db)))
+            .group_by(StudentCase.status).all())
+        bca_departments=case_department_values('Computer Applications',db)
+        project_counts=dict(db.query(CollaborationPost.state,func.count(CollaborationPost.id))
+            .filter(CollaborationPost.hidden.is_(False),CollaborationPost.department.in_(bca_departments))
+            .group_by(CollaborationPost.state).all())
+        projects_total=sum(project_counts.values())
+        projects_open=project_counts.get('open',0)
     result={'cases_total':sum(state_counts.values()),
             'cases_by_status':{status:state_counts.get(status,0)
                 for status in ('submitted','in_review','resolved','closed')},
-            'projects_total':sum(project_counts.values()),
-            'projects_open':project_counts.get('open',0),
-            'projects_closed':project_counts.get('closed',0),
+            'projects_total':projects_total,
+            'projects_open':projects_open,
+            'projects_closed':projects_total-projects_open,
             'view':'summary' if user.role=='principal' else 'department'}
+    if user.role=='principal':
+        result['departments']=[{'department':name,**counts} for name,counts in sorted(by_department.items())]
     if user.role=='hod':
         recent=(db.query(StudentCase.reference,StudentCase.subject,StudentCase.status)
-            .filter(StudentCase.department=='Computer Applications')
+            .filter(StudentCase.department.in_(case_department_values(user.department,db)))
             .order_by(StudentCase.created_at.desc(),StudentCase.id.desc())
             .limit(30).all())
         result['cases']=[{'reference':c.reference,'subject':c.subject,'status':c.status}
