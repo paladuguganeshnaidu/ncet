@@ -1,0 +1,6 @@
+.oversight-table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px}
+.oversight-table th,.oversight-table td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
+.oversight-table thead th{background:#f4f6f9;color:var(--navy);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.oversight-table tbody th{color:var(--ink);font-weight:700}
+.oversight-table tbody tr:last-child>*{border-bottom:0}
+.oversight-table td:nth-child(n+2){font-variant-numeric:tabular-nums}
