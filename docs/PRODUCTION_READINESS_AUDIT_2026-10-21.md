@@ -75,7 +75,14 @@ The custom domain `ncet.paladuguganeshnaidu.tech` still fails TLS negotiation on
 - Added an institution-wide principal oversight summary with per-department request and project counts. Regression coverage confirms the API returns aggregate counts only and omits request bodies, references and student identities.
 - HOD navigation now exposes the department-scoped project board for every assigned branch. Principal navigation labels the summary as institution-wide oversight.
 - Local non-AI integration suite: `137 passed, 1 warning` (AI workflow and discussion digest test modules excluded). Focused branch/dashboard suites: `17 passed, 1 warning`. Chromium oversight UI audit passed at 320, 390, 768 and 1,366 px. Bandit reported no issues at configured thresholds; local pip-audit found no known dependency vulnerabilities; Python compilation passed.
-- Commits `dab9332`, `2d4ce8c` and `d27ca77` are on GitHub `main`. Render remains connected to `hackerncet/tuxnestsite`, so this update is not deployed. No live records were changed and no AI calls were made.
+- Commits `dab9332`, `2d4ce8c`, `d27ca77`, `0921bef` and `fa2c2fe` are on GitHub `main`. Render remains connected to `hackerncet/tuxnestsite`, so this update is not deployed. No live records were changed and no AI calls were made.
+
+### Live service baseline refresh (2026-10-21)
+
+- Read-only requests to the current Render app returned 200 for `/healthz`, `/app`, `/students` and `/plot`; protected `/tasks`, `/complaints` and `/community` returned 401 without a session.
+- The `/app` response included HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy and Permissions-Policy.
+- The custom domain `ncet.paladuguganeshnaidu.tech` still fails its TLS handshake. No credentials were sent to it.
+- Render service metadata still identifies `https://github.com/hackerncet/tuxnestsite`, auto-deploy on commits, Free plan, and a blank HTTP health-check path. The Render connector has no service-source update operation; deploying this commit to the old source would redeploy stale code.
 
 ## Deployment gate order
 
