@@ -1,0 +1,30 @@
+/* Student lifecycle management. High-risk actions are visibly separate. */
+.student-removal-panel{margin-top:22px;padding:19px;background:#f8fafc;border:1px solid #d7e0ee;border-radius:14px}
+.student-removal-head{display:flex;gap:14px;justify-content:space-between;align-items:start}
+.student-removal-head h3{margin:0 0 7px;color:#0e2455;font-size:17px}
+.student-removal-head p{margin:0;max-width:560px}
+.student-removal-counter{white-space:nowrap;padding:7px 10px;background:#e8eef8;color:#0e2455;border-radius:8px;font-size:12px;font-weight:800}
+.student-removal-tools{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.student-removal-option{display:grid;gap:8px;margin:15px 0 11px;font-size:12px;font-weight:700;color:#304562}
+.student-removal-option select{width:100%;min-height:44px;border:1px solid #cbd6e5;border-radius:9px;background:#fff;color:#142e53;padding:10px 12px}
+.student-removal-warning{border-left:3px solid #b05a23;background:#fff6ee;color:#854821;padding:11px 13px;border-radius:7px;font-size:12px;line-height:1.6}
+.student-removal-review{border-top:1px solid #dae4ef;margin-top:20px;padding-top:18px}
+.student-removal-review h4{color:#0e2455;margin:0 0 12px;font-size:15px}
+.student-removal-review form{display:grid;gap:14px}
+.student-removal-review form>label{display:grid;gap:7px;font-size:12px;color:#385172;font-weight:700}
+.student-removal-review label>strong{background:#e8eef6;border:1px dashed #9caecc;border-radius:8px;padding:9px;color:#0e2455;font:700 14px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.03em;overflow-wrap:anywhere}
+.student-removal-review input:not([type=checkbox]),.student-removal-review textarea{width:100%;min-height:43px;border:1px solid #c6d4e6;border-radius:8px;background:#fff;color:#132b4f;padding:10px;font-size:13px}
+.student-removal-review input:focus-visible,.student-removal-review textarea:focus-visible{outline:2px solid #f6872a;outline-offset:2px}
+.student-removal-review .backup-confirm{display:flex;align-items:start;gap:10px;line-height:1.6;color:#854821}
+.student-removal-review .backup-confirm input{margin-top:3px}
+.removal-impact-list{max-height:210px;overflow:auto;margin:13px 0 20px;padding:0 0 0 22px;display:grid;gap:9px;color:#425876;font-size:12px}
+.removal-block{color:#a72f28;font-weight:800}
+#student-removal-alert{margin-top:13px;background:#fff0ed;border:1px solid #e9c3bd;padding:11px;color:#912f25;border-radius:8px;font-size:12px}
+.student-removal-review .btn-danger{background:#a3352c;color:#fff;border-color:#8e302a}
+.student-removal-review .btn-danger:hover{background:#85291f;color:#fff}
+.select-student-label{display:inline-flex;align-items:center;gap:5px;background:#f0f4f9;border:1px solid #d5dfeb;padding:6px;border-radius:8px;font-size:11px;color:#304b6f;font-weight:750;cursor:pointer}
+.select-student-label:has(input:checked){border-color:#0e2455;background:#e6edf8}
+.select-student{width:17px;height:17px;accent-color:#0e2455}
+.roster-inactive-label{display:flex;align-items:center;gap:6px;font-size:12px;color:#3a567b}
+.student-removal-panel :is(button,select,input,textarea):focus-visible{outline:2px solid #f6872a;outline-offset:2px}
+@media(max-width:620px){.student-removal-head{flex-direction:column}.student-removal-counter{align-self:start}.student-removal-tools .btn{flex:1}.student-removal-panel{padding:13px}}

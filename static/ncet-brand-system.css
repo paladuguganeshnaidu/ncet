@@ -1,0 +1,86 @@
+/* NCET institutional tokens. Use for all student and faculty experiences. */
+:root{
+ --ncet-blue:#0E2455;--ncet-orange:#F6872A;--ncet-white:#FFFFFF;
+ --ncet-bg:#F4F6F9;--ncet-text:#172033;--ncet-muted:#64748B;
+ --ncet-border:#DDE4EF;--ncet-focus:#F6872A;
+ --navy:var(--ncet-blue);--orange:var(--ncet-orange);
+ --paper:var(--ncet-bg);--ink:var(--ncet-text);--muted:var(--ncet-muted);
+ --bca-navy:var(--ncet-blue);--bca-orange:var(--ncet-orange);
+ --bca-bg:var(--ncet-bg);--bca-text:var(--ncet-text);--bca-muted:var(--ncet-muted);
+ --e-navy:var(--ncet-blue);--e-orange:var(--ncet-orange);
+ --e-bg:var(--ncet-bg);--e-ink:var(--ncet-text);--e-sub:var(--ncet-muted)
+}
+:where(.student-public,.student-modern,.student-directory-shell) .btn-primary,
+:where(.student-public,.student-modern) .btn-navy{border-color:var(--ncet-blue)}
+:where(.student-public,.student-modern,.ncet-profile-page) a:focus-visible,
+:where(.student-public,.student-modern,.ncet-profile-page) button:focus-visible,
+:where(.student-public,.student-modern,.ncet-profile-page) input:focus-visible{
+ outline:3px solid var(--ncet-orange);outline-offset:3px
+}
+/* Render the supplied transparent NCET artwork on white surfaces for contrast. */
+.brand img,.sidebar-brand .crest img,.ncms-crest img{
+ object-fit:contain;object-position:center
+}
+.brand img{width:88px;max-height:55px;height:auto}
+.footer-logo{width:110px;height:auto;object-fit:contain;border-radius:6px;background:white;padding:6px}
+.identity-crest{width:min(400px,100%);height:auto;max-height:225px;min-height:0;object-fit:contain}
+.identity-crest.legacy-crest{filter:none;mix-blend-mode:normal}
+.identity-center{background:#fff;border-radius:12px;margin:12px 18px;padding:16px}
+.identity-panel .identity-heading,.identity-panel .identity-sub{color:#fff!important}
+.identity-panel .identity-center .identity-heading,.identity-panel .identity-center .identity-sub{color:var(--ncet-blue)!important}
+.identity-panel-bottom img{object-fit:contain;max-height:60px;max-width:115px}
+.brandmark-inline{display:inline-flex;gap:8px;align-items:center}
+.brandmark-inline img{object-fit:contain}
+.ncet-naac-badge{width:63px;height:63px;object-fit:contain}
+.ncet-site-logos{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ncet-site-logos img{max-height:54px;width:auto;object-fit:contain}
+
+/* Unified, small, non-rotating logo shimmer. */
+.btn[aria-busy="true"]::before,button[aria-busy="true"]::before,
+.spinner{background:transparent url('/static/ncet-brand.svg') center/contain no-repeat!important;
+ border:0!important;border-radius:0!important;animation:ncet-logo-shine 1.5s ease-in-out infinite!important;
+ transform:none!important}
+.btn[aria-busy="true"]::before,button[aria-busy="true"]::before{
+ content:""!important;display:inline-block!important;width:32px!important;height:21px!important;
+ flex:0 0 32px!important;margin-right:7px!important;vertical-align:middle}
+.spinner{width:32px!important;height:21px!important;display:inline-block!important}
+@keyframes ncet-logo-shine{0%,100%{opacity:.52;filter:brightness(.9)}
+ 50%{opacity:1;filter:brightness(1.25) drop-shadow(0 0 3px #F6872A88)}}
+.ncet-network-loader{position:fixed;bottom:18px;right:18px;display:flex;align-items:center;gap:10px;
+ padding:8px 14px;background:var(--ncet-white);border:1px solid var(--ncet-border);
+ box-shadow:0 8px 25px #0E245526;border-radius:11px;z-index:99999;
+ color:var(--ncet-blue);font:650 12px/1.4 system-ui,sans-serif;pointer-events:none}
+.ncet-network-loader[hidden]{display:none!important}
+.ncet-network-loader img{width:48px;height:30px;object-fit:contain;
+ animation:ncet-logo-shine 1.5s ease-in-out infinite}
+.resume-edit-project{padding:17px;border:1px solid var(--ncet-border);background:#FAFBFD;border-radius:10px;margin:12px 0}
+.resume-edit-project-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.resume-edit-project .field{margin:10px 0}
+.resume-edit-project .field textarea{min-height:80px}
+@media(max-width:560px){.brand img{width:70px;max-height:42px}.ncet-network-loader{right:10px;bottom:10px}}
+@media(prefers-reduced-motion:reduce){
+ .ncet-network-loader img,.spinner,button[aria-busy="true"]::before,
+ .btn[aria-busy="true"]::before{animation:none!important;opacity:1!important}
+}
+
+.ncet-about-accreditation{display:flex;gap:18px;align-items:center;justify-content:center;padding:19px 20px 30px;color:var(--ncet-blue);font-size:14px;font-weight:750}
+.ncet-about-accreditation img{object-fit:contain;width:74px;height:74px}
+
+.footer-ngi{object-fit:contain;width:58px;height:52px;background:white;padding:5px;border-radius:8px;vertical-align:middle;margin-right:10px}
+
+/* Same-origin page transitions where supported; conventional navigation otherwise. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:.14s ease-out both ncet-page-leave}
+::view-transition-new(root){animation:.2s ease-out both ncet-page-arrive}
+@keyframes ncet-page-leave{from{opacity:1}to{opacity:.96}}
+@keyframes ncet-page-arrive{from{opacity:.92;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+:where(.topnav a,.navlinks a,.sidebar a,.student-footer a,.btn){
+ transition:color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease
+}
+:where(.topnav a,.navlinks a,.sidebar a,.student-footer a):hover{
+ text-decoration-color:var(--ncet-orange);text-underline-offset:5px
+}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important;transform:none!important}
+ :where(.topnav a,.navlinks a,.sidebar a,.student-footer a,.btn){transition:none!important}
+}

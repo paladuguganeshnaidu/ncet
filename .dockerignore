@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+!.env.example
+__pycache__
+.pytest_cache
+*.sqlite3
+tests
+*.zip

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#0E2455">
+<title>Department Requests | NCET VerifyFlow</title>
+<link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/bca.css">
+<link rel="stylesheet" href="/static/complaints-dashboard.css?v=20261018a">
+</head>
+<body>
+<header class="topnav">
+  <div class="container nav-inner">
+    <a class="brand" href="/app"><img src="/static/ncet-brand.svg" alt="NCET emblem" width="52" height="43"><span>NCET VerifyFlow<small>Department · Confidential student services</small></span></a>
+    <nav class="navlinks" aria-label="Workspace navigation">
+      <a href="/app">Workspace</a><a href="/tasks">HOD tasks</a><a id="department-enrollment" href="/bca/manage">Student enrollment</a>
+      <a class="nav-current" href="/complaints" aria-current="page">Complaints</a>
+    </nav>
+  </div>
+</header>
+<main class="complaints-shell" id="main">
+  <section class="complaints-intro">
+    <div><span class="eyebrow">PRIVATE DEPARTMENT DESK</span>
+      <h1>Complaint management</h1>
+      <p>Track student requests, prioritize new submissions and keep every response accountable.</p>
+    </div>
+    <div class="intro-right"><span class="private-label">HOD access only</span>
+      <button class="btn btn-navy" id="refresh-complaints" type="button">Refresh cases</button>
+    </div>
+  </section>
+  <div id="complaints-message" class="complaints-message" role="status" aria-live="polite">Checking your department access…</div>
+  <div id="complaints-workspace" hidden>
+    <section class="complaints-kpis" aria-label="Complaint counts">
+      <button class="case-kpi" data-status="all" aria-pressed="true" type="button"><span>All requests</span><strong id="kpi-all">0</strong><small>Entire department</small></button>
+      <button class="case-kpi" data-status="submitted" type="button"><span>New · needs review</span><strong id="kpi-submitted">0</strong><small>Awaiting first review</small></button>
+      <button class="case-kpi" data-status="in_review" type="button"><span>In progress</span><strong id="kpi-in_review">0</strong><small>HOD is reviewing</small></button>
+      <button class="case-kpi" data-status="resolved" type="button"><span>Resolved</span><strong id="kpi-resolved">0</strong><small>Resolution recorded</small></button>
+      <button class="case-kpi" data-status="closed" type="button"><span>Closed</span><strong id="kpi-closed">0</strong><small>Completed cases</small></button>
+    </section>
+    <section class="complaints-priority" aria-label="Requests needing attention">
+      <div><span class="eyebrow">PRIORITY QUEUE</span><h2>Needs your attention</h2><p>Focus on student follow-ups and older unresolved requests.</p></div>
+      <div class="priority-actions">
+        <button type="button" id="priority-waiting" data-attention="awaiting_reply" aria-pressed="false"><span>Awaiting HOD reply</span><strong id="priority-count-waiting">0</strong></button>
+        <button type="button" id="priority-aged" data-attention="older_than_7d" aria-pressed="false"><span>Open over 7 days</span><strong id="priority-count-aged">0</strong></button>
+      </div>
+    </section>
+    <div class="case-main">
+      <section class="case-panel case-index" aria-labelledby="case-list-title">
+        <div class="case-section-head"><div><h2 id="case-list-title">Student requests</h2><p class="muted">Search or filter without loading confidential case details.</p></div><span class="case-count" id="case-count">0 results</span></div>
+        <form id="case-filters" class="case-filters" autocomplete="off" role="search">
+          <label class="filter-search">Search reference or subject<input name="search" type="search" maxlength="120" placeholder="Search reference or subject"></label>
+          <label>Attention<select name="attention"><option value="all">All requests</option><option value="awaiting_reply">Awaiting HOD reply</option><option value="older_than_7d">Open longer than 7 days</option></select></label>
+          <label>Status<select name="status"><option value="all">All statuses</option><option value="submitted">New submissions</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
+          <label>Category<select name="category"><option value="all">All categories</option><option value="academics">Academics</option><option value="faculty">Faculty</option><option value="examinations">Examinations</option><option value="facilities">Facilities</option><option value="fees">Fees</option><option value="documentation">Documentation</option><option value="request">General request</option><option value="other">Other</option></select></label>
+          <label>From date<input type="date" name="from_date"></label>
+          <label>To date<input type="date" name="to_date"></label>
+          <label>Sort by<select name="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="updated">Recently updated</option></select></label>
+          <div class="filter-actions"><button class="btn" id="reset-filters" type="button">Clear filters</button></div>
+        </form>
+        <div class="filter-activity"><span id="filter-summary">Showing all requests</span><span id="list-updated"></span></div>
+        <div id="case-results" class="case-results" aria-live="polite"></div>
+        <nav class="case-pages" aria-label="Complaint pagination"><span id="case-pages-label">0 requests</span><div><button type="button" class="btn" id="case-prev" disabled>Previous</button><button type="button" class="btn" id="case-next" disabled>Next</button></div></nav>
+      </section>
+      <aside class="case-panel case-insights" aria-label="Complaint insights">
+        <h2>Department snapshot</h2>
+        <p class="muted">Based on all requests in your department, not only this page.</p>
+        <div id="case-status-bars" class="case-status-bars"></div>
+        <h3>Requests by category</h3>
+        <div id="case-category-bars" class="case-category-bars"></div>
+        <p class="case-privacy">Request details are visible only to your department HOD. This dashboard is not public and does not use external analytics or AI processing.</p>
+      </aside>
+    </div>
+  </div>
+</main>
+<dialog id="case-dialog" class="case-dialog" aria-labelledby="detail-heading">
+  <div class="detail-header"><div><span class="eyebrow">PRIVATE STUDENT REQUEST</span><h2 id="detail-heading">Request details</h2></div><button type="button" id="close-dialog" class="detail-close" aria-label="Close request details">×</button></div>
+  <div id="detail-content" class="case-detail-content"></div>
+  <section id="case-actions">
+    <form id="update-case-form" class="detail-form">
+      <h3>Update review status</h3>
+      <label>Review status<select name="status" required><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
+      <label>Explanation / resolution note<textarea name="note" rows="3" maxlength="1000" placeholder="Document the action taken and next steps"></textarea></label>
+      <button class="btn btn-navy" type="submit">Save status</button>
+    </form>
+    <form id="reply-case-form" class="detail-form">
+      <h3>Send student a reply</h3>
+      <label>Your reply<textarea name="message" rows="3" maxlength="2000" minlength="2" required placeholder="Explain progress or request further details"></textarea></label>
+      <button class="btn" type="submit">Send response</button>
+    </form>
+  </section>
+  <p id="case-dialog-message" role="status" aria-live="polite"></p>
+</dialog>
+<script defer src="/static/complaints-dashboard.js?v=20261021-department"></script>
+</body>
+</html>

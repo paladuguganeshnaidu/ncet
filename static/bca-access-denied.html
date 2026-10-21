@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#0E2455">
+  <title>Department Access · NCET VerifyFlow</title>
+  <link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/bca.css">
+  <link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017">
+  <link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d">
+  <style>
+    .access-shell{min-height:calc(100dvh - 80px);padding:clamp(40px,8vw,94px) 20px;display:grid;place-items:center}
+    .access-panel{width:min(100%,660px);border:1px solid #dfe5ed;background:#fff;border-radius:18px;padding:clamp(25px,5vw,47px);box-shadow:0 15px 52px #0e24550a}
+    .access-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#99501c;font-weight:750}
+    .access-panel h1{font-size:clamp(25px,4vw,34px);letter-spacing:-.04em;line-height:1.16;color:#0e2455;margin:11px 0}
+    .access-panel p{color:#55657b;line-height:1.7}
+    .access-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+    .access-note{font-size:13px;padding-top:16px;border-top:1px solid #e8ecf2}
+  </style>
+</head>
+<body>
+<header class="topnav">
+  <div class="container nav-inner">
+    <a href="/app" class="brand" aria-label="NCET VerifyFlow workspace">
+      <img src="/static/ncet-brand.svg" alt="NCET college emblem" width="52" height="43">
+      <span>NCET VerifyFlow</span>
+    </a>
+  </div>
+</header>
+<main class="access-shell">
+  <section class="access-panel" aria-labelledby="access-title">
+    <span class="access-eyebrow">Department-restricted workspace</span>
+    <h1 id="access-title">Department access required</h1>
+    <p>Your account is signed in, but it is not authorized to view this private student workspace. Complaint details are visible only to the relevant department HOD.</p>
+    <p>For task allocations, approvals, staff activity and deadlines in your own department, open the HOD task dashboard instead.</p>
+    <nav class="access-actions" aria-label="Available workspace links">
+      <a href="/tasks" class="btn btn-navy">Open HOD task dashboard</a>
+      <a href="/app" class="btn">Return to workspace</a>
+    </nav>
+    <p class="access-note">If you are a department HOD, ask the institution administrator to verify that your account is active and assigned to the correct department.</p>
+  </section>
+</main>
+</body>
+</html>

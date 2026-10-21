@@ -1,0 +1,99 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0E2455"><title>NCET Task Workspace · Department Document Review</title><link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/tasks.css?v=20261021-review-dialog"><link rel="stylesheet" href="/static/workspace-experience.css"><link rel="stylesheet" href="/static/notifications.css"><link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017"><link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261017" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d"><link rel="stylesheet" href="/static/hod-dashboard.css?v=20261017f"></head><body>
+<header class="topbar"><a class="brand" href="/app"><img src="/static/ncet-brand.svg" alt="Nagarjuna College of Engineering and Technology emblem"><span><b>NCET VerifyFlow</b><small>Department task management</small></span></a><nav><a href="/app">Document workspace</a><a href="/complaints">Student complaints</a><a href="/community">Student project board</a><button class="ghost" id="refresh">Refresh</button></nav></header>
+<main id="main"><section class="heading"><div class="overline">FACULTY & INSTITUTIONAL WORKSPACE</div><h1 id="heading">Task management</h1><p>Assign reference documents, review completed work and track departmental progress.</p><div id="connection" class="connection" role="status">Checking your account…</div></section>
+<div id="app" hidden>
+<section class="metrics" id="metrics" aria-label="Task performance overview"></section>
+<section class="hod-dashboard" id="hod-dashboard" hidden aria-labelledby="dashboard-title">
+  <div class="dashboard-head">
+    <div><p class="overline">HOD · DEPARTMENT DASHBOARD</p>
+      <h2 id="dashboard-title">Task performance & tracking</h2>
+      <p class="subtle">Department totals, live assignment stages and verified completion times. Refreshes automatically.</p></div>
+    <div class="dashboard-controls"><span id="dash-synced" class="subtle" role="status">Loading tracking data…</span>
+      <button id="dash-export" class="btn secondary" type="button">Download filtered CSV</button>
+      <button id="dash-refresh" class="btn secondary" type="button">Refresh tracking</button></div>
+  </div>
+  <div class="dashboard-metrics" id="dashboard-metrics" aria-label="Task summary">
+    <button type="button" data-dash-status="all"><span>Total tasks</span><strong>0</strong><small>All reference tasks</small></button>
+    <button type="button" data-dash-status="working"><span>Working / on hold</span><strong>0</strong><small>Staff assignments</small></button>
+    <button type="button" data-dash-status="reviewing"><span>Awaiting review</span><strong>0</strong><small>Verification & HOD review</small></button>
+    <button type="button" data-dash-status="approved"><span>Approved</span><strong>0</strong><small>Final HOD decisions</small></button>
+    <button type="button" data-dash-status="overdue"><span>Overdue</span><strong>0</strong><small>Late, not yet approved</small></button>
+  </div>
+  <div class="dashboard-visuals">
+    <article class="panel dash-visual"><header><div><h3>Task stage distribution</h3><p class="subtle">All departmental records</p></div></header>
+      <div id="dash-stage-chart" role="img" aria-label="Task stage distribution">No tasks yet.</div></article>
+    <article class="panel dash-visual"><header><div><h3>Approvals over the past 14 days</h3><p class="subtle">Based on actual HOD approval dates</p></div></header>
+      <div id="dash-trend-chart" role="img" aria-label="Approval counts for the last 14 calendar days">No approvals yet.</div></article>
+  </div>
+  <div class="dashboard-visuals">
+    <article class="panel"><header><div><h3>Staff workload</h3><p class="subtle">Assigned, in review, approved and overdue</p></div></header>
+      <div id="dash-staff" class="dashboard-staff">No staff assignments yet.</div></article>
+    <article class="panel"><header><div><h3>Recent activity</h3><p class="subtle">Task changes with actual dates and responsible users</p></div></header>
+      <ol id="dash-activity" class="dashboard-feed"><li>No activity yet.</li></ol></article>
+  </div>
+  <section class="panel dashboard-task-panel" aria-labelledby="dash-task-title">
+   <header><div><h3 id="dash-task-title">Track individual tasks</h3><p class="subtle">Select a task to see its lifecycle, submissions, reviewer and timestamps.</p></div><span id="dash-list-count" class="tag">0 tasks</span></header>
+   <div class="dashboard-filters">
+     <label>Search tasks or staff<input id="dash-search" type="search" autocomplete="off" placeholder="PDF name or assigned staff…"></label>
+     <label>Stage<select id="dash-filter"><option value="all">All stages</option><option value="working">Working / on hold</option><option value="reviewing">Awaiting review</option><option value="approved">Approved</option><option value="overdue">Overdue</option><option value="unassigned">Unassigned</option></select></label>
+     <label>Staff member<select id="dash-staff-filter"><option value="all">All staff</option></select></label>
+     <label>Deadline<select id="dash-deadline"><option value="all">Any deadline</option><option value="due_soon">Due within 7 days</option><option value="due_set">Deadline set</option><option value="no_deadline">No deadline</option></select></label>
+     <label>Last updated from<input id="dash-from" type="date" aria-label="Task last updated from date"></label>
+     <label>Last updated through<input id="dash-to" type="date" aria-label="Task last updated through date"></label>
+     <label>Sort tasks<select id="dash-sort"><option value="updated">Recently updated</option><option value="oldest">Oldest updates first</option><option value="due_soon">Nearest deadline first</option><option value="score_high">Highest review score</option></select></label>
+     <div class="dashboard-filter-actions"><button type="button" class="btn secondary" id="dash-reset">Clear filters</button></div>
+   </div>
+   <div id="dash-tasks" class="dashboard-task-list" aria-live="polite"><p class="subtle">No tasks available yet.</p></div>
+   <div class="dashboard-pagination" aria-label="Task list pages"><span id="dash-page-label" role="status">0 tasks</span><div class="dashboard-page-actions"><button type="button" id="dash-prev" class="btn secondary" disabled>Previous</button><button type="button" id="dash-next" class="btn secondary" disabled>Next</button></div></div>
+   <p class="subtle" id="dash-truncation" hidden>More matching records are available. Use Next to view older tasks.</p>
+  </section>
+</section>
+<section class="grid" id="hod-section" hidden>
+ <article class="panel"><header><h2>Upload reference files</h2><span class="tag">Up to 50 PDFs / 60 MB total</span></header><form id="batch-form"><label>Batch title<input type="text" id="batch-title" minlength="5" maxlength="140" required placeholder="e.g. October academic audit records"></label><label>Reference PDF files<input type="file" id="batch-files" accept=".pdf,application/pdf" multiple required></label><div class="form-footer"><span id="selected-count" class="subtle">No files selected · Add HOD review requirements before assigning.</span><button type="submit" class="btn">Upload reference files</button></div></form></article>
+ <article class="panel"><header><h2>Allocate selected tasks</h2><span class="tag">HOD only</span></header><form id="assign-form"><p id="selected-ids" class="subtle">Select unassigned PDF rows below.</p><label>Assign to staff member<select id="staff-id" required><option value="">Choose staff</option></select></label><label>Instructions for staff<textarea id="notes" minlength="10" maxlength="3000" required placeholder="Explain the expected output and any special conditions."></textarea></label>
+<label for="assignment-deadline">Submission deadline <span class="subtle">(optional)</span>
+<input id="assignment-deadline" type="datetime-local" aria-describedby="assignment-deadline-help">
+<span class="subtle" id="assignment-deadline-help">Uses your device's local time. Staff will see the deadline and overdue status in their task queue.</span>
+</label><div class="draft-review" aria-label="Document review requirements"><h3 style="margin:12px 0">Review requirements</h3>
+<label for="rules-mode">How should requirements be prepared?<select id="rules-mode"><option value="manual">HOD checklist (works without AI)</option><option value="ai">AI suggestions (optional)</option></select></label>
+<p id="manual-help" class="subtle">Write the checklist staff must follow. The same checklist is applied to every selected PDF. Staff work can still be submitted when AI is unavailable; it will go to HOD human review.</p>
+<div id="manual-rules" aria-label="HOD checklist rules"></div><p id="manual-actions"><button class="btn secondary" id="add-rule" type="button">Add checklist item</button></p>
+<div id="checklist-template-tools" class="checklist-template-tools" aria-label="Reusable department checklists"><label for="checklist-template">Department checklist template<select id="checklist-template"><option value="">Choose a saved checklist</option></select></label><label for="checklist-template-version-select">Version history<select id="checklist-template-version-select" disabled><option value="">Select a template first</option></select></label><span id="checklist-template-version" class="subtle" role="status">Templates are private to this department.</span><div class="checklist-template-actions"><button class="btn secondary" id="save-checklist-template" type="button">Save as template</button><button class="btn secondary" id="revise-checklist-template" type="button" disabled>Save new version</button><button class="btn secondary" id="archive-checklist-template" type="button" disabled>Archive</button></div></div>
+<div id="ai-rules" hidden><p class="subtle">Review suggestions against each original PDF before assignment. Suggestions may be incomplete and are never automatically approved.</p>
+<div id="draft-preview" aria-live="polite"><p class="subtle">Select an unassigned PDF to see rule suggestions.</p></div>
+<p><button class="btn secondary" id="retry-rules" type="button">Analyze / retry selected PDFs</button></p>
+<label class="confirmation"><input type="checkbox" id="review-confirm" disabled> <span id="review-label">Wait for AI analysis and review every selected PDF.</span></label></div></div><button class="btn" type="submit">Assign selected tasks</button></form></article>
+</section>
+<section class="panel" id="admin-ai" hidden><header><h2>DeepSeek integration</h2><span id="ai-state" class="tag">Checking…</span></header><p>Use your own DeepSeek API key for document analysis. Keys are encrypted, never displayed back, and are not included in uploaded source code.</p><form id="ai-form" class="inline"><label class="fill">New DeepSeek key<input id="ai-key" name="api_key" type="password" minlength="15" autocomplete="new-password" required></label><button type="submit" class="btn">Save key</button></form></section>
+<section class="panel"><header><div><h2 id="queue-title">Assigned document tasks</h2><p class="subtle">Select a reference PDF, review its rules, and follow its verification status.</p></div><span id="queue-count" class="tag">0 tasks</span></header><div class="scroll"><table><thead><tr><th id="check-header">Select</th><th>Reference document</th><th>Assigned staff</th><th>Status</th><th>Due date</th><th>Score</th><th>Actions</th></tr></thead><tbody id="tasks"><tr><td colspan="7">Loading…</td></tr></tbody></table></div></section>
+<div class="grid bottom">
+<section class="panel" id="notifications-box"><header><h2>In-app notifications</h2><span class="tag" id="unread">0 unread</span></header><div id="inbox" class="feed">No notifications yet.</div></section>
+<section class="panel" id="oversight" hidden><header><h2>Workload & quality overview</h2><span class="tag">Operational indicators</span></header><div id="leaderboard" class="scroll"></div><button id="ai-brief" class="btn secondary" type="button">Generate AI workflow suggestions</button><div id="ai-brief-content" class="feed" role="status" aria-live="polite"></div><p class="subtle">Counts and quality scores support workflow improvement, not personnel decisions. HOD approval is a separate human step.</p></section>
+<section class="panel" id="discussion-digests" hidden><header><h2>BCA project discussion reviews</h2><span class="tag">4 windows / day</span></header><div id="digest-list" class="feed">No summaries yet.</div><p class="subtle">Shared project discussions only. The system does not evaluate students' personalities or private complaints. Summaries require an active worker and AI provider.</p></section>
+</div>
+</div></main>
+<footer><span>© 2026 Nagarjuna College of Engineering and Technology · Authorized users only</span><span>Document verification → HOD decision → Institutional oversight</span></footer>
+<dialog id="deadline-dialog" aria-labelledby="deadline-title">
+  <form id="deadline-form">
+    <h2 id="deadline-title">Update task deadline</h2>
+    <p id="deadline-task-name" class="subtle"></p>
+    <label for="edit-deadline">Due date and time <span class="subtle">(local time)</span>
+      <input type="datetime-local" id="edit-deadline" aria-describedby="edit-deadline-note">
+    </label>
+    <p class="subtle" id="edit-deadline-note">Changes are sent to the assigned staff member. Leave empty to remove the deadline.</p>
+    <div class="deadline-dialog-actions"><button class="btn secondary" id="deadline-cancel" type="button">Cancel</button><button class="btn" type="submit">Save deadline</button></div>
+  </form>
+</dialog>
+<dialog id="task-review-dialog" aria-labelledby="task-review-title" aria-describedby="task-review-description">
+  <form id="task-review-form">
+    <h2 id="task-review-title">Review submitted work</h2>
+    <p id="task-review-description" class="subtle"></p>
+    <label for="task-review-note">Review note <span id="task-review-note-hint" class="subtle"></span>
+      <textarea id="task-review-note" minlength="10" maxlength="1500" required aria-describedby="task-review-note-hint"></textarea>
+    </label>
+    <p id="task-review-error" class="review-error" role="alert" hidden></p>
+    <div class="deadline-dialog-actions"><button class="btn secondary" id="task-review-cancel" type="button">Cancel</button><button class="btn" id="task-review-submit" type="submit">Save decision</button></div>
+  </form>
+</dialog>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script src="/static/tasks.js?v=20261021-review-dialog" defer></script><script src="/static/hod-dashboard.js?v=20261021-reminders" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

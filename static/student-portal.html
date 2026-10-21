@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#0E2455">
+<title>My Student Desk | NCET VerifyFlow</title>
+<link rel="icon" href="/static/ncet-brand.svg">
+<link rel="stylesheet" href="/static/bca.css">
+<link rel="stylesheet" href="/static/experience.css">
+<link rel="stylesheet" href="/static/notifications.css">
+<link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017">
+<link rel="stylesheet" href="/static/student-redesign.css?v=20261017b">
+<link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261017" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d"><style>
+.student-case-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:17px 0}
+.student-case-filters label{font-size:12px;color:#526781;font-weight:700;display:grid;gap:5px}
+.student-case-filters input,.student-case-filters select{min-width:0;width:100%;padding:9px 11px;border:1px solid #d2deeb;border-radius:8px;background:#fff;color:#233955;font-size:13px}
+.student-case-filters button{justify-self:start;grid-column:1/-1}
+.student-case-stats{background:#eff4fa;padding:11px;border-left:3px solid #0e2455;border-radius:7px;color:#244066;font-weight:700;font-size:12px}
+.student-case-status-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:10px}
+.student-case-status-cards button{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;text-align:left;padding:9px 10px;border:1px solid #d9e2ed;border-radius:8px;background:#fff;color:#526781;font-size:11px;cursor:pointer}
+.student-case-status-cards button[aria-pressed=true]{border-color:#0e2455;background:#eff4fa;color:#0e2455}
+.student-case-status-cards strong{font-size:15px;color:#0e2455}
+.student-case-pagination{border-top:1px solid #e4eaf1;padding-top:13px;margin-top:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#64748b;font-size:12px}
+.student-case-pagination>div{display:flex;gap:7px}
+.student-list-panel #case-list .student-case-entry{display:grid;gap:7px;text-align:left;width:100%;white-space:normal}
+.case-next-step{display:block;background:#f3f6fa;border-radius:6px;padding:8px 10px;color:#3d526c;font-size:12px;line-height:1.5}
+.case-latest-reply{display:grid;gap:4px;border-left:3px solid #0e2455;padding:6px 10px;color:#42566e;font-size:12px;line-height:1.5}
+.case-latest-reply strong{color:#203866}.case-latest-reply small{color:#718096;font-size:10px}
+#case-receipt-print{display:none}
+@media(max-width:760px){.student-case-status-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.student-case-filters{grid-template-columns:1fr}.student-case-pagination{align-items:flex-start;flex-direction:column}}
+@media print{
+ body.printing-receipt *{visibility:hidden!important}
+ body.printing-receipt #case-receipt-print,body.printing-receipt #case-receipt-print *{visibility:visible!important}
+ body.printing-receipt #case-receipt-print{display:block!important;position:fixed;inset:0 auto auto 0;width:100%;box-sizing:border-box;padding:28px;color:#0e2455;background:#fff;font:14px/1.6 Arial,sans-serif}
+ body.printing-receipt #case-receipt-print h1{font-size:24px;margin:8px 0}
+ body.printing-receipt #case-receipt-print h2{font-size:18px;margin:22px 0 6px}
+ body.printing-receipt #case-receipt-print .receipt-reference{font-size:17px;font-weight:700;color:#0e2455}
+ body.printing-receipt #case-receipt-print .receipt-label{color:#586b82;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+ body.printing-receipt #case-receipt-print .receipt-description{white-space:pre-wrap;border:1px solid #d9e2ed;border-radius:8px;padding:14px;color:#243c5a}
+}
+</style></head><body class="student-modern">
+<header class="topnav"><div class="container nav-inner">
+<a class="brand" href="/students"><img src="/static/ncet-brand.svg" alt="NCET emblem"><span>NCET VerifyFlow<small>Student portal</small></span></a>
+<nav class="navlinks" aria-label="Student navigation"><a href="/students">Student home</a><a href="/students/directory">Directory</a><button type="button" id="logout" class="btn hidden">Sign out</button></nav>
+</div></header>
+<main class="shell student-shell">
+<div class="student-page-heading"><div><span class="eyebrow">NCET • PRIVATE WORKSPACE</span><h1>My Student Desk</h1><p>Requests, replies, and your published portfolio — organized in one place.</p></div><span class="student-usn" id="who">Student</span></div>
+<div id="alert" role="status" aria-live="polite" class="hidden"></div>
+<section id="sign-in" class="student-auth-card panel">
+<div><span class="eyebrow">Secure student access</span><h2>Sign in using your USN</h2><p class="muted">Use the password provided by your department. You’ll be asked to change temporary credentials on your first visit.</p></div>
+<form id="login-form"><div class="field"><label for="login-usn">University Seat Number</label><input id="login-usn" name="usn" required minlength="8" maxlength="24" autocomplete="username" autocapitalize="characters" spellcheck="false" aria-describedby="login-usn-hint" placeholder="Enter your USN"><small class="muted" id="login-usn-hint">Uppercase, lowercase, or mixed-case USN all work.</small></div>
+<div class="field"><label for="login-password">Password</label><input id="login-password" name="password" type="password" required autocomplete="current-password"></div><button class="btn btn-navy" type="submit">Sign in securely →</button></form>
+</section>
+<section id="change-password" class="student-auth-card panel hidden"><h2>Set your own password</h2><p class="muted">Replace the temporary password before using student portal.</p>
+<form id="password-form"><div class="field"><label for="old-password">Temporary password</label><input id="old-password" name="old_password" type="password" autocomplete="current-password" required></div>
+<div class="field"><label for="new-password">New password (12–128 characters)</label><input id="new-password" name="new_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div><button class="btn btn-navy" type="submit">Update password</button></form></section>
+<div id="workspace" class="hidden">
+<div class="student-tabs" role="tablist" aria-label="Student workspace sections">
+<button type="button" class="student-tab active" id="student-tab-requests-button" role="tab" aria-selected="true" aria-controls="student-tab-requests" data-student-tab="requests">My requests</button>
+<button type="button" class="student-tab" id="student-tab-profile-button" role="tab" aria-selected="false" aria-controls="student-tab-profile" data-student-tab="profile">My public profile</button>
+</div>
+<section id="student-tab-requests" role="tabpanel" aria-labelledby="student-tab-requests-button" class="student-tab-panel">
+<div class="student-compact-grid"><section class="panel student-form-panel"><span class="eyebrow">PRIVATE HOD REQUEST</span><h2>New academic request</h2><p class="muted small">Send your concern directly to your department HOD.</p>
+<form id="new-case"><div class="field"><label for="case-category">Category</label><select name="category" id="case-category" required>
+<option value="academics">Academic concern</option><option value="faculty">Faculty / class</option><option value="examinations">Examination</option><option value="facilities">Facilities</option><option value="fees">Fees / administration</option><option value="documentation">Documents / certificates</option><option value="request">General request</option><option value="other">Other</option></select></div>
+<div class="field"><label for="case-subject">Subject</label><input name="subject" id="case-subject" minlength="6" maxlength="160" required placeholder="Briefly describe your concern"></div>
+<div class="field"><label for="case-description">Your message</label><textarea name="description" id="case-description" rows="4" minlength="15" maxlength="4000" required placeholder="Explain what happened and how the HOD can help"></textarea></div>
+<button class="btn btn-navy" type="submit">Submit privately →</button></form></section>
+<section class="panel student-list-panel"><span class="eyebrow">YOUR HISTORY</span><h2>My submissions</h2><p class="small muted">Read HOD replies or send a follow-up. Requests are private to your account.</p>
+<div class="student-case-stats" id="student-case-stats" role="status" aria-live="polite">Loading your requests…</div>
+<div id="student-case-metrics" class="student-case-status-cards" role="group" aria-label="Filter requests by status"></div>
+<form id="student-case-filters" class="student-case-filters" role="search" autocomplete="off">
+<label>Search requests<input type="search" name="search" maxlength="120" placeholder="Reference or subject"></label>
+<label>Status<select name="status"><option value="all">All statuses</option><option value="submitted">New</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
+<label>Category<select name="category"><option value="all">All categories</option><option value="academics">Academics</option><option value="faculty">Faculty</option><option value="examinations">Examinations</option><option value="facilities">Facilities</option><option value="fees">Fees</option><option value="documentation">Documentation</option><option value="request">General request</option><option value="other">Other</option></select></label>
+<label>Sort<select name="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="updated">Recently updated</option></select></label>
+<button type="button" class="btn" id="student-case-clear">Clear filters</button>
+</form>
+<div id="case-list" aria-live="polite"></div>
+<div class="student-case-pagination"><span id="student-case-page">0 requests</span><div><button type="button" class="btn" id="student-case-prev" disabled>Previous</button><button type="button" class="btn" id="student-case-next" disabled>Next</button></div></div></section></div>
+<section id="case-detail" class="panel hidden student-thread"><button type="button" id="close-case" class="btn">← Back to requests</button> <button type="button" id="print-receipt" class="btn">Print / save receipt as PDF</button><div id="case-receipt-print"></div><h2 id="case-heading">Request details</h2><div id="case-info"></div>
+<form id="message-form"><div class="field"><label for="case-message">Reply or add details</label><p class="muted small">A reply reopens a resolved request for 14 days after its latest update. Closed requests need a new request.</p><textarea name="message" id="case-message" rows="3" maxlength="2000" minlength="2" required></textarea></div><button class="btn btn-navy" type="submit">Send follow-up</button></form></section>
+</section>
+<section id="student-tab-profile" role="tabpanel" aria-labelledby="student-tab-profile-button" class="student-tab-panel hidden">
+<div class="student-profile-intro"><div><span class="eyebrow">YOUR STUDENT PORTFOLIO</span><h2>Make your work discoverable</h2><p>Share your skills, photo and work publicly only when you're ready. Contact details and private requests stay private.</p></div><a class="btn" href="/students/directory">Browse student directory ↗</a></div>
+<section class="panel student-photo-panel">
+<div class="student-avatar-wrap"><img id="showcase-photo-preview" src="/static/ncet-brand.svg" alt="Your profile photo preview" width="108" height="108"><span id="showcase-photo-fallback" class="small muted">No photo yet</span></div>
+<div class="student-photo-fields"><h3>Profile photo</h3><p class="muted small">Optional · JPEG, PNG or WebP · strictly under 150 KB. We resize and remove image metadata before storing.</p>
+<form id="showcase-photo-form" class="photo-controls"><label class="student-file-label" for="showcase-photo">Choose photo<input id="showcase-photo" name="file" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
+<button class="btn btn-navy" type="submit">Upload photo</button><button id="remove-showcase-photo" type="button" class="btn hidden">Remove</button></form>
+<span id="photo-upload-status" class="small muted" role="status">Your photo appears publicly only if you publish your profile.</span></div>
+</section>
+<section id="showcase-box" class="panel student-profile-form"><h3>Profile details</h3><form id="showcase-form">
+<div class="split"><div class="field"><label for="showcase-name">Full name</label><input id="showcase-name" required maxlength="130" minlength="3" autocomplete="name"></div>
+<div class="field"><label for="showcase-dept">Department</label><input id="showcase-dept" readonly value="Your department"></div></div>
+<div class="field"><label for="showcase-about">About me & academic interests</label><textarea id="showcase-about" rows="3" maxlength="900" placeholder="Tell visitors what you are building, learning or interested in"></textarea></div>
+<div class="field"><label for="showcase-skills">Skills (comma separated, up to 100)</label><textarea id="showcase-skills" rows="3" maxlength="8500" placeholder="Python, C, C++, Java, AI, Web Development…"></textarea><p id="skill-count" class="small muted" role="status">0 / 100 skills.</p></div>
+<div class="field"><label for="showcase-interests">Areas of interest</label>
+<textarea id="showcase-interests" rows="2" maxlength="1500" placeholder="Artificial Intelligence, Cloud Engineering, Design Systems, Cybersecurity…"></textarea>
+<p class="small muted">Comma-separated interests. Up to 20 interests, each 2–75 characters.</p></div>
+<details class="student-details" open><summary>Projects & live work <span>Optional · up to 8 projects</span></summary>
+<p class="small muted">Add a project title and optional description, technologies, GitHub repository and live demo link.</p>
+<div class="resume-project-form-list" id="showcase-projects"></div>
+<button class="btn" type="button" id="add-showcase-project">+ Add project</button>
+</details>
+<details class="student-details"><summary>Private contact details <span>Never displayed publicly</span></summary><div class="split student-details-body"><div class="field"><label for="showcase-mobile">Private mobile</label><input id="showcase-mobile" type="tel" inputmode="tel" autocomplete="tel" maxlength="20"></div>
+<div class="field"><label for="showcase-email">Private email</label><input id="showcase-email" type="email" autocomplete="email" maxlength="180"></div></div></details>
+<details class="student-details"><summary>Coding & social links <span>Optional · 11 sites</span></summary>
+<p class="muted small">Only include profiles you want anyone on the internet to visit.</p><div class="social-grid">
+<label class="field">GitHub<input class="social-link" name="github" type="url" maxlength="400" placeholder="https://github.com/…"></label>
+<label class="field">LinkedIn<input class="social-link" name="linkedin" type="url" maxlength="400" placeholder="https://linkedin.com/in/…"></label>
+<label class="field">LeetCode<input class="social-link" name="leetcode" type="url" maxlength="400" placeholder="https://leetcode.com/…"></label>
+<label class="field">CodeChef<input class="social-link" name="codechef" type="url" maxlength="400" placeholder="https://codechef.com/…"></label>
+<label class="field">HackerRank<input class="social-link" name="hackerrank" type="url" maxlength="400" placeholder="https://hackerrank.com/…"></label>
+<label class="field">Kaggle<input class="social-link" name="kaggle" type="url" maxlength="400" placeholder="https://kaggle.com/…"></label>
+<label class="field">Codeforces<input class="social-link" name="codeforces" type="url" maxlength="400" placeholder="https://codeforces.com/…"></label>
+<label class="field">Stack Overflow<input class="social-link" name="stackoverflow" type="url" maxlength="400" placeholder="https://stackoverflow.com/…"></label>
+<label class="field">GitLab<input class="social-link" name="gitlab" type="url" maxlength="400" placeholder="https://gitlab.com/…"></label>
+<label class="field">DEV Community<input class="social-link" name="devto" type="url" maxlength="400" placeholder="https://dev.to/…"></label>
+<label class="field">Portfolio website<input class="social-link" name="portfolio" type="url" maxlength="400" placeholder="https://your-site.example/…"></label>
+</div></details>
+<details class="student-details"><summary>Certificates & proof <span>Optional · up to 8 certificates</span></summary>
+<div class="field student-details-body"><label for="showcase-certs">One per line: Title | Issuer | public HTTPS proof URL</label><textarea id="showcase-certs" rows="3" placeholder="Python course | Cisco | https://example.org/credential/123"></textarea><p class="small muted">Share only certificates you have permission to make public.</p></div></details>
+<div class="student-consent"><label for="showcase-public"><input type="checkbox" id="showcase-public"><span><strong>Publish my student portfolio</strong><small>Allow Google and visitors to find my name, USN, photo, skills and public links. This does not publish private contact details or requests.</small></span></label></div>
+<div class="student-save"><button type="submit" class="btn btn-navy">Save my profile</button><a id="my-public-profile" class="btn hidden" href="/students/directory" target="_blank" rel="noopener">View public profile ↗</a></div>
+</form></section>
+</section>
+</div></main>
+<footer class="student-footer"><div class="container"><img class="footer-ngi" src="/static/ngi-brand.svg" alt="Nagarjuna Group of Institutions" width="64" height="58"><span>© 2026 NCET VerifyFlow · Student Portal</span><span><a href="/students">Students</a> · <a href="/students/directory">Published portfolios</a> · <a href="/about">About</a></span></div></footer>
+<script src="/static/student-portal.js?v=20261021-request-receipt" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

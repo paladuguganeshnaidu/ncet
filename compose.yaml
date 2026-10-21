@@ -1,0 +1,93 @@
+name: ncet-verifyflow
+services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ncet_verifyflow
+      POSTGRES_USER: ncet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in private .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ncet -d ncet_verifyflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [internal]
+  clamav:
+    image: clamav/clamav:stable_base
+    restart: unless-stopped
+    environment:
+      CLAMAV_NO_MILTERD: "true"
+    volumes:
+      - clamav_db:/var/lib/clamav
+    networks: [internal]
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:10000"
+    environment:
+      PORT: "10000"
+      APP_ENV: production
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set HTTPS origin in private .env}
+      DATABASE_URL: postgresql+psycopg://ncet:${POSTGRES_PASSWORD}@database:5432/ncet_verifyflow
+      STORAGE_BACKEND: database
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:?Set encryption key in private .env}
+      NCET_BOOTSTRAP_ADMIN_USERNAME: ${NCET_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      NCET_BOOTSTRAP_ADMIN_PASSWORD: ${NCET_BOOTSTRAP_ADMIN_PASSWORD:?Set new admin password in private .env}
+      SCAN_MODE: ${SCAN_MODE:-clamav}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_DEEPSEEK_MODEL: ${OPENROUTER_DEEPSEEK_MODEL:-deepseek/deepseek-v3.2}
+    networks: [internal]
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      web:
+        condition: service_started
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://ncet:${POSTGRES_PASSWORD}@database:5432/ncet_verifyflow
+      STORAGE_BACKEND: database
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:?Set encryption key in private .env}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_DEEPSEEK_MODEL: ${OPENROUTER_DEEPSEEK_MODEL:-deepseek/deepseek-v3.2}
+    networks: [internal]
+  proxy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:?Set PUBLIC_HOST in private .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal]
+volumes:
+  postgres_data:
+  clamav_db:
+  caddy_data:
+  caddy_config:
+networks:
+  internal:

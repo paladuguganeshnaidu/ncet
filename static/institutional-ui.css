@@ -1,0 +1,196 @@
+/* NCET VerifyFlow UI release. Motion approach informed by transitions.dev
+   (we implement our own small tokens and CSS; no third-party runtime). */
+:root{
+ --ncet-navy:#0E2455;--ncet-blue:#0E2455;--ncet-orange:#F6872A;
+ --ncet-green:#087C59;--ncet-forest:#076447;--ncet-white:#FFFFFF;
+ --ncet-bg:#F5F7FB;--ncet-text:#172033;--ncet-muted:#5F6F83;
+ --ncet-line:#E2E8F0;--ncet-focus:#F6872A;
+ --ncet-radius:12px;--ncet-radius-lg:18px;
+ --ncet-shadow:0 12px 32px rgba(14,36,85,.065);
+ --motion-fast:140ms;--motion-base:220ms;--motion-slow:360ms;
+ --motion-ease:cubic-bezier(.22,1,.36,1);
+ --motion-out:cubic-bezier(.4,0,1,1);
+}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{background:var(--ncet-bg);color:var(--ncet-text);-webkit-font-smoothing:antialiased}
+button,a,input,select,textarea,summary{touch-action:manipulation}
+:where(a,button,input,textarea,select,summary,[role=tab]):focus-visible{
+ outline:3px solid var(--ncet-focus)!important;outline-offset:3px!important
+}
+:where(input,textarea,select):not([type=checkbox]):not([type=radio]){
+ transition:border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease
+}
+:where(input,textarea,select):focus-visible{border-color:var(--ncet-orange)!important;box-shadow:0 0 0 3px rgba(246,135,42,.15)}
+:where(.btn,button):not(:disabled):active{transform:translateY(0) scale(.995)}
+:where(.btn,button,a){-webkit-tap-highlight-color:transparent}
+:where(.btn,.btn-primary,.btn-navy,.nav-action,.primary-action,.public-signin){
+ transition:background-color var(--motion-base) ease,border-color var(--motion-base) ease,
+ color var(--motion-base) ease,transform var(--motion-base) var(--motion-ease),
+ box-shadow var(--motion-base) ease;
+}
+:where(.btn,.btn-primary,.btn-navy,.nav-action,.primary-action,.public-signin):not(:disabled):hover{box-shadow:0 8px 18px rgba(14,36,85,.12)}
+/* All college wordmarks have dark lettering; never place a dark logo on navy. */
+:where(.topnav,.site-header,.student-nav,.resume-site-header){background:#fff}
+:where(.topnav,.site-header,.resume-site-header) .brand,
+:where(.topnav,.site-header,.resume-site-header) a.brand{color:var(--ncet-blue)}
+:where(.brand,.sidebar-brand,.footer-brand,.brandmark-inline) img[src*="ncet-brand"],
+:where(.ncms-crest,.logo-stage) img[src*="ncet-brand"]{
+ object-fit:contain;object-position:center;mix-blend-mode:normal;filter:none;
+}
+:where(.brand,.sidebar-brand,.footer-brand,.brandmark-inline) img[src*="ncet-brand"]{
+ background:#fff;border-radius:6px
+}
+:where(.topnav,.site-header){border-bottom:1px solid var(--ncet-line)}
+.topnav .navlinks a{position:relative;min-height:42px;display:inline-flex;align-items:center;justify-content:center;
+ transition:color var(--motion-base) ease,background-color var(--motion-base) ease}
+.topnav .navlinks a:hover,.topnav .navlinks a:focus-visible{background:#FFF2E6;color:var(--ncet-blue)}
+.topnav .navlinks a[aria-current=page]{color:var(--ncet-blue);background:#FFF0E2}
+:where(.navlinks,.student-tabs,.resume-anchors){scrollbar-width:thin;scrollbar-color:#CBD5E1 transparent}
+:where(.topnav,.nav-inner,.container,.shell,.student-shell){min-width:0}
+:where(.service-card,.card,.panel,.profile-card,.student-auth-card,.cleanup-card){
+ border-radius:var(--ncet-radius-lg);border-color:var(--ncet-line);
+ transition:transform var(--motion-base) var(--motion-ease),
+ border-color var(--motion-base) ease,box-shadow var(--motion-base) ease;
+}
+:where(.service-card,.card,.profile-card):hover{border-color:#F7BC86;box-shadow:var(--ncet-shadow)}
+:where(.service-card,.card,.profile-card):hover:not([aria-disabled=true]){transform:translateY(-2px)}
+:where(.service-card,.card,.profile-card):focus-within{border-color:var(--ncet-orange)}
+/* Consistent submission feedback; logo never spins or changes colors. */
+.ncet-network-loader{isolation:isolate;background:#fff!important;color:var(--ncet-blue)!important;
+ border:1px solid var(--ncet-line)!important;border-left:3px solid var(--ncet-orange)!important;
+ border-radius:12px!important;box-shadow:0 13px 38px rgba(14,36,85,.13)!important;
+ padding:11px 14px!important;gap:11px!important;
+ animation:ncet-toast-in var(--motion-base) var(--motion-ease) both;
+}
+.ncet-network-loader[hidden]{display:none!important}
+.ncet-network-loader img{width:65px!important;height:37px!important;background:#fff;
+ object-fit:contain!important;animation:ncet-mark-breathe 1.5s ease-in-out infinite!important;
+ transform:none!important;filter:none!important
+}
+@keyframes ncet-mark-breathe{
+ 0%,100%{opacity:.67}50%{opacity:1}
+}
+@keyframes ncet-toast-in{
+ from{opacity:0;transform:translateY(10px)}
+ to{opacity:1;transform:translateY(0)}
+}
+:where(button,.btn)[aria-busy=true]{pointer-events:none;cursor:progress}
+:where(button,.btn)[aria-busy=true]::before,.spinner{
+ background:transparent url('/static/ncet-brand.svg') center/contain no-repeat!important;
+ width:31px!important;height:23px!important;display:inline-block!important;
+ border:0!important;animation:ncet-mark-breathe 1.5s ease-in-out infinite!important;
+ transform:none!important;filter:none!important
+}
+/* Transitions are progressive enhancement: content stays visible with JS disabled. */
+.ncet-reveal{will-change:auto}
+.ncet-reveal.ncet-enter{animation:ncet-section-enter var(--motion-slow) var(--motion-ease) both}
+@keyframes ncet-section-enter{
+ from{opacity:.2;transform:translateY(14px)}
+ to{opacity:1;transform:translateY(0)}
+}
+.ncet-counter{font-variant-numeric:tabular-nums;letter-spacing:-.055em}
+.ncet-counter:focus{outline-color:var(--ncet-orange)}
+:where(.guide-grid details,details.faq,details.help-entry){transition:border-color var(--motion-base) ease,box-shadow var(--motion-base) ease}
+:where(.guide-grid details,details.faq,details.help-entry)[open]{border-color:#F7BC86}
+:where(.guide-grid details,details.faq,details.help-entry) summary{cursor:pointer}
+:where(.guide-grid details,details.faq,details.help-entry) summary::marker{color:var(--ncet-orange)}
+/* Admin and staff remain functional: decorative treatment only. */
+:where(.app-shell,.student-modern,.student-public) .panel{background:#fff}
+:where(.app-shell,.student-modern,.student-public) :is(h1,h2,h3){text-wrap:balance}
+:where(.student-modern,.student-public) .topnav .brand img{width:110px;max-height:58px;height:auto}
+:where(.student-modern,.student-public) .topnav{height:auto;min-height:78px}
+:where(.student-modern,.student-public) .topnav .nav-inner{min-height:78px}
+:where(.student-modern,.student-public) .intro{background:#fff;color:var(--ncet-blue);
+ border-bottom:1px solid var(--ncet-line)}
+:where(.student-modern,.student-public) .intro .eyebrow{color:#A84A0C}
+:where(.student-public) .intro p{color:#506079}
+:where(.student-public) .intro em{color:#D56813}
+:where(.student-public) .intro .btn-ghost{color:var(--ncet-blue);border:1px solid #CED8E6;background:#fff}
+:where(.student-public) .intro .btn-ghost:hover{background:#FFF1E6}
+:where(.student-modern,.student-public) .btn-primary{background:var(--ncet-orange);color:var(--ncet-blue);
+ border-color:var(--ncet-orange)}
+:where(.student-modern,.student-public) .btn-primary:hover{background:#FBA65D}
+:where(.student-modern,.student-public) .student-profile-intro{
+ background:linear-gradient(120deg,#F1F5FB,#FFFFFF)!important;color:var(--ncet-blue)!important;
+ border:1px solid var(--ncet-line)
+}
+:where(.student-modern,.student-public) .student-profile-intro :is(h2,h3,p){color:var(--ncet-blue)!important}
+:where(.student-modern,.student-public) .student-tabs{
+ overflow-x:auto;overscroll-behavior-x:contain;flex-wrap:nowrap
+}
+:where(.student-modern,.student-public) .student-tab{white-space:nowrap;flex:0 0 auto}
+:where(.student-modern,.student-public) .student-tab[aria-selected=true]{box-shadow:inset 0 -3px var(--ncet-orange)}
+:where(.student-modern,.student-public) .panel{box-shadow:0 7px 24px rgba(14,36,85,.045)}
+/* White logo plate when logo appears in navy staff sidebars or footers. */
+:where(.sidebar,.app-sidebar,.nav-sidebar) img[src*="ncet-brand"]{
+ background:white;border-radius:8px;padding:7px
+}
+:where(.footer,.resume-footer) img[src*="ncet-brand"],
+:where(.footer,.resume-footer) img[src*="ngi-brand"]{background:#fff;border-radius:9px;padding:7px}
+:where(.app-shell,.student-modern) :is(table,.table-wrap){max-width:100%}
+:where(.app-shell,.student-modern) .table-wrap{overflow-x:auto;overscroll-behavior-x:contain}
+:where(.app-shell,.student-modern) .modal,:where(.app-shell,.student-modern) dialog{
+ max-width:min(96vw,760px)
+}
+@media(max-width:700px){
+ html{scroll-padding-top:20px}
+ :where(.topnav,.site-header) .nav-inner{gap:10px}
+ :where(.student-modern,.student-public) .topnav .nav-inner{align-items:flex-start;flex-direction:column;padding-block:9px}
+ :where(.student-modern,.student-public) .topnav .navlinks{display:flex;overflow-x:auto;flex-wrap:nowrap;width:100%}
+ :where(.student-modern,.student-public) .topnav .navlinks>*{flex-shrink:0}
+ .ncet-network-loader{max-width:calc(100vw - 24px);right:12px!important;bottom:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}
+ *,*::before,*::after{scroll-behavior:auto!important}
+ .ncet-reveal.ncet-enter,.ncet-network-loader,.ncet-network-loader img,.spinner,
+ button[aria-busy=true]::before,.btn[aria-busy=true]::before{
+ animation:none!important;transform:none!important;opacity:1!important
+ }
+ :where(.btn,button,.service-card,.card,.profile-card,.navlinks a){transition-duration:0ms!important;transform:none!important}
+}
+
+/* Accessible 44px menu trigger; nav stays visible until enhancement is attached. */
+.ncet-menu-toggle{display:none;border:1px solid #D6E0EE;border-radius:9px;color:#0E2455;
+ background:#fff;padding:9px 11px;min-height:42px;align-items:center;gap:8px;
+ font-size:12px;font-weight:800;cursor:pointer}
+.ncet-menu-lines{display:grid;gap:4px;width:18px}
+.ncet-menu-lines i{display:block;width:18px;height:2px;background:#0E2455;border-radius:4px;
+ transition:transform var(--motion-base) var(--motion-ease),opacity var(--motion-base) ease}
+.ncet-nav-open .ncet-menu-lines i:first-child{transform:translateY(6px) rotate(45deg)}
+.ncet-nav-open .ncet-menu-lines i:nth-child(2){opacity:0}
+.ncet-nav-open .ncet-menu-lines i:last-child{transform:translateY(-6px) rotate(-45deg)}
+@media(max-width:700px){
+ .topnav.ncet-menu-enhanced .nav-inner{position:relative}
+ .topnav.ncet-menu-enhanced .ncet-menu-toggle{display:inline-flex;position:absolute;right:0;top:50%;
+ transform:translateY(-50%)}
+ .topnav.ncet-menu-enhanced .navlinks{display:none!important;
+  position:absolute;left:0;right:0;top:calc(100% - 1px);width:100%;min-width:0;
+  padding:9px!important;z-index:80;background:#fff;
+  border:1px solid #E3EAF2;border-radius:0 0 13px 13px;box-shadow:0 19px 32px #0E24552A;
+  flex-direction:column!important;align-items:stretch!important;gap:3px!important;
+  max-height:min(68dvh,440px);overflow:auto}
+ .topnav.ncet-menu-enhanced.ncet-nav-open .navlinks{display:flex!important;
+  animation:ncet-nav-appear var(--motion-base) var(--motion-ease)}
+ .topnav.ncet-menu-enhanced .navlinks a{min-height:45px;justify-content:flex-start;
+  width:100%;padding:10px 13px!important}
+ .topnav.ncet-menu-enhanced .brand{max-width:calc(100% - 70px)}
+}
+@keyframes ncet-nav-appear{from{opacity:.3;transform:translateY(-6px)}
+ to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+ .topnav.ncet-menu-enhanced.ncet-nav-open .navlinks{animation:none!important}
+ .ncet-menu-lines i{transition:none!important}
+}
+
+/* First-party page-to-page fades: unsupported browsers navigate normally. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:120ms ease-out both ncet-page-exit}
+::view-transition-new(root){animation:190ms ease-out both ncet-page-enter}
+@keyframes ncet-page-exit{to{opacity:.92}}
+@keyframes ncet-page-enter{from{opacity:.90}to{opacity:1}}
+img.ncet-campus-fallback{object-fit:contain!important;background:#fff!important;
+ padding:clamp(20px,4vw,45px);border:1px solid #E2E8F0}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+}

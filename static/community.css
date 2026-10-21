@@ -1,0 +1,40 @@
+/* NCET shared community: information-dense, accessible, no third-party scripts */
+.community-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(275px,1fr);gap:22px;align-items:start}
+.community-primary,.community-aside{min-width:0}
+.access-label{padding:7px 10px;border:1px solid #cfdaeb;border-radius:7px;color:#234267;background:#f0f4fa;font-size:12px;white-space:nowrap}
+.privacy-line{background:#f4f7fd;border-left:4px solid #d46d17;font-size:13px;line-height:1.7;color:#33415a}
+.privacy-line strong{display:block;color:#0e2455;margin-bottom:4px}
+.section-heading-row{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
+.section-heading-row h2{margin:0;color:#0e2455}
+.section-heading-row p{margin:5px 0 0}
+.post-card{border-bottom:1px solid #e2e8f0;padding:20px 0}
+.post-card:first-child{padding-top:5px}.post-card:last-child{border-bottom:0;padding-bottom:0}
+.post-header{display:flex;justify-content:space-between;gap:13px;align-items:flex-start}
+.post-header h3{margin:0 0 5px;color:#0e2455;font-size:18px}
+.byline{font-size:12px;color:#5d6b7e;line-height:1.6}
+.student-id{display:inline-block;color:#244771;font-size:11px;font-weight:750;border-radius:5px;background:#edf2fb;padding:3px 7px;margin-left:4px}
+.post-card p{font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.help-needed{padding:11px 13px;border-radius:8px;background:#f3f6fb;font-size:13px;margin:12px 0;color:#213d65}
+.help-needed strong{color:#0e2455}
+.tag{border-radius:5px;background:#fdf0e5;color:#88400c;font-size:11px;padding:5px 9px;font-weight:700;white-space:nowrap}
+.tag.closed{background:#eceff4;color:#4f5a6d}
+.post-actions,.page-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.post-actions button{font-size:12px;padding:7px 10px}
+.comment-section{margin-top:14px;padding-top:14px;border-top:1px solid #e8edf5}
+.comment{background:#f7f9fc;border:1px solid #e7ecf3;border-radius:9px;padding:11px 13px;margin-bottom:8px}
+.comment .byline{margin-bottom:5px}.comment p{margin:0}
+.comment textarea{min-height:75px}
+.directory-student{padding:12px 0;border-bottom:1px solid #edf0f5}
+.directory-student:last-child{border-bottom:0}
+.directory-student strong{display:block;font-size:13px;color:#152d53}
+.directory-student .skills{font-size:12px;color:#566e85;overflow-wrap:anywhere}
+.search-row{display:flex;gap:7px}
+.search-row input{width:100%;min-width:0;border:1px solid #cbd6e4;border-radius:8px;padding:9px 10px;font:inherit}
+#student-directory{margin-top:15px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#notice{padding:12px 16px;border-radius:8px;margin-bottom:16px;background:#f0f7f1;border:1px solid #cbe2cd;color:#1c5528}
+#notice.error{background:#fff3f2;border-color:#f2d2cc;color:#95392c}
+#my-identity{font-size:13px;margin:8px 0 14px;color:#536780}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #b85a0a;outline-offset:3px}
+@media(max-width:860px){.community-layout{grid-template-columns:1fr}.shell-head{flex-wrap:wrap}.community-aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.community-aside .panel{margin:0}}
+@media(max-width:600px){.community-aside{grid-template-columns:1fr}.post-header{flex-direction:column;gap:6px}.section-heading-row{flex-wrap:wrap}.topnav .navlinks{justify-content:flex-start}.access-label{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

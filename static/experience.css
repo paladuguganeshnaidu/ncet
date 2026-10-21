@@ -1,0 +1,78 @@
+/* NCET experience layer: restrained motion, strong focus, service-first hierarchy. */
+:root{--orange:#de751e;--navy:#0e2455;--surface:#fff;--focus:#b24d0b}
+.skip-link{position:absolute;z-index:200;top:-70px;left:16px;background:#fff;color:#0e2455;padding:10px 16px;border-radius:7px;font-weight:700}
+.skip-link:focus{top:12px}
+button,a,input,textarea,select{touch-action:manipulation}
+:focus-visible{outline:3px solid var(--focus)!important;outline-offset:3px!important}
+.navlinks a[aria-current="page"]{background:#edf2fa;color:#0e2455}
+.topnav{position:relative;z-index:4;box-shadow:0 1px 0 #142d570a}
+.brand{letter-spacing:-.03em}
+.experience-hero{padding:76px 0 85px;background:#0e2455}
+.experience-grid{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(32px,5vw,72px)}
+.hero-content{max-width:650px}
+.hero-content h1{font-size:clamp(39px,4.9vw,68px);line-height:1.08;margin:17px 0 22px}
+.hero-content>p:not(.hero-privacy){font-size:16px;max-width:510px}
+.experience-hero .eyebrow{color:#ffceaa;letter-spacing:.11em}
+.experience-hero .btn-primary{color:#172033;background:#f9a25b;border-color:#f9a25b}
+.experience-hero .btn-primary:hover{background:#ffc18d;border-color:#ffc18d}
+.experience-hero .btn-ghost:hover{background:#ffffff12}
+.hero-privacy{font-size:12px!important;color:#d2ddf0!important;margin:24px 0 0!important;line-height:1.6!important}
+.privacy-indicator{width:8px;height:8px;background:#a8e7c0;border-radius:50%;display:inline-block;margin-right:8px}
+.identity-panel{min-height:410px;position:relative;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#f6f8fd 72%,#f3f6fa 100%);color:#0e2455;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 25px 70px #04123135;border:1px solid #ffffff66}
+.identity-panel-top,.identity-panel-bottom{padding:19px 26px;position:relative;z-index:1}
+.identity-panel-top{border-bottom:1px solid #e6ebf3}
+.identity-kicker{font-size:10px;font-weight:750;letter-spacing:.12em;color:#405473}
+.identity-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#e47c25;margin:0 6px;vertical-align:middle}
+.identity-center{position:relative;z-index:1;text-align:center;padding:22px 16px 25px}
+.identity-halo{position:absolute;width:235px;height:235px;inset:2px 0 auto;margin:auto;border-radius:50%;background:radial-gradient(circle,#f5e7d744 5%,#e5ecf94d 55%,transparent 72%);pointer-events:none}
+.identity-crest{height:148px;width:min(185px,52vw);object-fit:contain;position:relative;filter:drop-shadow(0 8px 14px #142c4f22)}
+.identity-heading{font-size:18px!important;line-height:1.3!important;font-weight:790;color:#102857!important;letter-spacing:-.03em;margin:13px auto 5px!important}
+.identity-sub{color:#64748b!important;font-size:12px!important;margin:0!important}
+.identity-panel-bottom{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e6ebf3;color:#61718a;font-size:11px;font-weight:650}
+.identity-panel-bottom img{max-width:100px;object-fit:contain;height:42px}
+.section-kicker{display:block;color:#955013;font-size:11px;font-weight:800;letter-spacing:.13em;margin-bottom:9px}
+.experience-services{padding:68px 0}
+.experience-services .lead{margin-bottom:28px}
+.service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.service-card{display:flex;flex-direction:column;position:relative;padding:27px 23px 29px;gap:20px;border-radius:13px;background:white;border:1px solid #dce4ef;min-height:248px;text-decoration:none;color:#152748;transition:border-color .18s,box-shadow .18s,transform .18s}
+.service-card:hover,.service-card:focus-visible{border-color:#adbfdb;box-shadow:0 13px 35px #10244e14;transform:translateY(-2px)}
+.service-card-icon{height:49px;width:49px;border-radius:11px;display:grid;place-items:center;background:#eff3fa;color:#0e2455}
+.service-card-icon svg{height:24px;width:24px}
+.service-card-content{display:flex;flex-direction:column;gap:9px}
+.service-eyebrow{font-size:10px;color:#955013;font-weight:790;letter-spacing:.12em}
+.service-card-content strong{font-size:19px;letter-spacing:-.025em}
+.service-card-content>span:last-child{color:#53637a;font-size:13px;line-height:1.7}
+.service-arrow{position:absolute;right:24px;top:25px;color:#465e85;font-size:20px}
+.experience-find{background:#eaf0f8;border-top:1px solid #dce5f0;border-bottom:1px solid #dce5f0;padding:42px 0}
+.experience-find-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
+.experience-find h2{font-size:clamp(25px,3vw,34px);line-height:1.2;color:#0e2455;letter-spacing:-.04em;margin:5px 0 10px}
+.experience-find p{color:#51657e;font-size:14px;margin:0}
+.profile-search{background:white;border:1px solid #d8e2ef;padding:22px;border-radius:12px;box-shadow:0 6px 22px #0e24550a}
+.profile-search>label{display:block;font-size:13px;font-weight:700;color:#233e63;margin-bottom:10px}
+.profile-search-row{display:flex;gap:9px;align-items:stretch}
+.profile-search-row input{min-width:0;flex:1;height:46px;border-radius:8px;border:1px solid #b8c5d7;padding:0 13px}
+.profile-search-row .btn{white-space:nowrap}
+.experience-guidance{padding:66px 0 75px}
+.guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:26px}
+.guide-grid details{background:white;border:1px solid #dce4ef;border-radius:11px;padding:18px 19px;align-self:start}
+.guide-grid summary{cursor:pointer;color:#18335d;font-weight:700;font-size:14px;line-height:1.5}
+.guide-grid details[open]{border-color:#9db0cf;box-shadow:0 9px 24px #112b4b0c}
+.guide-grid details p{font-size:13px;color:#52657f;line-height:1.75;margin-top:13px}
+.guide-grid summary::marker{color:#a65d20}
+.panel,.profile-card{box-shadow:0 6px 20px #10244e08}
+.btn:not(:disabled):active{transform:translateY(0);box-shadow:none}
+.btn[aria-busy="true"],button[aria-busy="true"]{cursor:progress}
+.btn[aria-busy="true"]::before,button[aria-busy="true"]::before{content:"";display:inline-block;width:13px;height:13px;border:0;border-radius:0;vertical-align:-2px;margin-right:9px;animation:ncet-logo-shine 1.5s ease-in-out infinite;background:transparent url('/static/ncet-brand.svg') center/contain no-repeat}
+@keyframes progress-spin{to{transform:rotate(360deg)}}
+#directory-results[aria-busy="true"]{opacity:.75}
+.directory-skeleton{height:180px;border-radius:12px;border:1px solid #dce4ef;background:linear-gradient(90deg,#edf2f7 12%,#f7f9fc 46%,#edf2f7 75%);background-size:200% 100%;animation:skeleton-flow 1.5s ease-in-out infinite}
+@keyframes skeleton-flow{to{background-position-x:-200%}}
+#directory-status{min-height:23px}
+.edit-student-form input{min-width:0;max-width:100%}
+#roster-search{width:100%;max-width:420px;margin:10px 0 14px;border:1px solid #c4d0df;border-radius:8px;padding:10px 12px}
+.roster-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.roster-tools .btn{min-height:39px}
+@media(max-width:960px){.experience-grid{grid-template-columns:1fr}.hero-content{max-width:700px}.identity-panel{max-width:670px;width:100%;min-height:330px}.identity-center{padding:6px 16px}.identity-crest{height:114px}.service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.experience-hero{padding:51px 0}.hero-content h1{font-size:clamp(36px,9vw,48px)}.experience-find-grid{grid-template-columns:1fr}.service-grid,.guide-grid{grid-template-columns:1fr}.service-card{min-height:0;gap:14px;padding:23px}.experience-services{padding:48px 0}.profile-search-row{flex-direction:column}.profile-search-row .btn{min-height:46px}.identity-panel{min-height:0}.identity-panel-top,.identity-panel-bottom{padding:14px 18px}}
+@media(max-width:400px){.navlinks{justify-content:flex-start}.navlinks a{font-size:12px;padding:8px}.hero-content .actions{align-items:stretch}.hero-content .actions .btn{width:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.service-card:hover{transform:none}}

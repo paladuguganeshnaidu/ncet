@@ -1,0 +1,147 @@
+name: NCET VerifyFlow CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13'
+      - name: Install OCR runtime used in production Docker image
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends shellcheck tesseract-ocr tesseract-ocr-eng
+      - name: Check deployment script syntax
+        run: for script in deploy/ubuntu-one-command.sh deploy/ubuntu-install.sh deploy/vps-update.sh deploy/vps-public-smoke.sh; do bash -n "$script"; done
+      - name: Lint deployment shell scripts
+        run: shellcheck deploy/ubuntu-one-command.sh deploy/ubuntu-install.sh deploy/vps-update.sh deploy/vps-public-smoke.sh
+      - name: Validate production Compose configuration and private scanner service
+        env:
+          POSTGRES_PASSWORD: ci-only-placeholder-password
+          PUBLIC_HOST: verify.example.edu
+          PUBLIC_ORIGIN: https://verify.example.edu
+          SETTINGS_ENCRYPTION_KEY: YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=
+          NCET_BOOTSTRAP_ADMIN_PASSWORD: ci-only-placeholder-password
+          SCAN_MODE: clamav
+          CLAMAV_HOST: clamav
+          CLAMAV_PORT: "3310"
+        run: |
+          docker compose config --quiet
+          docker compose config --services | grep -Fxq clamav
+          docker compose config --format json > "$RUNNER_TEMP/compose.json"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config = json.loads(Path(os.environ['RUNNER_TEMP'], 'compose.json').read_text())
+          required = {'DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL', 'OPENROUTER_API_KEY', 'OPENROUTER_DEEPSEEK_MODEL'}
+          for service in ('web', 'worker'):
+              actual = set(config['services'][service].get('environment', {}))
+              missing = required - actual
+              if missing:
+                  raise SystemExit(f'{service} is missing optional AI environment mappings: {sorted(missing)}')
+          PY
+      - run: python -m pip install -r requirements.txt pytest httpx
+      - run: python -m compileall -q app
+      - run: python -m pytest -q tests/test_*.py
+      - run: alembic upgrade head
+      - name: Check migration drift
+        run: alembic check
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - run: node --check static/app.js && node --check static/tasks.js && node --check static/plot.js
+      - run: node --check static/notifications.js && node --check static/bca-oversight.js && node --check static/community.js && node --check static/student-portal.js && node --check static/bca-management.js && node --check static/public-home.js && node --check static/student-directory.js && node --check static/ncet-loading.js
+      - run: node --check static/institutional-ui.js
+      - run: node --check static/hod-dashboard.js && node --check static/complaints-dashboard.js && node --check static/bca-management.js
+
+  browser:
+    name: Chromium multi-role UI smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13'
+      - name: Install Playwright
+        run: python -m pip install playwright
+      - name: Install Chromium and runtime libraries
+        run: python -m playwright install --with-deps chromium
+      - name: Test Admin, HOD, Staff, Principal, IQAC and mobile UI
+        run: python tests/browser_ui.py && python tests/browser_bca.py && python tests/browser_student_removal.py && python tests/browser_tasks.py && python tests/browser_complaints.py && python tests/browser_experience.py && python tests/browser_notifications.py
+
+      - name: Install application runtime for viewport regression
+        run: python -m pip install -r requirements.txt
+      - name: Audit published student resume on mobile and desktop
+        run: python tests/browser_student_resume.py
+      - name: Audit public pages at 320px through 1440px
+        run: |
+          export DATABASE_URL="sqlite:///$RUNNER_TEMP/ncet-responsive.sqlite3"
+          export APP_ENV=development
+          export PUBLIC_ORIGIN="http://127.0.0.1:8878"
+          alembic upgrade head
+          uvicorn app.main:app --host 127.0.0.1 --port 8878 > /tmp/ncet-responsive-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 4
+          NCET_BASE_URL=http://127.0.0.1:8878 python tests/browser_responsive_audit.py
+          NCET_BASE_URL=http://127.0.0.1:8878 python tests/browser_plot.py
+          NCET_BASE_URL=http://127.0.0.1:8878 python tests/browser_not_found.py
+          NCET_BASE_URL=http://127.0.0.1:8878 python tests/browser_institutional_motion.py
+
+  security:
+    name: Required Python SAST and dependency audit
+    uses: ./.github/workflows/security.yml
+
+  deploy-vps:
+    name: Deploy verified main to Ubuntu VPS
+    runs-on: ubuntu-latest
+    needs: [test, browser, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.VPS_DEPLOY_ENABLED == 'true'
+    environment: production
+    concurrency:
+      group: ncet-vps-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Configure pinned SSH access
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/id_ed25519" >/dev/null
+      - name: Update the server after CI passed
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST" && test -n "$VPS_USER" && test -n "$VPS_DEPLOY_PATH"
+          DEPLOY_PATH_B64="$(printf '%s' "$VPS_DEPLOY_PATH" | base64 -w0)"
+          ssh -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$VPS_USER@$VPS_HOST" "DEPLOY_PATH_B64=$DEPLOY_PATH_B64 bash -s" \
+            < deploy/vps-update.sh
+
+      - name: Verify public VPS routes after deployment
+        env:
+          VPS_PUBLIC_ORIGIN: ${{ secrets.VPS_PUBLIC_ORIGIN }}
+        run: bash deploy/vps-public-smoke.sh

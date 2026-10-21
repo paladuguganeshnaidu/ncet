@@ -1,0 +1,30 @@
+# NCET VerifyFlow — single Render web service, EXISTING PostgreSQL database.
+# Secrets must be configured privately in Render, never committed.
+# Free plan is a pilot, NOT an always-on institutional production plan.
+services:
+  - type: web
+    name: ncet-verifyflow
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_RUN_WORKER_IN_WEB
+        value: "true"
+      - key: STORAGE_BACKEND
+        value: database
+      - key: DATABASE_URL
+        sync: false
+      - key: SETTINGS_ENCRYPTION_KEY
+        sync: false
+      - key: NCET_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: SCAN_MODE
+        value: "off"

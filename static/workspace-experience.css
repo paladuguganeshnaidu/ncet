@@ -1,0 +1,14 @@
+/* NCET authenticated-workspace visual polish; no permissions or data behavior changed. */
+:root{--workspace-focus:#b05c1b;--workspace-depth:0 5px 22px #11294d0b}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--workspace-focus)!important;outline-offset:3px!important}
+button:not(:disabled),a{transition:box-shadow .17s ease,background-color .17s ease,border-color .17s ease}
+.panel,.metric,.dashboard-card,.stat-card{box-shadow:var(--workspace-depth)}
+.panel{border-radius:12px}
+input,textarea,select{min-height:40px}
+textarea{line-height:1.6}
+button:disabled{opacity:.65;cursor:not-allowed}
+button[aria-busy="true"]{cursor:progress}
+button[aria-busy="true"]::before{content:"";display:inline-block;width:13px;height:13px;margin-right:8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:middle;animation:workspace-spin .72s linear infinite}
+@keyframes workspace-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+@media(max-width:760px){.panel{border-radius:10px}main{max-width:100%;overflow-wrap:anywhere}}

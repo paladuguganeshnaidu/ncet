@@ -1,0 +1,150 @@
+/* A collegiate, résumé-inspired student profile rather than a dashboard. */
+body.ncet-profile-page{margin:0;background:#F4F6F9;color:#172033;font-family:Inter,"Segoe UI",system-ui,sans-serif;line-height:1.56}
+.ncet-profile-page *{box-sizing:border-box}
+.ncet-profile-page .resume-site-header{background:white;border-bottom:3px solid #F6872A}
+.ncet-profile-page .resume-site-inner{max-width:1070px;margin:auto;padding:12px 22px;display:flex;gap:24px;justify-content:space-between;align-items:center}
+.resume-college{display:flex;gap:10px;align-items:center;min-width:0;text-decoration:none;color:#0E2455}
+.resume-college img{width:160px;max-height:67px;height:auto;object-fit:contain;flex-shrink:0}
+.resume-college span{font-size:15px;font-weight:800;line-height:1.15;white-space:nowrap}
+.resume-college span small{display:block;color:#64748B;font-weight:500;font-size:11px;margin-top:4px}
+.resume-site-header nav{display:flex;align-items:center;gap:17px;flex-wrap:wrap}
+.resume-site-header nav a{color:#0E2455;font-size:12px;font-weight:700;text-decoration:none}
+.resume-site-header nav a:hover{text-decoration:underline;text-decoration-color:#F6872A;text-underline-offset:5px}
+.resume-group-logo{width:78px;height:68px;object-fit:contain;flex:0 0 78px}
+.resume-container{max-width:1010px;margin:25px auto 46px;padding:0 17px}
+.resume-paper{background:white;box-shadow:0 14px 44px #0E245510;border:1px solid #E0E5ED;border-radius:9px;overflow:hidden}
+.resume-accreditation{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 37px 0;
+ color:#0E2455;font-size:10px;letter-spacing:.16em;font-weight:850}
+.resume-accreditation img{height:57px;width:57px;object-fit:contain}
+.resume-heading{display:flex;gap:23px;align-items:center;padding:4px 37px 25px}
+.resume-avatar,.resume-initials{width:110px;height:110px;flex:0 0 110px;border-radius:12px;object-fit:cover;background:#EDF1F7}
+.resume-avatar{border:3px solid #F4F6F9}
+.resume-initials{display:grid;place-items:center;color:#0E2455;font-size:33px;font-weight:800;border:1px solid #dce5f0}
+.resume-overline{font-weight:800;color:#B95E10;letter-spacing:.11em;text-transform:uppercase;font-size:10px;margin:0 0 5px}
+.resume-heading h1{font-size:clamp(25px,3.4vw,39px);letter-spacing:-.04em;line-height:1.1;color:#0E2455;margin:0 0 8px}
+.resume-subtitle{color:#293954;margin:0 0 7px;font-size:14px;font-weight:700}
+.resume-subtitle span{color:#F6872A;padding:0 4px}
+.resume-usn{font-size:12px;color:#64748B;margin:0}
+.resume-usn strong{color:#0E2455;letter-spacing:.09em;margin-right:7px}
+.resume-anchors{display:flex;flex-wrap:wrap;gap:2px 17px;align-items:center;padding:13px 37px;
+ background:#0E2455;border-top:4px solid #F6872A}
+.resume-anchors a{color:white;text-decoration:none;font-weight:650;font-size:12px;padding:5px 0}
+.resume-anchors a:hover,.resume-anchors a:focus-visible{color:#FFD5B0}
+.resume-section{margin:0 37px;padding:23px 0 24px;border-bottom:1px solid #E1E7F0;scroll-margin-top:15px}
+.resume-section:last-of-type{border-bottom:0}
+.resume-section h2{color:#0E2455;letter-spacing:.08em;text-transform:uppercase;font-size:15px;font-weight:850;margin:0 0 14px;
+ display:flex;align-items:center;gap:11px}
+.resume-section h2::before{content:"";height:18px;width:4px;background:#F6872A;border-radius:3px}
+.resume-about{font-size:14px;color:#334155;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere;margin:0}
+.resume-empty{font-size:13px;color:#64748B;margin:0;font-style:italic}
+.resume-chips{list-style:none;padding:0;margin:0;display:flex;gap:8px;flex-wrap:wrap}
+.resume-chips li{border:1px solid #CED9E9;background:#F4F6F9;color:#0E2455;padding:6px 12px;font-size:12px;font-weight:650;border-radius:6px}
+.resume-interests li{border-color:#F3DAC8;background:#FFF6EF}
+.resume-project{padding:0 0 18px;margin:0 0 18px;border-bottom:1px dashed #D8E0ED}
+.resume-project:last-child{padding:0;margin:0;border-bottom:0}
+.resume-project h3{font-size:15px;font-weight:800;color:#172033;margin:0 0 6px}
+.resume-project p{font-size:13px;color:#4E5C71;line-height:1.7;margin:0 0 9px;white-space:pre-line}
+.resume-project-tags{margin:6px 0}
+.resume-project-tags li{padding:3px 9px;font-size:11px;background:#fff}
+.resume-links{display:flex;flex-wrap:wrap;gap:18px;margin-top:10px}
+.resume-text-link{font-size:12px;color:#0E2455;font-weight:800;text-underline-offset:3px}
+.resume-text-link:hover{color:#B85F16}
+.resume-certificates{list-style:none;margin:0;padding:0}
+.resume-certificate{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #EEF1F5}
+.resume-certificate:last-child{border-bottom:0}
+.resume-certificate strong{color:#172033;font-size:13px}
+.resume-certificate p{font-size:12px;color:#64748B;margin:2px 0}
+.resume-socials{display:flex;flex-wrap:wrap;gap:9px;list-style:none;margin:0;padding:0}
+.resume-social{display:inline-flex;text-decoration:none;align-items:center;background:#F4F6F9;border:1px solid #DCE5F0;color:#0E2455;
+ border-radius:8px;padding:9px 15px;font-size:12px;font-weight:750}
+.resume-social:hover{border-color:#F6872A}
+.resume-disclaimer{padding:20px 37px 27px;background:#FAFBFD;border-top:1px solid #E1E7F0;display:flex;gap:17px;justify-content:space-between;align-items:center}
+.resume-disclaimer p{font-size:11px;color:#64748B;max-width:570px;margin:0}
+.resume-disclaimer a{font-size:12px;text-decoration:none;font-weight:800;white-space:nowrap;color:#0E2455}
+.resume-footer{display:flex;align-items:center;justify-content:center;gap:13px 24px;flex-wrap:wrap;background:#0E2455;color:white;padding:20px;
+ font-size:12px}
+.resume-footer img{height:49px;width:54px;object-fit:contain;background:white;border-radius:7px;padding:3px}
+.resume-footer a{color:white;font-weight:750}
+@media(max-width:780px){.resume-site-header nav{display:none}.resume-college img{width:132px}.resume-college span{font-size:13px}}
+@media(max-width:570px){
+ .resume-container{padding:0 10px;margin:14px auto 30px}
+ .resume-site-inner{padding:11px}
+ .resume-college img{width:102px;max-height:54px}
+ .resume-college span small{display:none}
+ .resume-college span{white-space:normal}
+ .resume-group-logo{width:53px;height:48px;flex-basis:53px}
+ .resume-accreditation{padding:10px 17px 0}
+ .resume-accreditation img{width:45px;height:45px}
+ .resume-heading{padding:10px 17px 21px;gap:13px;align-items:flex-start}
+ .resume-avatar,.resume-initials{width:70px;height:70px;flex-basis:70px;border-radius:8px;font-size:23px}
+ .resume-heading h1{font-size:clamp(21px,6vw,29px)}
+ .resume-overline{font-size:9px}
+ .resume-subtitle{font-size:12px}
+ .resume-anchors{padding:10px 16px;gap:2px 13px}
+ .resume-anchors a{font-size:11px}
+ .resume-section{margin:0 17px;padding:20px 0}
+ .resume-disclaimer{padding:18px 17px;align-items:flex-start;flex-direction:column}
+ .resume-certificate{align-items:flex-start;flex-direction:column;gap:4px}
+}
+@media print{
+ body.ncet-profile-page{background:white}
+ .resume-site-header nav,.resume-anchors,.resume-footer,.resume-disclaimer a{display:none!important}
+ .resume-container{margin:0;padding:0;max-width:none}
+ .resume-paper{border:0;box-shadow:none}
+ .resume-section{break-inside:avoid}
+}
+
+
+/* Tabs override: no-JS keeps every section accessible; JS selects one panel. */
+.ncet-profile-page{min-height:100dvh}
+.ncet-profile-page .skip-link{position:absolute;left:12px;top:-80px;background:#fff;color:#0E2455;padding:10px 15px;border:2px solid #F6872A;z-index:100;border-radius:9px}
+.ncet-profile-page .skip-link:focus{top:12px}
+.ncet-profile-page :is(a,button):focus-visible{outline:3px solid #F6872A;outline-offset:3px}
+.ncet-profile-page .resume-site-header nav a{transition:color .18s ease,text-decoration-color .18s ease}
+.resume-anchors{position:relative;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:#ffffff55 transparent}
+.resume-anchors a{flex:0 0 auto;display:inline-flex;align-items:center;min-height:42px;border-radius:9px;padding:10px 17px;
+ color:#e0e9f8;position:relative;white-space:nowrap;font-weight:700;
+ transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
+.resume-anchors a:hover{background:#ffffff16;color:#fff}
+.resume-anchors a[aria-selected="true"]{color:#0E2455;background:#fff;box-shadow:0 2px 13px #08173335}
+.resume-anchors a[aria-selected="true"]::after{content:"";position:absolute;bottom:3px;left:18%;right:18%;height:3px;border-radius:9px;background:#F6872A}
+.resume-anchors a[aria-selected="true"]:hover{color:#0E2455}
+.resume-tab-stage{min-width:0;overflow:visible}
+.resume-tab-stage.tabs-enhanced{min-height:210px}
+.resume-tab-stage.tab-animate{overflow:hidden;transition:height .24s cubic-bezier(.22,1,.36,1)}
+.resume-tab-stage.tabs-enhanced .resume-section[hidden]{display:none!important}
+.resume-tab-stage.tabs-enhanced .resume-section{border:0;padding-top:28px;padding-bottom:32px;min-height:180px}
+.resume-tab-stage .resume-section.tab-appearing{animation:resume-panel-enter .24s cubic-bezier(.22,1,.36,1) both}
+@keyframes resume-panel-enter{from{opacity:.15;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.resume-tab-stage .resume-section h2{font-size:17px}
+.resume-tab-stage .resume-section p{max-width:850px}
+.resume-tab-stage .resume-section .resume-project h3{font-size:15px}
+.resume-tab-stage .resume-section .resume-empty{padding:16px;border:1px dashed #DCE5F0;background:#FAFBFD;border-radius:9px}
+.resume-disclaimer{margin-top:0}
+@media(max-width:570px){
+ .resume-anchors{gap:5px;flex-wrap:nowrap;padding:9px 12px}
+ .resume-anchors a{padding:10px 12px;min-height:44px;font-size:12px}
+ .resume-tab-stage.tabs-enhanced .resume-section{padding-top:22px;padding-bottom:25px;min-height:180px}
+ .resume-site-header nav{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .resume-tab-stage .resume-section.tab-appearing{animation:none!important}
+ .resume-tab-stage.tab-animate{transition:none!important}
+ .resume-anchors a,.resume-site-header nav a{transition:none!important}
+}
+@media print{
+ .resume-anchors{display:none!important}
+ .resume-tab-stage.tabs-enhanced .resume-section[hidden]{display:block!important}
+ .resume-tab-stage.tabs-enhanced .resume-section{min-height:0!important;padding-block:17px}
+ .resume-tab-stage{height:auto!important;overflow:visible!important}
+}
+
+/* Opt-in on BOTH ends for a subtle same-origin navigation transition. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:.14s ease-out both resume-page-out}
+::view-transition-new(root){animation:.2s ease-out both resume-page-in}
+@keyframes resume-page-out{to{opacity:.96}}
+@keyframes resume-page-in{from{opacity:.93;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important}
+}

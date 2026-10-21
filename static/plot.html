@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e2455">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="description" content="A browser-local NCET VerifyFlow performance and optimization report.">
+<title>Performance &amp; optimization | NCET VerifyFlow</title>
+<link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/plot.css">
+<script src="/static/plot.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="NCET VerifyFlow home">
+    <img src="/static/ncet-brand.svg" alt="NCET emblem">
+    <span><strong>NCET VerifyFlow</strong><small>Performance &amp; optimization</small></span>
+  </a>
+  <a class="home-link" href="/">Back to home</a>
+</header>
+<main id="main">
+  <section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">LIVE BROWSER CHECK · THIS VISIT ONLY</p>
+    <h1 id="page-title">Performance, made visible.</h1>
+    <p class="lead">A quick report from this browser, with practical steps for keeping the NCET portal fast and steady.</p>
+    <div class="privacy-note"><span aria-hidden="true">●</span><p><strong>Private by design.</strong> These measurements stay in this browser session. The page does not send or store visitor metrics.</p></div>
+  </section>
+
+  <section class="health panel" aria-labelledby="health-title">
+    <div>
+      <p class="eyebrow">SERVICE REACHABILITY</p>
+      <h2 id="health-title">Application health</h2>
+      <p id="health-detail" class="muted">Checking the read-only health endpoint…</p>
+    </div>
+    <div class="health-result"><span id="health-dot" class="dot" aria-hidden="true"></span><strong id="health-status" role="status" aria-live="polite">Checking</strong><span id="health-latency" class="latency">—</span></div>
+  </section>
+
+  <section class="section" aria-labelledby="vitals-title">
+    <div class="section-heading"><div><p class="eyebrow">CURRENT PAGE LOAD</p><h2 id="vitals-title">Browser experience</h2></div><span id="sample-time" class="sample-time">Reading measurements…</span></div>
+    <div class="metrics">
+      <article class="metric panel" data-metric="lcp"><span>Largest Contentful Paint</span><strong id="metric-lcp">—</strong><small id="state-lcp">Good target ≤2.5 s · waiting for page paint</small><em>LCP</em></article>
+      <article class="metric panel" data-metric="inp"><span>Interaction to Next Paint</span><strong id="metric-inp">—</strong><small id="state-inp">Good target ≤200 ms · interact to measure</small><em>INP</em></article>
+      <article class="metric panel" data-metric="cls"><span>Cumulative Layout Shift</span><strong id="metric-cls">—</strong><small id="state-cls">Good target ≤0.1 · watching page stability</small><em>CLS</em></article>
+      <article class="metric panel" data-metric="ttfb"><span>Time to First Byte</span><strong id="metric-ttfb">—</strong><small id="state-ttfb">One response · 800 ms target</small><em>TTFB</em></article>
+    </div>
+    <p class="field-note">This is a single local sample, not a field percentile or a site-wide score. INP appears after you interact. Field Core Web Vitals are assessed at the 75th percentile across real visits and device classes. <a href="https://web.dev/articles/vitals" target="_blank" rel="noopener noreferrer">Read the Web Vitals thresholds and guidance</a>.</p>
+  </section>
+
+  <section class="section panel resources" aria-labelledby="resource-title">
+    <div class="section-heading"><div><p class="eyebrow">THIS PAGE ONLY</p><h2 id="resource-title">Network transfer</h2></div><span id="resource-total" class="total-size">—</span></div>
+    <p class="muted">Transferred bytes reported by the browser for this page. Cached resources correctly count as 0 network bytes; cross-origin resources may be hidden by browser privacy rules.</p>
+    <div id="resource-bars" class="resource-bars" aria-live="polite"></div>
+  </section>
+
+  <section class="section" aria-labelledby="optimize-title">
+    <div class="section-heading"><div><p class="eyebrow">WORKING PLAN</p><h2 id="optimize-title">Keep improving</h2></div></div>
+    <div class="optimization-grid">
+      <article class="panel optimization-card"><span class="step">01</span><h3>Keep page payloads focused</h3><p>Load only the styles and scripts a page needs. Compress and version static assets so browsers can cache stable files safely.</p></article>
+      <article class="panel optimization-card"><span class="step">02</span><h3>Protect the database path</h3><p>Paginate lists, aggregate counts in SQL and defer private or large file fields until a user opens a record.</p></article>
+      <article class="panel optimization-card"><span class="step">03</span><h3>Measure real workflows</h3><p>Check public and signed-in journeys on phones and desktops. Track live p95 latency and load under representative traffic before changing capacity.</p></article>
+    </div>
+  </section>
+
+  <section class="section panel history" aria-labelledby="history-title">
+    <div class="section-heading"><div><p class="eyebrow">DOCUMENTED SOURCE BASELINE</p><h2 id="history-title">A previous optimization pass</h2></div><span class="sample-time">17 Oct 2026 · local / synthetic</span></div>
+    <p class="muted">These figures come from the repository’s profile and directory audit. They are historical source/test measurements, not current Render response times.</p>
+    <div class="history-chart" role="img" aria-label="Historical critical CSS and JavaScript payload reduced from 38,679 to 14,091 bytes; requests reduced from 6 to 2.">
+      <div class="history-row"><span>Critical CSS + JS</span><div class="history-bars"><div><small>Before · 38,679 B</small><span class="bar before" style="--bar:100%"></span></div><div><small>After · 14,091 B</small><span class="bar after" style="--bar:36.4%"></span></div></div><strong>−63.6%</strong></div>
+      <div class="history-row"><span>Critical requests</span><div class="history-bars"><div><small>Before · 6</small><span class="bar before" style="--bar:100%"></span></div><div><small>After · 2</small><span class="bar after" style="--bar:33.3%"></span></div></div><strong>−66.7%</strong></div>
+      <div class="history-row"><span>Directory photo bytes selected</span><div class="history-bars"><div><small>After · 0</small><span class="bar after zero"></span></div></div><strong>0 B</strong></div>
+    </div>
+    <p class="source-note">Source: <code>docs/PERFORMANCE_AUDIT_2026-10-17.md</code>. The audit calls out that production Core Web Vitals and load tests remain to be measured.</p>
+  </section>
+
+  <footer><span>NCET VerifyFlow · performance report</span><button id="check-health" class="button" type="button">Check service again</button></footer>
+</main>
+</body>
+</html>
