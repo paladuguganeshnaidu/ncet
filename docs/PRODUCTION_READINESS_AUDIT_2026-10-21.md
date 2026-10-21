@@ -72,9 +72,10 @@ The custom domain `ncet.paladuguganeshnaidu.tech` still fails TLS negotiation on
 
 ### Current product update (2026-10-21)
 
-- Added an institution-wide principal oversight summary with per-department request and project counts. Request text and student identities remain in the department HOD complaint desk. This code has not been tested yet, per the current work instruction.
+- Added an institution-wide principal oversight summary with per-department request and project counts. Regression coverage confirms the API returns aggregate counts only and omits request bodies, references and student identities.
 - HOD navigation now exposes the department-scoped project board for every assigned branch. Principal navigation labels the summary as institution-wide oversight.
-- Commit `dab9332` is on GitHub `main`. Render remains connected to `hackerncet/tuxnestsite`, so this update is not deployed. No live records were changed and no AI calls were made.
+- Local non-AI integration suite: `137 passed, 1 warning` (AI workflow and discussion digest test modules excluded). Focused branch/dashboard suites: `17 passed, 1 warning`. Bandit reported no issues at configured thresholds; local pip-audit found no known dependency vulnerabilities; Python compilation passed.
+- Commits `dab9332`, `2d4ce8c` and `d27ca77` are on GitHub `main`. Render remains connected to `hackerncet/tuxnestsite`, so this update is not deployed. No live records were changed and no AI calls were made.
 
 ## Deployment gate order
 

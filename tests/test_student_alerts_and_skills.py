@@ -107,6 +107,47 @@ def test_complaint_notification_principal_summary_and_project_alert(client,login
         assert anonymous.get('/bca/oversight').status_code==401
 
 
+def test_principal_oversight_aggregates_every_department_without_private_details(client,login):
+    from app.community import CollaborationPost
+    from app.student_models import StudentCase
+    from app.security import hash_password
+    with DBSession() as db:
+        cse=User(username='cse-student',display_name='CSE Private Name',role='student',
+                 department='Computer Science & Engineering',password_hash=hash_password('SecurePassword-123!'),active=True)
+        mechanical=User(username='me-student',display_name='ME Private Name',role='student',
+                        department='Mechanical Engineering',password_hash=hash_password('SecurePassword-123!'),active=True)
+        db.add_all([cse,mechanical]);db.flush()
+        db.add_all([
+            StudentCase(reference='NCET-REQ-CSE-001',student_id=cse.id,department='Computer Science & Engineering',
+                        category='academics',subject='Private CSE subject',description='Private CSE request body.',status='submitted'),
+            StudentCase(reference='NCET-REQ-ME-001',student_id=mechanical.id,department='Mechanical Engineering',
+                        category='facilities',subject='Private ME subject',description='Private ME request body.',status='in_review'),
+            CollaborationPost(student_id=cse.id,department='Computer Science & Engineering',title='CSE collaboration project',
+                              description='Private project details for the CSE branch.',help_needed='Find a project contributor',state='open'),
+            CollaborationPost(student_id=mechanical.id,department='Mechanical Engineering',title='ME collaboration project',
+                              description='Private project details for the ME branch.',help_needed='Find a project contributor',state='closed'),
+        ])
+        db.commit()
+
+    with TestClient(app) as principal:
+        login(principal,'principal')
+        response=principal.get('/api/bca/oversight')
+        assert response.status_code==200,response.text
+        data=response.json()
+        assert data['cases_total']==2
+        assert data['projects_total']==2
+        by_department={row['department']:row for row in data['departments']}
+        assert by_department['Computer Science & Engineering']['cases_total']==1
+        assert by_department['Computer Science & Engineering']['projects_open']==1
+        assert by_department['Mechanical Engineering']['cases_by_status']=={'in_review':1}
+        assert by_department['Mechanical Engineering']['projects_open']==0
+        rendered=str(data)
+        for private_value in ('NCET-REQ-CSE-001','NCET-REQ-ME-001','Private CSE subject',
+                              'Private ME subject','Private CSE request body','Private project details'):
+            assert private_value not in rendered
+        assert 'cases' not in data
+
+
 def test_missing_bca_hod_routes_setup_alert_to_admin_not_private_complaint(client,login):
     # Preserve department boundaries; escalate to admin rather than exposing
     # the student's confidential request to an unrelated department's HOD.
@@ -154,7 +195,7 @@ def test_bca_oversight_requires_correct_department_and_has_safe_denial_page(clie
     make_bca_hod()
     allowed=client.get('/bca/oversight')
     assert allowed.status_code==200,allowed.text
-    assert 'BCA complaints and projects' in allowed.text
+    assert 'Institutional oversight' in allowed.text
     assert client.get('/api/bca/oversight').status_code==200
 
     # The Principal receives aggregate statistics, not student case identities.
