@@ -86,6 +86,7 @@ The custom domain `ncet.paladuguganeshnaidu.tech` still fails TLS negotiation on
 - Read-only logins for the supplied `admin`, `hod` and `testap` accounts all succeeded on the Render hostname. The deployed HOD received 403 from `/complaints` and `/bca/manage`; the staff account also received 403 from those HOD/admin surfaces. Admin and HOD task dashboards returned 200. This confirms the known branch-workspace gap is present in the deployed build.
 - A redacted admin roster/catalog comparison found 6 student rows, all labeled Computer Science & Engineering, with 0 missing/unknown or inconsistent branch labels. Only 1 of the 6 had a public profile available for a second-view comparison; 5 profiles were unavailable, so this is not a complete public-profile accuracy audit.
 - Login checks created no lasting records and did not invoke AI. Each session was logged out after the read-only route checks.
+- GitHub Actions for commit `d8dfa44` completed with the Python test job, Chromium multi-role/viewport job, and Security Audit all successful. The Ubuntu VPS deploy job was skipped because repository variable `VPS_DEPLOY_ENABLED` is not enabled. [CI run](https://github.com/paladuguganeshnaidu/ncet/actions/runs/39548637666) · [Security Audit](https://github.com/paladuguganeshnaidu/ncet/actions/runs/39548637640).
 
 ## Deployment gate order
 
