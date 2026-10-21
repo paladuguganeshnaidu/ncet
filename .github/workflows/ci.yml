@@ -77,7 +77,7 @@ jobs:
       - name: Install Chromium and runtime libraries
         run: python -m playwright install --with-deps chromium
       - name: Test Admin, HOD, Staff, Principal, IQAC and mobile UI
-        run: python tests/browser_ui.py && python tests/browser_bca.py && python tests/browser_student_removal.py && python tests/browser_tasks.py && python tests/browser_complaints.py && python tests/browser_experience.py && python tests/browser_notifications.py
+        run: python tests/browser_ui.py && python tests/browser_bca.py && python tests/browser_student_removal.py && python tests/browser_tasks.py && python tests/browser_complaints.py && python tests/browser_oversight.py && python tests/browser_experience.py && python tests/browser_notifications.py
 
       - name: Install application runtime for viewport regression
         run: python -m pip install -r requirements.txt

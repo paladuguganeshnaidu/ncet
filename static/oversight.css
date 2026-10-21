@@ -1,3 +1,4 @@
+.table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
 .oversight-table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px}
 .oversight-table th,.oversight-table td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
 .oversight-table thead th{background:#f4f6f9;color:var(--navy);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
