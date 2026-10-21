@@ -7,6 +7,7 @@ Features marked implemented are present in this worktree. The local non-AI integ
 ## Current capabilities found in the code
 
 - **Implemented:** HOD approval and correction decisions use an accessible in-page review form with a recorded note, instead of browser popups. Workflow messages describe optional automated checks and the human fallback accurately when AI is not configured.
+- **Implemented and API/browser-tested:** HODs can assign a mixed PDF batch with one shared checklist or a separate validated checklist per file. The API requires an exact checklist for each selected PDF, caps rule counts, and saves each approved checklist with its task.
 - Department HOD task queue with PDF batches, assignment, deadlines, holds, notifications, staff workload, activity history, approval trends, and human decisions.
 - Reusable HOD checklists stored per department, with immutable versions, version selection, archive controls, and task-level rule snapshots. This works without an AI key.
 - Deterministic document inspection plus an asynchronous verification worker. When no AI provider is available, submitted work goes to human review.
@@ -45,7 +46,7 @@ Acceptance: a HOD can take a reference PDF from upload through assignment and ma
 
 ### HOD task dashboard
 
-- Keep the existing task dashboard as the operational queue. It has one-click status views, staff/deadline/date filters, search, sorting and a filtered CSV export. Add saved filters and bulk assignment with per-file checklist review.
+- Keep the existing task dashboard as the operational queue. It has one-click status views, staff/deadline/date filters, search, sorting and a filtered CSV export. Add saved filters and workload-aware assignment suggestions that HODs confirm.
 - Show workload distribution and aging from real task timestamps, with clear empty/loading/error states and a link to each underlying record.
 - Add branch-level comparison only for institutional roles; HOD views remain restricted to their own department.
 
@@ -88,7 +89,7 @@ Acceptance: a student can sign in, understand the latest status, reply, receive 
 Ship in this order after the repository and production service are connected to the reviewed branch:
 
 1. **Production safety:** resolve the database expiry and exposure, configure malware scanning and `/healthz`, repair the custom-domain certificate, and prove backup restore. These controls come before widening document uploads.
-2. **HOD document automation:** bulk allocate with a per-file checklist preview, workload-aware staff suggestions that HODs confirm, visible retry/failure states for background jobs, and configurable deadline escalation. Keep final decisions human and every change auditable.
+2. **HOD document automation:** workload-aware staff suggestions that HODs confirm, visible retry/failure states for background jobs, and configurable deadline escalation. Keep final decisions human and every change auditable.
 3. **Student request desk:** add response target/aging indicators and accessible mobile form progress; keep requests, document tasks, and project activity as separate records and views.
 4. **Operations and scale:** server-page student rosters, add queue/storage/database health and real request latency, define retention/export controls, and exercise restore and migration rollback.
 5. **Access hardening:** add privileged-user MFA, review institution-wide project access, and agree aggregate-only leadership reporting before changing what those roles can see.

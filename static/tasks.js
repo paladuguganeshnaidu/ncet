@@ -20,8 +20,8 @@ function setMinDeadline(){
 const stateLabel=s=>({unassigned:'Unassigned',assigned:'Assigned',on_hold:'On hold',verifying:'Reviewing',awaiting_hod:'Awaiting HOD',manual_review:'Human review',correction_required:'Corrections needed',approved:'Approved'}[s]||s);
 let drafts=new Map();
 const RULE_TYPES=['required_heading','required_phrase','max_pages','min_pages','date_present','signature','formatting','grammar','semantic','other'];
-function addManualRule(seed={}){
-  const host=$('#manual-rules'),row=document.createElement('fieldset');row.className='manual-rule';
+function addManualRule(seed={},host=$('#manual-rules')){
+  const row=document.createElement('fieldset');row.className='manual-rule';
   const title=document.createElement('legend');title.textContent='Checklist item';row.append(title);
   const titleLabel=document.createElement('label');titleLabel.textContent='Requirement';const titleInput=document.createElement('input');titleInput.type='text';titleInput.maxLength=110;titleInput.required=$('#rules-mode').value!=='ai';titleInput.placeholder='e.g. Include the department approval heading';titleInput.value=seed.title||'';titleLabel.append(titleInput);row.append(titleLabel);
   const typeLabel=document.createElement('label');typeLabel.textContent='Check type';const type=document.createElement('select');
@@ -32,15 +32,52 @@ function addManualRule(seed={}){
   const requiredLabel=document.createElement('label');requiredLabel.className='rule-required';const required=document.createElement('input');required.type='checkbox';required.checked=seed.required!==false;requiredLabel.append(required,document.createTextNode(' Required for acceptance'));row.append(requiredLabel);
   const remove=document.createElement('button');remove.type='button';remove.className='btn secondary smallbtn';remove.textContent='Remove item';remove.addEventListener('click',()=>{if(host.children.length>1)row.remove();else{titleInput.value='';value.value='';instructions.value='';type.value='required_phrase';required.checked=true;titleInput.focus()}});row.append(remove);host.append(row);
 }
-function manualRules(){
- const rows=[...$('#manual-rules').querySelectorAll('.manual-rule')];
+function ruleDrafts(host){
+ const rows=[...host.querySelectorAll('.manual-rule')];
  return rows.map((row,index)=>{const fields=row.querySelectorAll('input,select'),title=fields[0].value.trim(),type=fields[1].value,value=fields[2].value.trim(),instructions=fields[3].value.trim(),required=fields[4].checked;
-  if(title.length<3)throw Error(`Checklist item ${index+1}: enter a requirement with at least 3 characters.`);
   const id=(title.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'rule')+'_'+(index+1);
   return {id,title,type,required,value,instructions};
  });
 }
-function setRulesMode(){const ai=$('#rules-mode').value==='ai';$('#ai-rules').hidden=!ai;$('#manual-rules').hidden=ai;$('#manual-actions').hidden=ai;$('#manual-help').hidden=ai;$('#checklist-template-tools').hidden=ai;$('#review-confirm').required=ai;$('#manual-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=!ai});if(ai)renderDrafts();}
+function manualRules(host=$('#manual-rules')){
+ return ruleDrafts(host).map((rule,index)=>{const {title}=rule;
+  if(title.length<3)throw Error(`Checklist item ${index+1}: enter a requirement with at least 3 characters.`);
+  return rule;
+ });
+}
+let perFileRuleCache=new Map();
+function capturePerFileRules(){
+ $('#per-file-rules').querySelectorAll('.per-file-checklist').forEach(card=>perFileRuleCache.set(Number(card.dataset.taskId),ruleDrafts(card.querySelector('.task-rules'))));
+}
+function renderPerFileChecklists(){
+ capturePerFileRules();const host=$('#per-file-rules');host.replaceChildren();
+ const defaults=ruleDrafts($('#manual-rules'));
+ for(const id of selected){
+  const task=tasks.find(item=>item.id===id);if(!task)continue;
+  const card=document.createElement('section');card.className='per-file-checklist';card.dataset.taskId=String(id);
+  const heading=document.createElement('h4');heading.textContent=task.file;card.append(heading);
+  const rules=document.createElement('div');rules.className='task-rules';rules.setAttribute('aria-label',`Checklist for ${task.file}`);
+  const seeds=perFileRuleCache.has(id)?perFileRuleCache.get(id):defaults;
+  if(seeds.length)seeds.forEach(seed=>addManualRule(seed,rules));else addManualRule({},rules);
+  card.append(rules);
+  const add=document.createElement('button');add.type='button';add.className='btn secondary';add.dataset.addPerFileRule=String(id);add.textContent='Add requirement';card.append(add);host.append(card);
+ }
+}
+function updateAllocationChecklistUI(){
+ const ai=$('#rules-mode').value==='ai';
+ const toggleVisible=!ai&&selected.size>1;
+ $('#per-file-toggle-label').hidden=!toggleVisible;
+ if(!toggleVisible&&selected.size<2)$('#per-file-toggle').checked=false;
+ const usePerFile=!ai&&toggleVisible&&$('#per-file-toggle').checked;
+ $('#per-file-help').hidden=!usePerFile;$('#per-file-rules').hidden=!usePerFile;
+ $('#manual-rules').hidden=ai||usePerFile;$('#manual-actions').hidden=ai||usePerFile;
+ $('#manual-help').hidden=ai||usePerFile;$('#checklist-template-tools').hidden=ai||usePerFile;
+ $('#rules-mode').required=true;$('#review-confirm').required=ai;
+ $('#manual-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=!ai&&!usePerFile});
+ $('#per-file-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=usePerFile});
+ if(ai)renderDrafts();
+}
+function setRulesMode(){const ai=$('#rules-mode').value==='ai';$('#ai-rules').hidden=!ai;updateAllocationChecklistUI();}
 function renderDrafts(){
   const host=$('#draft-preview');if(!host)return;
   const selectedTasks=[...selected].map(id=>tasks.find(t=>t.id===id)).filter(Boolean);
@@ -132,6 +169,12 @@ $('#archive-checklist-template').addEventListener('click',async()=>{
 
 $('#add-rule').addEventListener('click',()=>addManualRule());
 $('#rules-mode').addEventListener('change',setRulesMode);
+$('#per-file-toggle').addEventListener('change',()=>{if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI()});
+$('#per-file-rules').addEventListener('click',event=>{
+ const button=event.target.closest('[data-add-per-file-rule]');if(!button)return;
+ const card=$(`#per-file-rules [data-task-id="${Number(button.dataset.addPerFileRule)}"]`);
+ if(card)addManualRule({},card.querySelector('.task-rules'));
+});
 addManualRule();setRulesMode();
 
 function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
@@ -161,7 +204,7 @@ function metrics(){const count=s=>tasks.filter(t=>t.state===s).length;const card
 async function loadInbox(){const data=await api('/api/tasks/notifications/inbox');$('#unread').textContent=`${data.unread} unread`;$('#inbox').innerHTML=data.items.slice(0,14).map(n=>`<article><strong>${safe(n.text)}</strong><p>${safe(new Date(n.at).toLocaleString())}</p>${n.seen?'':`<button class="ghost" data-notification="${n.id}">Mark read</button>`}</article>`).join('')||'<p class="subtle">No notifications yet.</p>';}
 async function loadInsights(){if(!['admin','hod','principal','iqac'].includes(role))return;const data=await api('/api/tasks/insights/summary');$('#oversight').hidden=false;$('#leaderboard').innerHTML=`<table><thead><tr><th>Staff member</th><th>Approved</th><th>In progress</th><th>In review</th><th>Quality</th></tr></thead><tbody>${data.staff.map(x=>`<tr><td>${safe(x.staff)}</td><td>${x.approved}</td><td>${x.active}</td><td>${x.in_review}</td><td>${x.average_quality===null?'—':safe(x.average_quality)+'%'}</td></tr>`).join('')||'<tr><td colspan="5">No approved work yet.</td></tr>'}</tbody></table>`;}
 async function loadDigests(){if(role!=='hod')return;try{const d=await api('/api/insights/discussions');$('#discussion-digests').hidden=false;$('#digest-list').innerHTML=d.items.slice(0,5).map(x=>`<article><strong>${safe(x.slot)} · ${safe(x.status)}</strong><p>${safe(x.summary)}</p><small>${x.posts} posts · ${x.comments} comments · ${x.review_flags.length} moderation flags</small>${x.review_flags.length?`<p>Needs HOD review: ${safe(x.review_flags.join('; '))}</p>`:''}</article>`).join('')||'<p class="subtle">No recent department discussions to summarize.</p>';}catch(e){/* Other department HOD has no access. */}}
-async function refresh(){try{const data=await api('/api/tasks');tasks=data.items||[];selected=new Set([...selected].filter(id=>tasks.some(t=>t.id===id&&t.state==='unassigned')));table();metrics();await loadDrafts();await loadInbox();await loadInsights();await loadDigests();if(role==='hod')window.dispatchEvent(new CustomEvent('ncet-hod-tasks-refreshed',{detail:{role:'hod'}}));$('#connection').textContent=`Signed in as ${me.name} · ${role.toUpperCase()} · ${me.department}`;}catch(e){say(e.message,true)}}
+async function refresh(){try{const data=await api('/api/tasks');tasks=data.items||[];const previous=[...selected].sort((a,b)=>a-b);selected=new Set(previous.filter(id=>tasks.some(t=>t.id===id&&t.state==='unassigned')));const selectionChanged=previous.length!==selected.size;if(selectionChanged&&$('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();table();metrics();await loadDrafts();await loadInbox();await loadInsights();await loadDigests();if(role==='hod')window.dispatchEvent(new CustomEvent('ncet-hod-tasks-refreshed',{detail:{role:'hod'}}));$('#connection').textContent=`Signed in as ${me.name} · ${role.toUpperCase()} · ${me.department}`;}catch(e){say(e.message,true)}}
 async function start(){try{const data=await api('/api/auth/me');me=data.user;role=me.role;csrf=data.csrf;$('#app').hidden=false;$('#heading').textContent=role==='staff'?'My assigned work':role==='hod'?'HOD department dashboard':'Institutional work overview';$('#hod-section').hidden=role!=='hod';$('#metrics').hidden=role==='hod';$('#hod-dashboard').hidden=role!=='hod';$('#admin-ai').hidden=role!=='admin';$('#queue-title').textContent=role==='staff'?'My assigned documents':'Task allocation and review';if(role==='hod'){setMinDeadline();const s=await api('/api/tasks/staff');staff=s.items;$('#staff-id').innerHTML='<option value="">Choose staff</option>'+staff.map(x=>`<option value="${x.id}">${safe(x.name)} (${safe(x.username)})</option>`).join('');await loadChecklistTemplates()};if(role==='admin'){const c=await api('/api/tasks/ai/status');$('#ai-state').textContent=c.configured?`${c.provider} · ${c.model}`:'Not configured'}await refresh();poll=setInterval(refresh,20000);}catch(e){$('#connection').textContent='Please sign in through the NCET workspace to continue.';say(e.message,true);$('#app').hidden=true}}
 $('#refresh').addEventListener('click',refresh);
 $('#ai-brief').addEventListener('click',async()=>{
@@ -178,10 +221,14 @@ $('#batch-files').addEventListener('change',e=>{$('#selected-count').textContent
 $('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();form.set('title',$('#batch-title').value);for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received.`);e.target.reset();await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
 $('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!selected.size)return say('Tick the PDF rows you want to assign.',true);const staff_id=Number($('#staff-id').value);if(!staff_id)return say('Choose a staff member.',true);try{
  const deadline=parseDeadline($('#assignment-deadline').value),useAI=$('#rules-mode').value==='ai';
- const rules=useAI?[]:manualRules();
- if(useAI&&!$('#review-confirm').checked)return say('Review the AI rule drafts for every selected PDF first.',true);
+ let rules=[],rules_by_task={};
+ if(useAI){if(!$('#review-confirm').checked)return say('Review the AI rule drafts for every selected PDF first.',true)}
+ else if($('#per-file-toggle').checked){
+  for(const card of $('#per-file-rules').querySelectorAll('.per-file-checklist'))rules_by_task[Number(card.dataset.taskId)]=manualRules(card.querySelector('.task-rules'));
+  if(Object.keys(rules_by_task).length!==selected.size)return say('Add and complete a checklist for every selected PDF.',true);
+ }else rules=manualRules();
  const ids=[...selected];
- const result=await api('/api/tasks/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_ids:ids,staff_id,notes:$('#notes').value,use_generated_rules:useAI,confirmed_task_ids:useAI?ids:[],rules,deadline})});
+ const result=await api('/api/tasks/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_ids:ids,staff_id,notes:$('#notes').value,use_generated_rules:useAI,confirmed_task_ids:useAI?ids:[],rules,rules_by_task,deadline})});
  selected.clear();$('#assignment-deadline').value='';
  say(`${result.assigned} assignments sent to staff inbox.`);await refresh();
 }catch(err){say(err.message,true)}});
@@ -210,7 +257,7 @@ $('#retry-rules').addEventListener('click',async()=>{
 });
 
 $('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Replace the stored DeepSeek API key?'))return;const key=$('#ai-key').value;try{await api('/api/tasks/ai/key',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('DeepSeek key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
-document.addEventListener('change',e=>{if(e.target.matches('[data-select]')){const id=Number(e.target.dataset.select);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;renderDrafts()}});
+document.addEventListener('change',e=>{if(e.target.matches('[data-select]')){const id=Number(e.target.dataset.select);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts()}});
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op],[data-notification]');if(!btn)return;
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;

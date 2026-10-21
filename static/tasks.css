@@ -32,6 +32,14 @@
 .manual-rule label input,.manual-rule label select{margin-top:5px}
 .manual-rule .rule-required{display:flex;align-items:center;gap:7px}
 .manual-rule .rule-required input{margin:0}
+.per-file-toggle{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#f7f9fc}
+.per-file-toggle input{width:17px;height:17px;accent-color:var(--navy);margin:0;flex:0 0 auto}
+.per-file-rules{display:grid;gap:12px;margin:12px 0}
+.per-file-checklist{border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:8px;padding:14px;background:#fbfcfe;min-width:0}
+.per-file-checklist h4{font-size:13px;color:var(--navy);overflow-wrap:anywhere;margin:0 0 12px}
+.task-rules .manual-rule{background:#fff}
+.per-file-checklist>.btn{margin-top:4px}
+#per-file-rules[hidden],#per-file-help[hidden]{display:none}
 #manual-rules[hidden],#ai-rules[hidden]{display:none}
 .checklist-template-tools{border:1px solid var(--line);border-radius:8px;padding:14px;margin:12px 0;background:#f8fafc}.checklist-template-tools label{margin-bottom:9px}.checklist-template-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.checklist-template-actions .btn{padding:8px 10px}.checklist-template-tools .subtle{display:block}
 .task-next-action{display:block;max-width:370px;margin-top:5px;color:#52647a;font-size:11px;line-height:1.45;white-space:normal}

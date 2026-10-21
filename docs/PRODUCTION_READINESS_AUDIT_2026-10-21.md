@@ -66,8 +66,9 @@ The custom domain `ncet.paladuguganeshnaidu.tech` still fails TLS negotiation on
 ### Latest local HOD workflow check (2026-10-21)
 
 - Replaced browser `confirm()` / `prompt()` HOD task decisions with an accessible in-page form that records the required justification, shows validation errors, and has explicit approval and correction actions.
+- Added bulk HOD assignment with either a shared checklist or a distinct checklist for every selected PDF. API validation rejects missing per-file requirements; API regression test passed, as did the 12-test taskflow suite.
 - Corrected no-AI task copy so reference upload and staff submission no longer promise an AI report. The optional AI suggestion path remains separate from the manual checklist and human review path.
-- Chromium task UI check passed for the five roles, HOD approve and correction flows, task deadline interaction, dashboard filters, and responsive widths from 320 to 1,366 px. JavaScript syntax check passed. This was a mocked API browser check; it does not validate the currently deployed version because Render still uses the old repository.
+- Chromium task UI check passed for the five roles, HOD approve and correction flows, shared and per-PDF checklist assignment, task deadline interaction, dashboard filters, and responsive widths from 320 to 1,366 px. JavaScript syntax and Python compilation checks passed. This was a mocked API browser check; it does not validate the currently deployed version because Render still uses the old repository.
 
 ## Deployment gate order
 

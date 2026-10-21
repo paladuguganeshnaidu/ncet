@@ -139,6 +139,7 @@ class AssignBody(BaseModel):
     staff_id:int
     notes:str=Field(min_length=10,max_length=3000)
     rules:list[dict]=Field(default_factory=list,max_length=30)
+    rules_by_task:dict[int,list[dict]]=Field(default_factory=dict)
     use_generated_rules:bool=False
     confirmed_task_ids:list[int]=Field(default_factory=list,max_length=50)
     deadline:datetime|None=None
@@ -400,12 +401,23 @@ def assign(body:AssignBody,user:User=Depends(csrf_required),db:DbSession=Depends
     if not staff or not staff.active or staff.role!='staff' or staff.department!=user.department:
         raise HTTPException(403,'Choose active staff from your own department.')
     from .verification import Rule, ALLOWED_TYPES
+    if len(body.rules_by_task)>MAX_TASK_FILES or any(len(rules)>30 for rules in body.rules_by_task.values()):
+        raise HTTPException(422,'Provide requirements for at most 50 PDFs, with at most 30 checklist items per PDF.')
+    manual_by_task={}
     if body.use_generated_rules:
         if set(body.confirmed_task_ids)!=set(body.task_ids) or len(body.confirmed_task_ids)!=len(body.task_ids):
             raise HTTPException(422,'Review and confirm each PDF’s AI rule suggestions before assigning.')
-        if body.rules:raise HTTPException(422,'Do not combine manual and generated rule sets.')
+        if body.rules or body.rules_by_task:raise HTTPException(422,'Do not combine manual and generated rule sets.')
     else:
-        rules=validated_manual_rules(body.rules)
+        if body.rules_by_task:
+            if body.rules:raise HTTPException(422,'Use either one shared checklist or per-PDF checklists, not both.')
+            if set(body.rules_by_task)!=set(body.task_ids):
+                raise HTTPException(422,'Provide exactly one checklist for every selected PDF.')
+            manual_by_task={task_id:validated_manual_rules(raw_rules)
+                            for task_id,raw_rules in body.rules_by_task.items()}
+            rules=[]
+        else:
+            rules=validated_manual_rules(body.rules)
     deadline=future_deadline(body.deadline)
     items=db.query(TaskItem).filter(TaskItem.id.in_(body.task_ids),TaskItem.department==user.department).with_for_update().all()
     if len(items)!=len(body.task_ids):raise HTTPException(404,'One or more tasks are unavailable.')
@@ -424,7 +436,7 @@ def assign(body:AssignBody,user:User=Depends(csrf_required),db:DbSession=Depends
                 raise HTTPException(409,'AI draft requires HOD review and regeneration.')
             selected_rules[draft.task_id]=proposal
     for task in items:
-        task_rules=selected_rules[task.id] if body.use_generated_rules else rules
+        task_rules=selected_rules[task.id] if body.use_generated_rules else manual_by_task.get(task.id,rules)
         task.assigned_to=staff.id;task.assigned_by=user.id;task.notes=body.notes.strip()
         task.rules_json=json.dumps([r.model_dump() for r in task_rules]);task.deadline=deadline
         task.state='assigned';task.updated_at=utcnow()

@@ -41,6 +41,24 @@ def test_hod_bulk_assignment_notifications_and_holds(client,login):
     assert client.post(f'/api/tasks/{ids[1]}/hold',params={'hold':'false'},headers={'X-CSRF-Token':h}).json()['state']=='assigned'
 
 
+def test_hod_can_assign_pdf_specific_checklists(client,login):
+    hod_csrf=login(client,'hod');ids=_batch(client,hod_csrf,2)
+    first=[{'id':'cover','title':'Department cover page','type':'required_phrase','required':True,'value':'Department Cover','instructions':''}]
+    second=[{'id':'outcomes','title':'Course outcomes section','type':'required_heading','required':True,'value':'Course Outcomes','instructions':''}]
+    payload={'task_ids':ids,'staff_id':_staff_id(),
+             'notes':'Complete both PDFs using their individual checklist requirements.',
+             'rules_by_task':{str(ids[0]):first,str(ids[1]):second}}
+    incomplete={**payload,'rules_by_task':{str(ids[0]):first}}
+    assert client.post('/api/tasks/assign',headers={'X-CSRF-Token':hod_csrf},json=incomplete).status_code==422
+    response=client.post('/api/tasks/assign',headers={'X-CSRF-Token':hod_csrf},json=payload)
+    assert response.status_code==200,response.text
+    with TestClient(app) as staff:
+        login(staff,'staff')
+        assigned={task['id']:task for task in staff.get('/api/tasks').json()['items'] if task['id'] in ids}
+    assert assigned[ids[0]]['rules'][0]['value']=='Department Cover'
+    assert assigned[ids[1]]['rules'][0]['value']=='Course Outcomes'
+
+
 def test_permission_department_and_invalid_batch(client,login):
     h=login(client,'hod'); ids=_batch(client,h,1)
     for bad in (0,_staff_id()+10_000):
