@@ -24,23 +24,40 @@ def main():
         page.goto('about:blank')
         page.set_content('<main><h1>Logged-in NCET dashboard</h1></main>')
         page.evaluate("""() => {
+          window.__authCalls=0;
+          window.__inboxCalls=0;
+          window.__noticeResponse={unread:2,items:[
+            {id:'a-1',text:'New BCA student request',category:'complaints',link:'/bca/oversight',seen:false,at:'2026-10-16T10:00:00+00:00'},
+            {id:'t-1',text:'A task was assigned',category:'tasks',link:'/tasks',seen:false,at:'2026-10-16T11:00:00+00:00'}
+          ]};
+          window.setInterval=(callback,interval)=>{window.__notificationTimer={callback,interval};return 1;};
+          window.clearInterval=()=>{};
           window.fetch=async url=>{
-            if(String(url).includes('/api/auth/me'))
+            if(String(url).includes('/api/auth/me')) {
+              window.__authCalls++;
               return new Response(JSON.stringify({csrf:'mock-token',user:{role:'principal'}}),{status:200,headers:{'Content-Type':'application/json'}});
-            if(String(url).includes('/api/alerts/inbox'))
-              return new Response(JSON.stringify({unread:2,items:[
-                {id:'a-1',text:'New BCA student request',category:'complaints',link:'/bca/oversight',seen:false,at:'2026-10-16T10:00:00+00:00'},
-                {id:'t-1',text:'A task was assigned',category:'tasks',link:'/tasks',seen:false,at:'2026-10-16T11:00:00+00:00'}
-              ]}),{status:200,headers:{'Content-Type':'application/json'}});
+            }
+            if(String(url).includes('/api/alerts/inbox')) {
+              window.__inboxCalls++;
+              return new Response(JSON.stringify(window.__noticeResponse),{status:200,headers:{'Content-Type':'application/json'}});
+            }
             return new Response('{}',{status:200});
           };
         }""")
         page.add_script_tag(content=(STATIC/'notifications.js').read_text(encoding='utf-8'))
         page.locator('#ncet-alerts').wait_for(state='visible')
         assert '2 new' in page.locator('#alert-count').inner_text()
+        assert page.evaluate('window.__notificationTimer.interval')==1500
+        assert page.evaluate('window.__authCalls')==1
+        assert page.evaluate('window.__inboxCalls')==1
         page.locator('#alert-toggle').click()
         assert page.locator('.alert-entry').count()==2
         assert page.locator('a[href="/bca/oversight"]').count()==1
+        page.evaluate("window.__noticeResponse={unread:3,items:[]}")
+        page.evaluate('window.__notificationTimer.callback()')
+        page.get_by_text('3 new').wait_for()
+        assert page.evaluate('window.__authCalls')==1
+        assert page.evaluate('window.__inboxCalls')==2
         page.keyboard.press('Escape')
         assert page.locator('#alert-list').is_hidden()
         assert errors==[],errors
