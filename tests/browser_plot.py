@@ -45,4 +45,49 @@ with sync_playwright() as playwright:
     assert page.locator('footer a[href="/plot"]').inner_text() == 'Performance & optimization'
     browser.close()
 
-print('NCET PLOT PAGE PASS: live health probe, browser resource chart, privacy metadata, and 4 responsive widths.')
+    # CLS is the largest session window, not the sum of every shift during a visit.
+    browser = launch_chromium(playwright,headless=True)
+    page = browser.new_page(viewport={'width': 1280, 'height': 900})
+    page.add_init_script("""
+        const NativeObserver = window.PerformanceObserver;
+        class PlotObserver {
+          constructor(callback) { this.callback = callback; this.native = null; }
+          observe(options) {
+            if (options.type === 'layout-shift') {
+              window.__plotLayoutShiftCallback = this.callback;
+              return;
+            }
+            this.native = new NativeObserver(this.callback);
+            this.native.observe(options);
+          }
+          disconnect() { this.native?.disconnect(); }
+        }
+        PlotObserver.supportedEntryTypes = NativeObserver.supportedEntryTypes;
+        window.PerformanceObserver = PlotObserver;
+    """)
+    page.goto(BASE + '/plot', wait_until='domcontentloaded', timeout=25000)
+    page.evaluate("""() => {
+      const callback = window.__plotLayoutShiftCallback;
+      if (!callback) throw new Error('Plot CLS observer was not registered');
+      const entries = [
+        {value: 0.06, startTime: 1000, hadRecentInput: false},
+        {value: 0.04, startTime: 1600, hadRecentInput: false},
+        {value: 0.20, startTime: 2700, hadRecentInput: false},
+        {value: 0.04, startTime: 3600, hadRecentInput: false},
+        {value: 0.20, startTime: 4500, hadRecentInput: false},
+        {value: 0.12, startTime: 5500, hadRecentInput: false},
+        {value: 0.09, startTime: 10000, hadRecentInput: false},
+        {value: 0.02, startTime: 10800, hadRecentInput: false},
+        {value: 0.02, startTime: 11700, hadRecentInput: false},
+        {value: 0.02, startTime: 12600, hadRecentInput: false},
+        {value: 0.02, startTime: 13500, hadRecentInput: false},
+        {value: 0.02, startTime: 14400, hadRecentInput: false},
+        {value: 0.30, startTime: 15000, hadRecentInput: false},
+        {value: 0.70, startTime: 15100, hadRecentInput: true}
+      ];
+      callback({getEntries: () => entries});
+    }""")
+    assert page.locator('#metric-cls').inner_text() == '0.440'
+    browser.close()
+
+print('NCET PLOT PAGE PASS: live health probe, browser resource chart, privacy metadata, 4 responsive widths, and CLS session-window calculation.')

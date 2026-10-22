@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const state = { lcp: null, inp: null, cls: 0 };
+  const state = { lcp: null, inp: null, cls: 0, clsWindowStart: null, clsLastShift: null, clsCurrentWindow: 0 };
   const bytes = (value) => value < 1024 ? `${value} B` : value < 1024 * 1024 ? `${(value / 1024).toFixed(1)} KB` : `${(value / 1024 / 1024).toFixed(2)} MB`;
   const ms = (value) => value == null ? '—' : value < 1000 ? `${Math.round(value)} ms` : `${(value / 1000).toFixed(2)} s`;
 
@@ -26,7 +26,19 @@
   if (!hasLcp) showMetric('lcp', 'Not supported', '', 'Browser does not expose LCP');
 
   const hasCls = observe('layout-shift', (list) => {
-    for (const entry of list.getEntries()) if (!entry.hadRecentInput) state.cls += entry.value;
+    for (const entry of list.getEntries()) {
+      if (entry.hadRecentInput) continue;
+      const newWindow = state.clsWindowStart === null
+        || entry.startTime - state.clsLastShift >= 1000
+        || entry.startTime - state.clsWindowStart >= 5000;
+      if (newWindow) {
+        state.clsWindowStart = entry.startTime;
+        state.clsCurrentWindow = 0;
+      }
+      state.clsCurrentWindow += entry.value;
+      state.clsLastShift = entry.startTime;
+      state.cls = Math.max(state.cls, state.clsCurrentWindow);
+    }
     const verdict = state.cls <= 0.1 ? 'good' : state.cls <= 0.25 ? 'attention' : 'poor';
     showMetric('cls', state.cls.toFixed(3), verdict, verdict === 'good' ? 'Target ≤0.1 · stable sample' : verdict === 'attention' ? 'Target ≤0.1 · some movement' : 'Target ≤0.1 · unexpected movement');
   });
