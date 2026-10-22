@@ -1,9 +1,33 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const state = { lcp: null, inp: null, cls: 0, clsWindowStart: null, clsLastShift: null, clsCurrentWindow: 0 };
+  const state = { lcp: null, inp: null, cls: 0, clsWindowStart: null, clsLastShift: null, clsCurrentWindow: 0, shifts: [] };
   const bytes = (value) => value < 1024 ? `${value} B` : value < 1024 * 1024 ? `${(value / 1024).toFixed(1)} KB` : `${(value / 1024 / 1024).toFixed(2)} MB`;
   const ms = (value) => value == null ? '—' : value < 1000 ? `${Math.round(value)} ms` : `${(value / 1000).toFixed(2)} s`;
+
+  function safeSelector(node) {
+    if (!node || node.nodeType !== 1) return 'element unavailable';
+    const tag = String(node.tagName || 'element').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || 'element';
+    const classes = Array.from(node.classList || []).filter((name) => /^[a-zA-Z][\w-]{0,40}$/.test(name)).slice(0, 3);
+    return `${tag}${classes.map((name) => `.${name}`).join('')}`;
+  }
+
+  function showShiftSources() {
+    const list = $('shift-source-list');
+    if (!list) return;
+    const unique = new Map();
+    for (const shift of state.shifts) {
+      const existing = unique.get(shift.selector);
+      if (!existing || existing.value < shift.value) unique.set(shift.selector, shift);
+    }
+    const top = Array.from(unique.values()).sort((a, b) => b.value - a.value).slice(0, 5);
+    const rows = top.length ? top.map((shift) => {
+      const item = document.createElement('li');
+      item.textContent = `${shift.selector} · shift score ${shift.value.toFixed(3)}`;
+      return item;
+    }) : [Object.assign(document.createElement('li'), { textContent: 'No unexpected layout shifts have been observed.' })];
+    list.replaceChildren(...rows);
+  }
 
   function showMetric(key, value, verdict, label) {
     $( `metric-${key}` ).textContent = value;
@@ -28,6 +52,10 @@
   const hasCls = observe('layout-shift', (list) => {
     for (const entry of list.getEntries()) {
       if (entry.hadRecentInput) continue;
+      for (const source of entry.sources || []) {
+        if (state.shifts.length >= 100) state.shifts.shift();
+        state.shifts.push({ selector: safeSelector(source.node), value: Number(entry.value) || 0 });
+      }
       const newWindow = state.clsWindowStart === null
         || entry.startTime - state.clsLastShift >= 1000
         || entry.startTime - state.clsWindowStart >= 5000;
@@ -39,6 +67,7 @@
       state.clsLastShift = entry.startTime;
       state.cls = Math.max(state.cls, state.clsCurrentWindow);
     }
+    showShiftSources();
     const verdict = state.cls <= 0.1 ? 'good' : state.cls <= 0.25 ? 'attention' : 'poor';
     showMetric('cls', state.cls.toFixed(3), verdict, verdict === 'good' ? 'Target ≤0.1 · stable sample' : verdict === 'attention' ? 'Target ≤0.1 · some movement' : 'Target ≤0.1 · unexpected movement');
   });

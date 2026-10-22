@@ -82,12 +82,18 @@ with sync_playwright() as playwright:
         {value: 0.02, startTime: 12600, hadRecentInput: false},
         {value: 0.02, startTime: 13500, hadRecentInput: false},
         {value: 0.02, startTime: 14400, hadRecentInput: false},
-        {value: 0.30, startTime: 15000, hadRecentInput: false},
-        {value: 0.70, startTime: 15100, hadRecentInput: true}
+        {value: 0.30, startTime: 15000, hadRecentInput: false,
+          sources: [{node: document.querySelector('.metric')}]},
+        {value: 0.70, startTime: 15100, hadRecentInput: true,
+          sources: [{node: document.querySelector('body')}]}
       ];
       callback({getEntries: () => entries});
     }""")
     assert page.locator('#metric-cls').inner_text() == '0.440'
+    page.locator('#shift-diagnostics summary').click()
+    shift_report = page.locator('#shift-source-list').inner_text()
+    assert 'article.metric.panel · shift score 0.300' in shift_report, shift_report
+    assert '0.70' not in shift_report, shift_report
     browser.close()
 
 print('NCET PLOT PAGE PASS: live health probe, browser resource chart, privacy metadata, 4 responsive widths, and CLS session-window calculation.')
