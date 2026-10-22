@@ -48,6 +48,7 @@ with sync_playwright() as p:
     switches=[]
     for width in (320,375,390,768,1024,1440):
         page=browser.new_page(viewport={'width':width,'height':850},device_scale_factor=1)
+        page.add_init_script("window.__copiedProfile='';window.__printCount=0;Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedProfile=text}}});window.print=()=>window.__printCount++")
         errors=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
         def serve(route):
@@ -80,6 +81,15 @@ with sync_playwright() as p:
         assert page.locator('.resume-anchors[role="tablist"]').count()==1
         assert page.locator('.resume-section:not([hidden])').count()==1
         assert page.locator('#about').is_visible()
+        assert page.get_by_role('link',name='Student sign in · Edit & publish').get_attribute('href')=='/students/portal#showcase-box'
+        assert 'Students manage this portfolio themselves.' in page.locator('.resume-owner-prompt').inner_text()
+        assert page.locator('.resume-project-grid .resume-project').count()==1
+        assert page.locator('.resume-project-kicker').inner_text()=='PROJECT 01'
+        page.get_by_role('button',name='Share portfolio').click()
+        page.wait_for_function("document.querySelector('#resume-action-status').textContent.includes('copied')")
+        assert page.evaluate('window.__copiedProfile')=='https://ncet-verifyflow.onrender.com/students/profile/1NC24CS150'
+        page.get_by_role('button',name='Save as PDF').click()
+        assert page.evaluate('window.__printCount')==1
         page.locator('a[href="#projects"]').click()
         assert page.url.endswith('#projects'),page.url
         assert page.locator('#projects').is_visible()
@@ -122,12 +132,12 @@ p95=switches[min(len(switches)-1,int(len(switches)*.95))]
 original_css=10432+8120+6555+4636+7184
 original_js=1752
 updated_css=(static/'resume-profile.css').stat().st_size
-updated_js=(static/'student-profile-tabs.js').stat().st_size
+updated_js=(static/'student-profile-tabs.js').stat().st_size+(static/'student-profile-actions.js').stat().st_size
 before=original_css+original_js
 after=updated_css+updated_js
 assert after<before*.75,(before,after)
 print('NCET RESUME PERFORMANCE BENCHMARK')
 print(f'Critical CSS+JS bytes (uncompressed): previous={before}, updated={after}, reduction={(before-after)/before*100:.1f}%')
-print(f'Critical stylesheet/script requests: previous=6, updated=2')
+print(f'Critical stylesheet/script requests: previous=6, updated=3')
 print(f'Tab switch browser timings, 18 interactions: median={median(switches):.0f} ms, p95={p95:.0f} ms')
 print('NCET résumé audit passed: six widths, six sections, reduced motion, keyboard/history, no-JS fallback, all institutional images loaded.')

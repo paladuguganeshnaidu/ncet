@@ -556,7 +556,20 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
     name=escape(info['name'])
     sid=escape(info['usn'])
     branch=escape(info['department'])
-    summary=escape((info['about'] or f"{info['name']} studies at Nagarjuna College of Engineering and Technology.")[:155],quote=True)
+    def excerpt(value:str,limit:int)->str:
+        text=value.strip()
+        if len(text)<=limit:return text
+        sentence_end=max((text.rfind(mark,0,limit)+1 for mark in '.!?'),default=0)
+        if sentence_end>=60:return text[:sentence_end]
+        return text[:limit].rsplit(' ',1)[0].rstrip(' ,;:')+'…'
+    summary=escape(excerpt(info['about'] or f"{info['name']} studies at Nagarjuna College of Engineering and Technology.",155),quote=True)
+    portfolio_intro=escape(excerpt(info['about'] or '',220),quote=True)
+    updated_label='Not provided'
+    if info.get('updated_at'):
+        try:
+            updated_label=datetime.fromisoformat(info['updated_at'].replace('Z','+00:00')).strftime('%d %b %Y')
+        except (TypeError,ValueError):
+            pass
     canonical=f"{URL_ROOT}/students/profile/{sid}"
     photo=info.get('photo_url')
     absolute_photo=URL_ROOT+photo if photo else ''
@@ -573,13 +586,14 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
         return (f'<a class="{klass}" href="{escape(url,quote=True)}" target="_blank" rel="noopener noreferrer nofollow">'
                 f'{escape(title)} <span aria-hidden="true">↗</span></a>')
     projects=[]
-    for project in info['projects']:
+    for project_number,project in enumerate(info['projects'],1):
         links=''.join(filter(None,[
             link(project.get('github_url',''),'GitHub source') if project.get('github_url') else '',
             link(project.get('live_url',''),'Live project') if project.get('live_url') else ''
         ]))
         tags=('<ul class="resume-chips resume-project-tags">'+chips(project.get('technologies',[]))+'</ul>') if project.get('technologies') else ''
-        projects.append('<article class="resume-project"><h3>'+escape(project['title'])+'</h3>'+
+        project_label=f'PROJECT {project_number:02d}'
+        projects.append('<article class="resume-project"><p class="resume-project-kicker">'+project_label+'</p><h3>'+escape(project['title'])+'</h3>'+
                         '<p>'+escape(project.get('description') or 'Student project')+'</p>'+tags+
                         ('<div class="resume-links">'+links+'</div>' if links else '')+'</article>')
     project_html=''.join(projects) if projects else empty('Student projects have not been added yet.')
@@ -623,7 +637,7 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <link rel="icon" href="/static/ncet-brand.svg">
 <script type="application/ld+json">{json_ld}</script>
 <link rel="preload" as="image" href="/static/ncet-brand.svg" fetchpriority="high">
-<link rel="stylesheet" href="/static/resume-profile.css?v=20261017-2">
+<link rel="stylesheet" href="/static/resume-profile.css?v=20261022-student-owned-portfolio">
 <link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d">
 <script src="/static/student-profile-tabs.js?v=20261017" defer></script>
 </head><body class="ncet-profile-page">
@@ -641,9 +655,19 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <div class="resume-accreditation"><span>NCET · STUDENT PORTFOLIO</span>
 <img src="/static/naac-brand.svg" alt="Institutional accreditation: NAAC A+" width="61" height="61" decoding="async"></div>
 <div class="resume-heading">{avatar}<div class="resume-heading-copy">
-<p class="resume-overline">Student profile · Voluntarily published</p>
+<p class="resume-overline">Student portfolio · Published by the student</p>
 <h1>{name}</h1><p class="resume-subtitle">{branch} <span aria-hidden="true">·</span> Semester {info['semester']}</p>
+{f'<p class="resume-intro">{portfolio_intro}</p>' if portfolio_intro else ''}
 <p class="resume-usn"><strong>USN</strong> {sid}</p></div></div>
+<div class="resume-action-bar" aria-label="Portfolio actions">
+<button type="button" class="resume-action resume-share" id="resume-share" data-share-url="{escape(canonical,quote=True)}">Share portfolio</button>
+<button type="button" class="resume-action resume-print" id="resume-print">Save as PDF</button>
+<a class="resume-action resume-manage" href="/students/portal#showcase-box">Student sign in · Edit &amp; publish</a>
+<span class="resume-action-status" id="resume-action-status" role="status" aria-live="polite"></span></div>
+<p class="resume-owner-prompt">Students manage this portfolio themselves. <a href="/students/portal#showcase-box">Sign in to add or update projects, skills, credentials and links, then publish changes or make the page private</a>. Email, mobile and academic requests remain private.</p>
+<dl class="resume-highlights" aria-label="Portfolio overview">
+<div><dt>Skills</dt><dd>{len(info['skills'])}</dd></div><div><dt>Projects</dt><dd>{len(info['projects'])}</dd></div>
+<div><dt>Credentials</dt><dd>{len(info['certificates'])}</dd></div><div class="resume-highlight-note"><dt>Last updated</dt><dd>{escape(updated_label)}</dd></div></dl>
 <nav class="resume-anchors" aria-label="Portfolio sections">
 <a href="#about" id="profile-tab-about">About</a><a href="#skills" id="profile-tab-skills">Skills</a><a href="#projects" id="profile-tab-projects">Projects</a>
 <a href="#certifications" id="profile-tab-certifications">Certifications</a><a href="#interests" id="profile-tab-interests">Interests</a><a href="#links" id="profile-tab-links">Links</a>
@@ -652,7 +676,7 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <section id="about" class="resume-section"><h2>About</h2>
 <p class="resume-about">{escape(info['about']) or 'This student has not yet added a summary.'}</p></section>
 <section id="skills" class="resume-section"><h2>Technical skills</h2>{skill_section}</section>
-<section id="projects" class="resume-section"><h2>Projects</h2>{project_html}</section>
+<section id="projects" class="resume-section"><h2>Projects</h2><p class="resume-section-intro">A closer look at projects shared by {name}. Open the source or live project when a link is available.</p><div class="resume-project-grid">{project_html}</div></section>
 <section id="certifications" class="resume-section"><h2>Certifications</h2>{cert_html}</section>
 <section id="interests" class="resume-section"><h2>Areas of interest</h2>{interests}</section>
 <section id="links" class="resume-section"><h2>GitHub, live work & professional links</h2>{social_html}</section>
@@ -665,6 +689,7 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <span>NCET VerifyFlow · Academic collaboration & student success</span>
 <a href="/students">Student Portal</a></footer>
 <script src="/static/institutional-ui.js?v=20261017d" defer></script>
+<script src="/static/student-profile-actions.js?v=20261022-student-portfolio-actions" defer></script>
 </body></html>''',headers={'Cache-Control':'no-store'})
 
 

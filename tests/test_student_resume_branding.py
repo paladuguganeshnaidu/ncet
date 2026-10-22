@@ -70,6 +70,11 @@ def test_portfolio_sections_projects_and_public_links(client):
                   "Python Skills","AI Agents","https://github.com/example/ncet-verification",
                   "https://demo.example.org","ncet-brand.svg","ngi-brand.svg","naac-brand.svg"):
         assert label in html,label
+    assert 'Student sign in · Edit &amp; publish' in html
+    assert 'href="/students/portal#showcase-box"' in html
+    assert 'id="resume-share"' in html and 'id="resume-print"' in html
+    assert 'Students manage this portfolio themselves.' in html
+    assert '<dt>Last updated</dt>' in html
     assert "application/ld+json" in html
     assert "<lastmod>" in client.get("/sitemap.xml").text
     for confidential in ("private@institution.example","+919988776655"):
