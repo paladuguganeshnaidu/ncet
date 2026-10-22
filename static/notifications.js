@@ -17,6 +17,7 @@
   let running = false;
   let pollTimer = null;
   let pollInterval = 0;
+  let lastInboxSignature = '';
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -63,10 +64,14 @@
       if (!response.ok) throw Error('Unable to refresh notifications');
       const result = await response.json();
       container.hidden = false;
-      badge.textContent = result.unread ? `(${result.unread} new)` : '';
-      list.innerHTML = result.items.length
-        ? result.items.map((notice) => `<a class="alert-entry ${notice.seen ? '' : 'alert-unread'}" href="${esc(notice.link)}" data-notice="${esc(notice.id)}"><span>${esc(notice.category)}</span><strong>${esc(notice.text)}</strong><small>${esc(new Date(notice.at).toLocaleString())}</small></a>`).join('')
-        : '<p>No new activity yet.</p>';
+      const signature = JSON.stringify(result);
+      if (signature !== lastInboxSignature) {
+        badge.textContent = result.unread ? `(${result.unread} new)` : '';
+        list.innerHTML = result.items.length
+          ? result.items.map((notice) => `<a class="alert-entry ${notice.seen ? '' : 'alert-unread'}" href="${esc(notice.link)}" data-notice="${esc(notice.id)}"><span>${esc(notice.category)}</span><strong>${esc(notice.text)}</strong><small>${esc(new Date(notice.at).toLocaleString())}</small></a>`).join('')
+          : '<p>No new activity yet.</p>';
+        lastInboxSignature = signature;
+      }
       schedule(signedInInterval);
     } catch (error) {
       schedule(signedOutInterval);

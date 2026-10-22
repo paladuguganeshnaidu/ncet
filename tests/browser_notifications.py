@@ -53,11 +53,14 @@ def main():
         page.locator('#alert-toggle').click()
         assert page.locator('.alert-entry').count()==2
         assert page.locator('a[href="/bca/oversight"]').count()==1
+        page.locator('a[href="/tasks"]').evaluate('(element)=>element.focus()')
+        page.evaluate('window.__notificationTimer.callback()')
+        assert page.locator('a[href="/tasks"]').evaluate('(element)=>element===document.activeElement')
         page.evaluate("window.__noticeResponse={unread:3,items:[]}")
         page.evaluate('window.__notificationTimer.callback()')
         page.get_by_text('3 new').wait_for()
         assert page.evaluate('window.__authCalls')==1
-        assert page.evaluate('window.__inboxCalls')==2
+        assert page.evaluate('window.__inboxCalls')==3
         page.keyboard.press('Escape')
         assert page.locator('#alert-list').is_hidden()
         assert errors==[],errors
