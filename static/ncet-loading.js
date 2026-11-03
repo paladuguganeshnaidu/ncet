@@ -1,4 +1,4 @@
-/* NCET logo loading state: delayed until a request actually takes time.
+/* NCET lightweight loading state: delayed until a request actually takes time.
    Nothing blocks painting or artificially delays submission. */
 (()=>{'use strict';
  if(window.__ncetLoadingInstalled)return;window.__ncetLoadingInstalled=true;
@@ -14,8 +14,8 @@
   loader.setAttribute('aria-live','polite');
   loader.setAttribute('aria-label','Loading');
   loader.hidden=true;
-  const mark=document.createElement('img');
-  mark.src='/static/ncet-brand.svg';mark.alt='';mark.width=65;mark.height=37;
+  const mark=document.createElement('span');
+  mark.className='ncet-loader-dot';mark.setAttribute('aria-hidden','true');
   const label=document.createElement('span');label.textContent='Working on your request…';
   loader.append(mark,label);document.body.append(loader);
   return loader;
@@ -44,7 +44,7 @@
    return active?result.finally(finish):result;
   }catch(error){if(active)finish();throw error}
  };
- // Allow traditional form navigation to show a logo if the server takes >420ms.
+ // Show loading feedback on traditional form navigation only if a request is slow.
  document.addEventListener('submit',event=>{
   if(event.defaultPrevented)return;
   queueMicrotask(()=>{

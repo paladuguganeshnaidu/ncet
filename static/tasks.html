@@ -1,4 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0E2455"><title>NCET Task Workspace · Department Document Review</title><link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/tasks.css?v=20261021-per-file-checklists"><link rel="stylesheet" href="/static/workspace-experience.css"><link rel="stylesheet" href="/static/notifications.css"><link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017"><link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261017" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d"><link rel="stylesheet" href="/static/hod-dashboard.css?v=20261017f"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0E2455"><title>NCET Task Workspace · Department Document Review</title><link rel="icon" href="/static/ncet-brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/tasks.css?v=20261021-per-file-checklists"><link rel="stylesheet" href="/static/workspace-experience.css"><link rel="stylesheet" href="/static/notifications.css"><link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017"><link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261017" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d"><link rel="stylesheet" href="/static/hod-dashboard.css?v=20261017f"><link rel="stylesheet" href="/static/enterprise-minimal.css?v=20261103-a">
+</head><body>
 <header class="topbar"><a class="brand" href="/app"><img src="/static/ncet-brand.svg" alt="Nagarjuna College of Engineering and Technology emblem"><span><b>NCET VerifyFlow</b><small>Department task management</small></span></a><nav><a href="/app">Document workspace</a><a href="/complaints">Student complaints</a><a href="/community">Student project board</a><button class="ghost" id="refresh">Refresh</button></nav></header>
 <main id="main"><section class="heading"><div class="overline">FACULTY & INSTITUTIONAL WORKSPACE</div><h1 id="heading">Task management</h1><p>Assign reference documents, review completed work and track departmental progress.</p><div id="connection" class="connection" role="status">Checking your account…</div></section>
 <div id="app" hidden>
@@ -67,7 +68,7 @@
 <p><button class="btn secondary" id="retry-rules" type="button">Analyze / retry selected PDFs</button></p>
 <label class="confirmation"><input type="checkbox" id="review-confirm" disabled> <span id="review-label">Wait for AI analysis and review every selected PDF.</span></label></div></div><button class="btn" type="submit">Assign selected tasks</button></form></article>
 </section>
-<section class="panel" id="admin-ai" hidden><header><h2>DeepSeek integration</h2><span id="ai-state" class="tag">Checking…</span></header><p>Use your own DeepSeek API key for document analysis. Keys are encrypted, never displayed back, and are not included in uploaded source code.</p><form id="ai-form" class="inline"><label class="fill">New DeepSeek key<input id="ai-key" name="api_key" type="password" minlength="15" autocomplete="new-password" required></label><button type="submit" class="btn">Save key</button></form></section>
+<section class="panel" id="admin-ai" hidden><header><h2>NVIDIA NIM integration</h2><span id="ai-state" class="tag">Checking…</span></header><p>Use your own NVIDIA API key for document analysis. Keys are encrypted, never displayed back, and are not included in uploaded source code.</p><form id="ai-form" class="inline"><label class="fill">New NVIDIA key<input id="ai-key" name="api_key" type="password" minlength="15" autocomplete="new-password" required></label><button type="submit" class="btn">Save key</button></form></section>
 <section class="panel"><header><div><h2 id="queue-title">Assigned document tasks</h2><p class="subtle">Select a reference PDF, review its rules, and follow its verification status.</p></div><span id="queue-count" class="tag">0 tasks</span></header><div class="scroll"><table><thead><tr><th id="check-header">Select</th><th>Reference document</th><th>Assigned staff</th><th>Status</th><th>Due date</th><th>Score</th><th>Actions</th></tr></thead><tbody id="tasks"><tr><td colspan="7">Loading…</td></tr></tbody></table></div></section>
 <div class="grid bottom">
 <section class="panel" id="notifications-box"><header><h2>In-app notifications</h2><span class="tag" id="unread">0 unread</span></header><div id="inbox" class="feed">No notifications yet.</div></section>
@@ -91,12 +92,22 @@
   <form id="task-review-form">
     <h2 id="task-review-title">Review submitted work</h2>
     <p id="task-review-description" class="subtle"></p>
+    <label for="task-review-decision">Final HOD decision
+      <select id="task-review-decision" required><option value="approved">Approve after independent review</option><option value="needs_correction">Request staff correction</option></select>
+    </label>
+    <p class="subtle">Automated flags are recommendations. Approval after a flag requires an independent evidence review and an audit note.</p>
     <label for="task-review-note">Review note <span id="task-review-note-hint" class="subtle"></span>
       <textarea id="task-review-note" minlength="10" maxlength="1500" required aria-describedby="task-review-note-hint"></textarea>
     </label>
     <p id="task-review-error" class="review-error" role="alert" hidden></p>
     <div class="deadline-dialog-actions"><button class="btn secondary" id="task-review-cancel" type="button">Cancel</button><button class="btn" id="task-review-submit" type="submit">Save decision</button></div>
   </form>
+</dialog>
+<dialog id="report-dialog" aria-labelledby="report-title">
+  <h2 id="report-title">Evidence review</h2>
+  <p class="subtle">Only source-supported document checks are presented as findings. Human authorship is not scientifically established from writing style.</p>
+  <div id="report-body" class="report-body"></div>
+  <div class="deadline-dialog-actions"><button class="btn secondary" id="report-close" type="button">Close report</button></div>
 </dialog>
 <div id="toast" role="status" aria-live="polite" hidden></div>
 <script src="/static/tasks.js?v=20261021-per-file-checklists" defer></script><script src="/static/hod-dashboard.js?v=20261021-reminders" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

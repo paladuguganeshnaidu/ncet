@@ -26,5 +26,9 @@ services:
         sync: false
       - key: PUBLIC_ORIGIN
         sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_MODEL
+        value: meta/llama-3.1-70b-instruct
       - key: SCAN_MODE
         value: "off"

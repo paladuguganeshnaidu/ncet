@@ -167,7 +167,7 @@ def test_scoring_threshold_requires_actual_provider_and_no_uncertainty(client,lo
     from app.verification import Extracted
     monkeypatch.setattr('app.verification.extract_document',lambda *args:Extracted(['Doc content'],1,False,[]))
     def fake_ai(provider,system,payload,max_tokens=2200):
-        return {'summary':'Reviewed','evaluations':[{'rule_id':f'rule{i}','result':('pass' if i<fake_ai.passed else 'issue'),'confidence':0.98,'evidence':'Document sample'} for i in range(4)]}
+        return {'summary':'Reviewed','evaluations':[{'rule_id':f'rule{i}','result':('pass' if i<fake_ai.passed else 'issue'),'confidence':0.98,'evidence':'Doc content'} for i in range(4)]}
     monkeypatch.setattr(tf,'review_json',fake_ai)
     with TestClient(app) as staff:
         s=login(staff,'staff')
@@ -274,3 +274,80 @@ def test_hod_review_history_is_durable(client, login, monkeypatch):
     assert row['decisions'][0]['decision']=='approved'
     with DBSession() as db:
         assert db.query(TaskDecision).filter(TaskDecision.task_id==ids[0]).count()==1
+
+
+def test_weighted_review_uses_reference_context_and_explicit_hod_override(client,login,monkeypatch):
+    from app import taskflow as tf
+    from app.verification import Extracted
+    hod_token=login(client,'hod'); task_id=_batch(client,hod_token,1)[0]
+    rules=[{'id':f'check{i}', 'title':f'Check number {i}', 'type':'other',
+            'required':i==0,'weight':5 if i==0 else 1,
+            'value':'','instructions':'Review this evidence'} for i in range(3)]
+    response=client.post('/api/tasks/assign',headers={'X-CSRF-Token':hod_token},
+        json={'task_ids':[task_id],'staff_id':_staff_id(),
+              'notes':'Compare the submitted report with the HOD reference instructions.','rules':rules})
+    assert response.status_code==200,response.text
+    monkeypatch.setattr(tf,'select_provider',lambda db:Provider('NVIDIA','test-model','https://integrate.api.nvidia.com/v1/chat/completions','test-key'))
+    monkeypatch.setattr('app.verification.extract_document',
+        lambda name,data:Extracted(['Official department report with verifiable objective text'],1,False,[]))
+    seen=[]
+    def mocked_review(provider,system,payload,max_tokens=2200):
+        seen.append(payload)
+        return {'summary':'Reviewed with source evidence.',
+                'evaluations':[{'rule_id':f'check{i}','result':'issue' if i==0 else 'pass',
+                                'confidence':0.98,'evidence':'verifiable objective text',
+                                'issue':'Objective requires correction.'} for i in range(3)]}
+    monkeypatch.setattr(tf,'review_json',mocked_review)
+    with TestClient(app) as staff:
+        staff_token=login(staff,'staff')
+        submitted=staff.post(f'/api/tasks/{task_id}/submit',headers={'X-CSRF-Token':staff_token},
+            files={'file':('completed.pdf',PDF,'application/pdf')})
+        assert submitted.status_code==201,submitted.text
+    assert run_task_once()
+    task=client.get('/api/tasks').json()['items'][0]
+    assert task['score']==29  # Two low-importance passes / seven weight units.
+    assert task['state']=='correction_required'
+    assert task['report']['rubric']['mandatory_failed']==['check0']
+    assert task['report']['reference_comparison']['available']
+    assert task['report']['document_signals']['word_count']>0
+    assert seen and seen[0]['reference_text'].startswith('[REFERENCE PAGE 1]')
+    assert 'HOD reference' in seen[0]['task_instructions']
+    approval=client.post(f'/api/tasks/{task_id}/decide',headers={'X-CSRF-Token':hod_token},
+        json={'decision':'approved','note':'I independently checked the source and authorized the documented exception.'})
+    assert approval.status_code==200,approval.text
+    assert approval.json()['state']=='approved'
+
+
+def test_oversight_can_only_open_approved_task_documents(client,login):
+    hod_token=login(client,'hod'); task_id=_batch(client,hod_token,1)[0]
+    assert client.post('/api/tasks/assign',headers={'X-CSRF-Token':hod_token},
+        json={'task_ids':[task_id],'staff_id':_staff_id(),
+              'notes':'Produce an official report for the department.','rules':RULE}).status_code==200
+    for oversight in ('principal','iqac'):
+        with TestClient(app) as reviewer:
+            login(reviewer,oversight)
+            assert reviewer.get('/api/tasks').json()['items']==[]
+            assert reviewer.get(f'/api/tasks/{task_id}/reference').status_code==404
+            assert reviewer.get('/api/tasks/insights/summary').status_code==200
+    from app.database import DBSession
+    with DBSession() as db:
+        task=db.get(TaskItem,task_id);task.state='approved';db.commit()
+    for oversight in ('principal','iqac'):
+        with TestClient(app) as reviewer:
+            login(reviewer,oversight)
+            assert reviewer.get('/api/tasks').json()['items'][0]['id']==task_id
+            assert reviewer.get(f'/api/tasks/{task_id}/reference').status_code==200
+
+
+def test_invalid_word_limit_and_weight_rejected_by_assignment(client,login):
+    token=login(client,'hod');task_id=_batch(client,token,1)[0]
+    base={'task_ids':[task_id],'staff_id':_staff_id(),
+          'notes':'Please complete all required content as instructed.'}
+    invalids=[
+        {'id':'word', 'title':'Minimum words', 'type':'min_words','value':'zero'},
+        {'id':'word', 'title':'Maximum words', 'type':'max_words','value':'0'},
+        {'id':'weight', 'title':'Heavy critical item', 'type':'other','weight':101},
+    ]
+    for rule in invalids:
+        resp=client.post('/api/tasks/assign',headers={'X-CSRF-Token':token},json={**base,'rules':[rule]})
+        assert resp.status_code==422,resp.text

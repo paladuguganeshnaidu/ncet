@@ -575,9 +575,11 @@ def save_rules(body:RuleBookBody,user:User=Depends(as_role_mutation('hod')),db:D
     for rule in body.rules:
         if rule.type in ('min_pages','max_pages') and (not rule.value.isdecimal() or int(rule.value)>2000 or int(rule.value)<1):
             raise HTTPException(422,'Page limits must be integers between 1 and 2000.')
-        if rule.type not in ('required_heading','required_phrase','max_pages','min_pages','date_present','signature','formatting','grammar','semantic','other'):
+        if rule.type in ('min_words','max_words') and (not rule.value.isdecimal() or int(rule.value)>100000 or int(rule.value)<1):
+            raise HTTPException(422,'Word limits must be integers between 1 and 100000.')
+        if rule.type not in ('required_heading','required_phrase','max_pages','min_pages','min_words','max_words','date_present','signature','formatting','grammar','semantic','other'):
             raise HTTPException(422,f'Unsupported rule type: {rule.type}')
-        if rule.type in ('required_heading','required_phrase','max_pages','min_pages') and not rule.value.strip():
+        if rule.type in ('required_heading','required_phrase','max_pages','min_pages','min_words','max_words') and not rule.value.strip():
             raise HTTPException(422,f'A value is required for: {rule.title}')
     # Strong serialization on PostgreSQL: concurrent HOD edits cannot write same version.
     db.query(User).filter(User.id==user.id).with_for_update().first()
@@ -611,9 +613,41 @@ def integration_status(user:User=Depends(as_role('admin')),db:DbSession=Depends(
     return {'configured':bool(provider),
             'provider':provider.name if provider else None,
             'model':provider.model if provider else None,
-            'deepseek_configured':bool(provider and provider.name=='DeepSeek'),
+            'nvidia_configured':bool(db.get(IntegrationSetting,'nvidia_key')) or bool(os.getenv('NVIDIA_API_KEY')),
+            'deepseek_configured':bool(db.get(IntegrationSetting,'deepseek_key')) or bool(os.getenv('DEEPSEEK_API_KEY')),
             'openrouter_configured':bool(db.get(IntegrationSetting,'openrouter_key')) or bool(os.getenv('OPENROUTER_API_KEY')),
-            'key_stored':bool(db.get(IntegrationSetting,'deepseek_key') or db.get(IntegrationSetting,'openrouter_key'))}
+            'key_stored':bool(db.get(IntegrationSetting,'nvidia_key') or db.get(IntegrationSetting,'deepseek_key') or db.get(IntegrationSetting,'openrouter_key'))}
+
+@app.put('/api/admin/integrations/nvidia')
+def nvidia_integration_update(body:IntegrationBody,user:User=Depends(as_role_mutation('admin')),
+                              db:DbSession=Depends(get_db)):
+    """Encrypt the NVIDIA key at rest; never return or audit the secret itself."""
+    if not body.api_key.strip():
+        raise HTTPException(422,'API key is required.')
+    try:
+        encrypted=encrypt_key(body.api_key.strip())
+    except (ValueError,TypeError):
+        raise HTTPException(503,'Encryption key missing or invalid. Configure SETTINGS_ENCRYPTION_KEY on the server.')
+    row=db.get(IntegrationSetting,'nvidia_key')
+    if row:
+        row.encrypted_value=encrypted;row.updated_by=user.id;row.updated_at=utcnow()
+    else:
+        db.add(IntegrationSetting(key='nvidia_key',encrypted_value=encrypted,updated_by=user.id))
+    audit(db,user,'integration.nvidia.updated','NVIDIA API key was changed (value is not logged)')
+    db.commit()
+    return {'ok':True,'message':'NVIDIA API key securely stored. Live inference is not yet tested.'}
+
+
+@app.delete('/api/admin/integrations/nvidia')
+def nvidia_integration_delete(user:User=Depends(as_role_mutation('admin')),
+                              db:DbSession=Depends(get_db)):
+    row=db.get(IntegrationSetting,'nvidia_key')
+    if row:
+        db.delete(row)
+    audit(db,user,'integration.nvidia.deleted')
+    db.commit()
+    return {'ok':True,'environment_key_present':bool(os.getenv('NVIDIA_API_KEY'))}
+
 
 @app.put('/api/admin/integrations/openrouter')
 def integration_update(body:IntegrationBody,user:User=Depends(as_role_mutation('admin')),db:DbSession=Depends(get_db)):

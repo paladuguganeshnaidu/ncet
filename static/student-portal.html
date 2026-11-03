@@ -38,7 +38,8 @@
  body.printing-receipt #case-receipt-print .receipt-label{color:#586b82;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
  body.printing-receipt #case-receipt-print .receipt-description{white-space:pre-wrap;border:1px solid #d9e2ed;border-radius:8px;padding:14px;color:#243c5a}
 }
-</style></head><body class="student-modern">
+</style><link rel="stylesheet" href="/static/enterprise-minimal.css?v=20261103-a">
+</head><body class="student-modern">
 <header class="topnav"><div class="container nav-inner">
 <a class="brand" href="/students"><img src="/static/ncet-brand.svg" alt="NCET emblem"><span>NCET VerifyFlow<small>Student portal</small></span></a>
 <nav class="navlinks" aria-label="Student navigation"><a href="/students">Student home</a><a href="/students/directory">Directory</a><button type="button" id="logout" class="btn hidden">Sign out</button></nav>
@@ -84,7 +85,7 @@
 <section id="student-tab-profile" role="tabpanel" aria-labelledby="student-tab-profile-button" class="student-tab-panel hidden">
 <div class="student-profile-intro"><div><span class="eyebrow">YOUR STUDENT PORTFOLIO</span><h2>Make your work discoverable</h2><p>Share your skills, photo and work publicly only when you're ready. Contact details and private requests stay private.</p></div><a class="btn" href="/students/directory">Browse student directory ↗</a></div>
 <section class="panel student-photo-panel">
-<div class="student-avatar-wrap"><img id="showcase-photo-preview" src="/static/ncet-brand.svg" alt="Your profile photo preview" width="108" height="108"><span id="showcase-photo-fallback" class="small muted">No photo yet</span></div>
+<div class="student-avatar-wrap"><img id="showcase-photo-preview" src="/static/profile-placeholder.svg" alt="Your profile photo preview" width="108" height="108"><span id="showcase-photo-fallback" class="small muted">No photo yet</span></div>
 <div class="student-photo-fields"><h3>Profile photo</h3><p class="muted small">Optional · JPEG, PNG or WebP · strictly under 150 KB. We resize and remove image metadata before storing.</p>
 <form id="showcase-photo-form" class="photo-controls"><label class="student-file-label" for="showcase-photo">Choose photo<input id="showcase-photo" name="file" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
 <button class="btn btn-navy" type="submit">Upload photo</button><button id="remove-showcase-photo" type="button" class="btn hidden">Remove</button></form>
@@ -126,5 +127,5 @@
 </form></section>
 </section>
 </div></main>
-<footer class="student-footer"><div class="container"><img class="footer-ngi" src="/static/ngi-brand.svg" alt="Nagarjuna Group of Institutions" width="64" height="58"><span>© 2026 NCET VerifyFlow · Student Portal</span><span><a href="/students">Students</a> · <a href="/students/directory">Published portfolios</a> · <a href="/about">About</a></span></div></footer>
+<footer class="student-footer"><div class="container"><span>© 2026 NCET VerifyFlow · Student Portal</span><span><a href="/students">Students</a> · <a href="/students/directory">Published portfolios</a> · <a href="/about">About</a></span></div></footer>
 <script src="/static/student-portal.js?v=20261021-request-receipt" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

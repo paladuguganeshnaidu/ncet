@@ -37,7 +37,8 @@ with sync_playwright() as p:
     page=context.new_page();page.set_default_timeout(11000)
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.set_content('<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1" /></head><body><div id="app"></div></body></html>')
-    css=(ROOT/'static/styles.css').read_text()+'\n'+(ROOT/'static/enterprise.css').read_text()
+    css='\n'.join((ROOT/'static'/name).read_text() for name in
+        ('styles.css','enterprise.css','enterprise-minimal.css'))
     js=(ROOT/'static/app.js').read_text()
     for suffix in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','ncms-logo.webp','ncms-emblem.webp','ngi-logo.webp','ncet-crest.webp'):
         asset=ROOT/'static'/suffix
@@ -67,7 +68,7 @@ with sync_playwright() as p:
         assert department in page.locator('#acc-dept').inner_text(),department
     assert 'Mechanical Engineering' not in page.locator('#acc-dept').inner_text()
 
-    page.locator('[data-page=integrations]').first.click();page.get_by_text('DeepSeek AI settings').wait_for();assert page.locator('#deepseek-key').count()==1;assert page.get_by_text('New OpenRouter API key').count()==0
+    page.locator('[data-page=integrations]').first.click();page.get_by_text('NVIDIA AI settings').wait_for();assert page.locator('#nvidia-key').count()==1;assert page.get_by_text('New OpenRouter API key').count()==0
     page.screenshot(path=str(ROOT/'tests/ui-admin.png'),full_page=True)
     signout();signin('hod')
     # The CSE HOD can open the department-scoped complaints dashboard but not BCA oversight.

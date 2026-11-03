@@ -72,8 +72,8 @@ def test_ai_pass_then_hod_and_principal(client,monkeypatch):
     def fake_call(extracted,rules,key):
         assert 'Executive Summary' in extracted.pages[0]
         return AIResponse(summary='Verified against the checklist.',evaluations=[
-            AIItem(rule_id='heading',result='pass',location='Page 1',confidence=1.0),
-            AIItem(rule_id='grammar',result='pass',location='Page 1',confidence=.96)])
+            AIItem(rule_id='heading',result='pass',location='Page 1',evidence='Executive Summary',confidence=1.0),
+            AIItem(rule_id='grammar',result='pass',location='Page 1',evidence='Department Verification Report',confidence=.96)])
     monkeypatch.setattr('app.verification.call_ai',fake_call)
     h=login_role(client,'hod')
     store_rulebook(client,h,[{'id':'heading','title':'Executive Summary heading','type':'required_heading','value':'Executive Summary'},
@@ -95,7 +95,7 @@ def test_ai_pass_then_hod_and_principal(client,monkeypatch):
 def test_mandatory_violations_resubmit_and_manual_review(client,monkeypatch):
     monkeypatch.setenv('OPENROUTER_API_KEY','fake-key')
     def fake_ai(extracted,rules,key):
-        return AIResponse(summary='Summary',evaluations=[AIItem(rule_id='grammar',result='pass',confidence=.93)])
+        return AIResponse(summary='Summary',evaluations=[AIItem(rule_id='grammar',result='pass',evidence='This report',confidence=.93)])
     monkeypatch.setattr('app.verification.call_ai',fake_ai)
     h=login_role(client,'hod');store_rulebook(client,h,[{'id':'heading','title':'Mandatory heading','type':'required_heading','value':'Executive Summary'},
                                                 {'id':'grammar','title':'Grammar','type':'grammar'}]);signout(client,h)

@@ -24,16 +24,15 @@ def main():
         # accordion and a direct profile-search form, not rotating ad graphics.
         load_page(page,"public-home.html","public-home.js")
         assert page.locator(".film-frames").count()==0
-        assert page.locator('.identity-crest').evaluate('(img)=>img.complete && img.naturalWidth>0')
         assert page.locator('.topnav .brand img').evaluate('(img)=>img.complete && img.naturalWidth>0')
         assert page.locator('.topnav .brand-title').inner_text()=='NCET Student Portal'
         assert page.locator('.topnav .brand-subtitle').inner_text()=='VerifyFlow · Student and faculty collaboration'
-        assert page.locator('.identity-crest').get_attribute('src').startswith('data:image/svg+xml;base64,')
         assert page.locator('body').inner_text().lower().find('student services')==-1
-        assert page.locator('.identity-crest').evaluate(
-            '(img)=>Math.abs(img.getBoundingClientRect().width / img.getBoundingClientRect().height - 455/225)<.15')
-        assert page.locator('.identity-panel').evaluate(
-            '(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
+        assert page.locator('.hero-workflow').is_visible()
+        assert page.locator('.workflow-steps li').count()==3
+        assert page.locator('.identity-crest').count()==0
+        assert page.locator('.topnav .brand img').count()==1  # asset is inlined by load_page
+        assert page.locator('.topnav img[src*="naac-brand"]').count()==0
         people=page.locator('.footer-credits a').all()
         assert [a.inner_text().split(' · ')[-1].replace(' ↗','') for a in people]==['Principal','HOD','Developer']
         assert [a.get_attribute('href') for a in people]==[
@@ -131,7 +130,7 @@ def main():
             load_page(page,"public-home.html","public-home.js")
             overflow=page.evaluate("document.documentElement.scrollWidth > window.innerWidth + 1")
             assert not overflow, f"Horizontal overflow at {width}px"
-            assert page.locator('.identity-crest').is_visible(),width
+            assert page.locator('.hero-workflow').is_visible(),width
             # The complete NCET Student Portal label must be uniformly styled,
             # readable and contained at every mobile and desktop breakpoint.
             header=page.locator('.topnav .brand')
@@ -152,12 +151,12 @@ def main():
             assert typeface['weight']>=700,width
             assert typeface['subtitleVisible'],width
             assert typeface['titleRight']<=typeface['brandRight']+2,(width,typeface)
-            assert page.locator('.identity-crest').evaluate('(img)=>img.naturalWidth>0'),width
+            assert page.locator('.topnav .brand img').evaluate('(img)=>img.naturalWidth>0'),width
             assert page.locator('.footer-credits a').count()==3,width
-            assert page.locator('.identity-panel').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
+            assert page.locator('.hero-workflow').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
         page.emulate_media(reduced_motion="reduce")
         load_page(page,"public-home.html","public-home.js")
-        assert page.locator(".identity-crest").is_visible()
+        assert page.locator(".hero-workflow").is_visible()
         duration=page.locator(".service-card").first.evaluate(
             "(el) => getComputedStyle(el).transitionDuration")
         assert duration in ("0s","1e-05s"), duration

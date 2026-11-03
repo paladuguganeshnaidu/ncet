@@ -1,0 +1,239 @@
+/* NCET VerifyFlow — minimal institutional design layer.
+   The college identity appears once per view; workflows stay primary. */
+:root{
+ --ncet-blue:#0e2455;
+ --ncet-orange:#f6872a;
+ --ncet-green:#087c59;
+ --ncet-bg:#f6f8fc;
+ --ncet-text:#1c2b42;
+ --ncet-muted:#607088;
+ --ncet-line:#e2e8f0;
+ --ncet-border:#e2e8f0;
+ --ncet-focus:#bb6018;
+ --navy:#0e2455;
+ --orange:#f6872a;
+ --e-navy:#0e2455;
+ --e-orange:#f6872a;
+ --paper:#f6f8fc;
+ --ink:#1c2b42;
+ --muted:#607088;
+ --ncet-gradient:linear-gradient(120deg,#f8fafd 5%,#f4f7fc 70%,#fff8f1 125%);
+ --ncet-shadow-soft:0 8px 28px rgba(14,36,85,.045);
+}
+html{scroll-padding-top:82px}
+body{color:var(--ncet-text);background:var(--ncet-bg);-webkit-font-smoothing:antialiased}
+:where(h1,h2,h3){letter-spacing:-.035em}
+:where(p,.muted,.subtle){line-height:1.65}
+:where(.eyebrow,.section-kicker,.service-eyebrow,.overline,.nav-heading){
+ letter-spacing:.055em!important;font-size:11px;font-weight:650
+}
+:where(.panel,.card,.service-card,.profile-card,.metric,.student-auth-card,.access-panel){
+ border-radius:12px!important;box-shadow:var(--ncet-shadow-soft)!important;
+}
+:where(.btn,.btn-primary,.btn-navy,.nav-action,.nav-portal-action,button){
+ box-shadow:none!important;transition:background-color .17s ease,border-color .17s ease,color .17s ease
+}
+:where(.btn,.btn-primary,.btn-navy,.nav-action,.nav-portal-action){
+ border-radius:9px!important;font-weight:650
+}
+:where(button,a,input,textarea,select,summary):focus-visible{
+ outline:3px solid var(--ncet-focus)!important;outline-offset:3px!important
+}
+:where(input,textarea,select){border-radius:8px}
+:where(.btn-primary,.navlinks .nav-action,.navlinks .nav-portal-action){
+ background:var(--ncet-blue)!important;color:#fff!important;border-color:var(--ncet-blue)!important
+}
+:where(.btn-primary,.navlinks .nav-action,.navlinks .nav-portal-action):hover{
+ background:#1b376c!important;border-color:#1b376c!important;color:#fff!important
+}
+:where(.btn-navy,.btn.primary){background:#0e2455;border-color:#0e2455;color:#fff}
+:where(.btn-navy,.btn.primary):hover{background:#1b376c;color:#fff}
+:where(.panel,.card,.service-card,.profile-card):hover{transform:none!important}
+:where(.section-kicker,.eyebrow,.service-eyebrow){color:#95521c!important}
+:where(.topnav,.site-header,.topbar){
+ background:rgba(255,255,255,.98)!important;border-bottom:1px solid var(--ncet-line);
+ box-shadow:none!important
+}
+.topnav .brand{min-width:0;align-items:center;gap:10px}
+.topnav .brand img{width:83px!important;height:auto!important;max-height:48px!important;
+ flex:0 0 auto;object-fit:contain}
+.topnav .brand small,.brand .brand-subtitle{
+ color:#61728b!important;font-size:10px!important;font-weight:500!important;
+ line-height:1.35!important;letter-spacing:0!important;text-transform:none!important
+}
+:where(.topnav,.topbar) :where(.navlinks,nav) a:not(.nav-action):not(.nav-portal-action){
+ color:#344760;font-size:13px;font-weight:600;text-decoration:none
+}
+:where(.topnav,.topbar) :where(.navlinks,nav) a:hover{color:var(--ncet-blue)}
+:where(.topnav,.topbar) .navlinks a[aria-current="page"]{color:var(--ncet-blue);background:#eef2f8}
+:where(.topnav,.topbar) .navlinks{gap:6px}
+.ncet-menu-toggle{border-radius:9px!important;font-weight:650!important}
+:where(.footer,.about-footer,.student-footer){border-top:1px solid var(--ncet-line)}
+:where(.footer-logo,.footer-ngi){display:none!important}
+:where(.student-page-heading,.shell-head,.heading){margin-bottom:22px}
+:where(.student-profile-intro,.student-case-stats){background:var(--ncet-gradient)!important}
+
+/* Public landing — one crest in the navigation, workflow preview instead of a logo wall. */
+body:has(.hero-workflow) .topnav{min-height:70px!important}
+body:has(.hero-workflow) .topnav .nav-inner{min-height:70px!important;gap:18px}
+body:has(.hero-workflow) .topnav .brand{
+ flex:0 1 auto!important;max-width:none!important;gap:10px!important
+}
+body:has(.hero-workflow) .topnav .brand .brand-title{
+ font-size:16px!important;line-height:1.2!important;letter-spacing:-.025em!important
+}
+body:has(.hero-workflow) .topnav .brand .brand-subtitle{
+ font-size:10px!important;white-space:normal;max-width:210px
+}
+body:has(.hero-workflow) .navlinks{margin-left:auto;gap:5px}
+body:has(.hero-workflow) .navlinks a{font-size:12px!important;padding:9px 12px!important}
+body:has(.hero-workflow) .navlinks .nav-portal-action{margin-left:8px;border-radius:8px!important}
+.experience-hero{
+ background:var(--ncet-gradient)!important;border-bottom:1px solid var(--ncet-line);
+ padding:clamp(48px,6vw,88px) 0!important
+}
+.experience-grid{grid-template-columns:minmax(0,1.07fr) minmax(0,.93fr);gap:clamp(28px,5vw,78px);align-items:center}
+.hero-content{max-width:620px}
+.hero-content .eyebrow{font-size:11px!important;color:#92511d!important;letter-spacing:.06em!important}
+.hero-content h1{
+ margin:18px 0 20px!important;color:var(--ncet-blue)!important;
+ font-size:clamp(36px,5vw,64px)!important;line-height:1.11!important;
+ font-weight:790;letter-spacing:-.052em
+}
+.hero-content h1 em{color:#c56c23!important;font-style:normal}
+.hero-content>p:not(.hero-privacy){max-width:490px;font-size:16px;color:#53647a!important;line-height:1.7}
+.hero-content .actions{gap:10px;margin-top:28px}
+.experience-hero .btn-primary{
+ background:var(--ncet-blue)!important;color:#fff!important;border-color:var(--ncet-blue)!important
+}
+.experience-hero .btn-primary:hover{background:#1b376c!important}
+.experience-hero .btn-ghost{background:#fff!important;color:var(--ncet-blue)!important;
+ border:1px solid #d5deea!important}
+.hero-privacy{margin-top:24px!important;font-size:12px;color:#61728b!important}
+.hero-workflow{
+ padding:clamp(22px,3vw,36px);background:#fff;border:1px solid #e0e7f0;border-radius:16px;
+ box-shadow:0 15px 44px rgba(14,36,85,.075);color:var(--ncet-text)
+}
+.workflow-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+.workflow-label{font-size:11px;font-weight:750;color:var(--ncet-blue);letter-spacing:.03em}
+.workflow-status{font-size:10px;font-weight:650;color:#34745b;display:flex;align-items:center;gap:7px}
+.workflow-status span{width:6px;height:6px;border-radius:50%;background:#399875}
+.hero-workflow h2{font-size:clamp(21px,2.2vw,27px);color:var(--ncet-blue);margin:22px 0 6px;line-height:1.2}
+.hero-workflow>p{font-size:12px;margin:0 0 19px;color:#6a7a90}
+.workflow-steps{list-style:none;padding:0;margin:0;display:grid}
+.workflow-steps li{display:flex;align-items:flex-start;gap:15px;position:relative;
+ border-top:1px solid #eef1f5;padding:16px 0}
+.workflow-steps strong{display:block;font-size:13px;color:#21334e;font-weight:720}
+.workflow-steps small{display:block;font-size:12px;color:#607088;line-height:1.5;margin-top:4px}
+.step-number{display:grid;place-items:center;flex:0 0 31px;height:31px;
+ background:#f4f6fb;border:1px solid #e4e9f2;color:#60728b;border-radius:8px;
+ font-size:10px;font-weight:750}
+.workflow-steps li:last-child .step-number{background:#fff3e7;border-color:#f0d7bc;color:#a65b20}
+.workflow-footer{border-top:1px solid #eef1f5;padding-top:15px;font-size:11px;color:#738198}
+.workflow-footer span{padding:0 6px;color:#cb752a}
+.ncet-campus-story{padding:clamp(46px,6vw,72px) 0}
+.ncet-campus-photo img{border-radius:12px!important;box-shadow:none!important}
+.ncet-campus-photo figcaption{border-radius:6px;background:rgba(14,36,85,.78);font-size:11px}
+.ncet-campus-copy h2,.experience-services .section-heading,.experience-guidance .section-heading{
+ color:var(--ncet-blue)
+}
+.ncet-campus-highlights strong{background:#f6f8fb;border-color:#dfe5ef;color:#536784}
+.experience-services,.experience-guidance{background:#f8fafd}
+.experience-services .service-card{
+ border:1px solid #e2e8f0;border-radius:12px!important;min-height:0;
+ box-shadow:none!important;transition:border-color .17s ease!important
+}
+.experience-services .service-card:hover{border-color:#b5c6dc}
+.service-card-icon{background:#f0f3f9!important;color:var(--ncet-blue)!important}
+.service-arrow{color:#a3632d!important}
+.experience-find{background:linear-gradient(100deg,#f3f6fb,#fffaf4)!important}
+.guide-grid details{border:1px solid #e1e7f0!important;border-radius:10px;box-shadow:none}
+.footer{background:#0e2455;color:#d9e3f0}
+.footer-wordmark{font-size:16px;font-weight:750;color:#fff;letter-spacing:-.03em}
+.footer-content{gap:clamp(24px,4vw,50px)}
+.footer-content h3{font-size:11px;letter-spacing:.06em;color:#adbfda}
+.footer-credits a{
+ padding:7px 0!important;border:0!important;background:transparent!important;
+ color:#d9e3f0!important;font-weight:500!important;font-size:12px
+}
+.footer-credits a:hover{color:#fff!important;text-decoration:underline}
+.footer-bottom{border-top:1px solid #ffffff24;color:#b9c8dc}
+
+/* About — accreditation is a compact fact, not another giant college mark. */
+.ncet-about-page .about-hero{background:var(--ncet-gradient)!important}
+.ncet-about-page .brand img{width:85px!important;max-height:49px!important}
+.about-purpose{background:#fff}
+.about-accreditation{display:flex;justify-content:center;align-items:center;gap:17px;
+ border:1px solid #e3e9f1;border-radius:12px;background:#f9fbfd;padding:25px}
+.accreditation-grade{display:grid;place-items:center;flex:0 0 69px;height:69px;
+ background:#fff3e7;border:1px solid #f0d4b9;border-radius:10px;
+ color:#a5571b;font-size:25px;font-weight:800}
+.about-accreditation strong{display:block;font-size:15px;color:var(--ncet-blue)}
+.about-accreditation small{display:block;color:#6c7c91;margin-top:5px}
+.about-photo img{border-radius:12px!important;box-shadow:none!important}
+.about-steps .public-steps article{box-shadow:none!important;border-color:#e2e8f0}
+.about-footer{background:#0e2455}
+
+/* Faculty: neutral surfaces, fewer ornaments, softer contrast. */
+.login-art{background:linear-gradient(140deg,#0e2455,#172f5b)!important}
+.login-art .hero-copy h1{letter-spacing:-.05em}
+.sidebar{background:#fff}
+.sidebar-brand .crest{box-shadow:none}
+.sidebar-brand .brand-sub{letter-spacing:0!important;text-transform:none!important}
+.nav-item{border-radius:8px!important}
+.topbar .brand img{width:58px;height:auto;max-height:43px}
+.hod-dashboard,.student-profile-intro{box-shadow:none}
+:where(.student-modern,.student-public) .topnav{min-height:68px}
+:where(.student-modern,.student-public) .topnav .nav-inner{min-height:68px}
+:where(.student-modern,.student-public) .topnav .brand img{width:82px!important;max-height:46px!important}
+:where(.student-modern,.student-public) .intro{background:var(--ncet-gradient)!important}
+.student-photo-panel #showcase-photo-preview{background:#eff3f8;object-fit:cover}
+
+/* Error and fallback illustrations no longer duplicate the college crest. */
+body:has(.error-card) .error-card{display:block!important;max-width:720px;margin-inline:auto}
+body:has(.error-card) .error-content{max-width:630px;margin-inline:auto}
+body:has(.error-card) .error-number{color:#e3e9f2}
+img.ncet-campus-fallback{background:#eef3f9!important;object-fit:cover!important;padding:0!important}
+
+/* A small activity indicator, no extra institutional branding inside spinners. */
+.ncet-network-loader{border-left:1px solid #e2e8f0!important;box-shadow:0 9px 24px #0e24551b!important}
+.ncet-loader-dot{width:14px;height:14px;border:2px solid #d9e2ef;border-top-color:#bf6b26;
+ border-radius:50%;flex:0 0 14px;animation:ncet-minimal-spin .8s linear infinite}
+@keyframes ncet-minimal-spin{to{transform:rotate(360deg)}}
+button[aria-busy="true"]::before,.btn[aria-busy="true"]::before,.spinner{
+ background:none!important;background-image:none!important;width:15px!important;height:15px!important;min-width:15px!important;
+ border:2px solid #d9e2ef!important;border-top-color:#bf6b26!important;
+ border-radius:50%!important;box-shadow:none!important;filter:none!important;
+ animation:ncet-minimal-spin .8s linear infinite!important
+}
+button[aria-busy="true"]::before,.btn[aria-busy="true"]::before{content:""!important;margin-right:7px!important;vertical-align:middle}
+@media(max-width:950px){
+ .experience-grid{grid-template-columns:1fr!important;gap:27px}
+ .hero-workflow{max-width:610px}
+ body:has(.hero-workflow) .topnav .nav-inner{gap:12px}
+}
+@media(max-width:700px){
+ html{scroll-padding-top:22px}
+ body:has(.hero-workflow) .topnav .nav-inner{flex-wrap:nowrap!important;min-height:65px!important}
+ body:has(.hero-workflow) .topnav .brand{max-width:calc(100% - 67px)!important;flex:1 1 auto!important}
+ body:has(.hero-workflow) .topnav .brand img{width:70px!important;max-height:41px!important}
+ body:has(.hero-workflow) .topnav .brand .brand-title{font-size:14px!important}
+ body:has(.hero-workflow) .topnav .brand .brand-subtitle{font-size:9px!important}
+ body:has(.hero-workflow) .topnav.ncet-menu-enhanced .navlinks{margin:0}
+ .experience-hero{padding:38px 0 49px!important}
+ .hero-content h1{font-size:clamp(34px,9vw,52px)!important}
+ .hero-workflow{padding:22px}
+ .workflow-status{font-size:10px}
+ .about-accreditation{justify-content:flex-start}
+}
+@media(max-width:380px){
+ body:has(.hero-workflow) .topnav .brand img{width:59px!important}
+ body:has(.hero-workflow) .topnav .brand .brand-title{font-size:12.8px!important}
+ body:has(.hero-workflow) .topnav .brand .brand-subtitle{font-size:8.6px!important}
+ .workflow-header{align-items:flex-start}
+ .hero-workflow h2{font-size:22px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ncet-loader-dot,button[aria-busy="true"]::before,.btn[aria-busy="true"]::before,.spinner{animation:none!important}
+ .experience-services .service-card{transition:none!important}
+}

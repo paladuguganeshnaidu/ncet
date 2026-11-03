@@ -16,7 +16,7 @@ STATIC = ROOT / 'static'
 def load_page(page, html_file, script=None, mock_denied=False):
     page.goto('about:blank')  # reset the previous page's global JavaScript scope
     html = (STATIC / html_file).read_text(encoding='utf-8')
-    for asset in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg',
+    for asset in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','profile-placeholder.svg','campus-placeholder.svg',
                   'ncet-official.webp','ncms-emblem.webp','ngi-logo.webp'):
         image = STATIC / asset
         if image.is_file():
@@ -24,7 +24,7 @@ def load_page(page, html_file, script=None, mock_denied=False):
             uri = 'data:' + mime + ';base64,' + base64.b64encode(image.read_bytes()).decode()
             html = re.sub(r'/static/' + re.escape(asset) + r'(?:\?v=[a-zA-Z0-9_-]+)?', lambda _match: uri, html)
     for css in ('bca.css', 'community.css','experience.css','responsive-upgrade.css',
-                'student-redesign.css','ncet-brand-system.css','homepage-polish.css','institutional-ui.css','home-revamp.css'):
+                'student-redesign.css','ncet-brand-system.css','homepage-polish.css','institutional-ui.css','home-revamp.css','enterprise-minimal.css'):
         file=STATIC/css
         if not file.is_file():continue
         html=re.sub(r'<link rel="stylesheet" href="/static/' + re.escape(css) + r'(?:\?v=[a-zA-Z0-9_-]+)?"\s*/?>',
@@ -52,7 +52,9 @@ def main():
 
         load_page(desktop, 'public-home.html', 'public-home.js')
         assert desktop.locator('h1').inner_text().startswith('Your campus.')
-        assert desktop.locator('.identity-crest').evaluate('(img) => img.naturalWidth') > 0
+        assert desktop.locator('.hero-workflow').is_visible()
+        assert desktop.locator('.topnav img[src*="ncet-brand"]').count() == 0  # inlined assets
+        assert desktop.locator('.topnav .brand img').evaluate('(img) => img.naturalWidth') > 0
         assert desktop.locator('.film-frames').count() == 0
         assert desktop.locator('#toggle-animation').count() == 0
         assert desktop.locator('.service-card').count() == 3
@@ -61,7 +63,7 @@ def main():
         assert desktop.locator('form[role="search"]').get_attribute('action') == '/students/directory'
         desktop.locator('.guide-grid summary').first.click()
         assert desktop.locator('.guide-grid details').first.get_attribute('open') == ''
-        assert desktop.locator('header a[href="/students"]').inner_text().strip() == 'Student Portal'
+        assert desktop.locator('header a[href="/students"]').inner_text().strip() == 'Student portal'
         assert desktop.locator('header a[href="/app"]').count() == 0
         assert desktop.locator('header small').count() == 1
 

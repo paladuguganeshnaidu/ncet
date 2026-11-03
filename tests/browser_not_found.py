@@ -17,7 +17,7 @@ with sync_playwright() as tool:
         assert page.locator("h1").inner_text()=="We couldn't find that page."
         assert page.locator("a[href='/students']").count()==1
         assert page.locator("a[href='/students/directory']").count()==1
-        assert page.locator("img[src='/static/ncet-brand.svg']").count()==2
+        assert page.locator("img[src='/static/ncet-brand.svg']").count()==1
         for img in page.locator("img[src='/static/ncet-brand.svg']").all():
             assert img.evaluate("(img)=>img.complete && img.naturalWidth>0"),width
         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+2"),width
@@ -28,4 +28,4 @@ with sync_playwright() as tool:
             assert page.locator("body").is_visible()
         page.close()
     browser.close()
-print("404 CHROMIUM PASS: 6 viewport widths, working original NCET transparent logo, navigation and no horizontal overflow.")
+print("404 CHROMIUM PASS: 6 viewport widths, single NCET logo, navigation and no horizontal overflow.")
