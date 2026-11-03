@@ -77,6 +77,13 @@ with sync_playwright() as p:
     page.locator('.hero-workflow').scroll_into_view_if_needed()
     assert page.locator('.workflow-steps li').count()==3
     assert page.evaluate("matchMedia('(prefers-reduced-motion:reduce)').matches")
+    # The logged-in document workspace has its own form progress state and must
+    # not show a stale page-wide toast even for a slow authenticated mutation.
+    page.goto(BASE+'/app',wait_until='domcontentloaded')
+    page.evaluate("() => { window.__appMutation=fetch('/api/ui-motion-slow',{method:'POST'}); }")
+    page.wait_for_timeout(650)
+    assert page.locator('.ncet-network-loader').count()==0
+    page.evaluate('() => window.__appMutation')
     browser.close()
 
 print('NCET MOTION & UI AUDIT PASS: 6 public routes × 6 widths = 36 layouts, minimal activity indicator, accessible mobile menu and reduced motion.')
