@@ -42,7 +42,7 @@ with sync_playwright() as playwright:
     browser = launch_chromium(playwright,headless=True)
     page = browser.new_page(viewport={'width': 1280, 'height': 900})
     page.goto(BASE + '/', wait_until='domcontentloaded', timeout=25000)
-    assert page.locator('footer a[href="/plot"]').inner_text() == 'Performance & optimization'
+    assert page.locator('footer a[href="/plot"]').count() == 0  # diagnostics stay available at /plot without distracting homepage links
     browser.close()
 
     # CLS is the largest session window, not the sum of every shift during a visit.

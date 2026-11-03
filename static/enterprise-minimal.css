@@ -2,7 +2,7 @@
    The college identity appears once per view; workflows stay primary. */
 :root{
  --ncet-blue:#0e2455;
- --ncet-orange:#d87824;
+ --ncet-orange:#f6872a;
  --ncet-green:#087c59;
  --ncet-bg:#f6f8fc;
  --ncet-text:#1c2b42;
@@ -11,9 +11,9 @@
  --ncet-border:#e2e8f0;
  --ncet-focus:#bb6018;
  --navy:#0e2455;
- --orange:#d87824;
+ --orange:#f6872a;
  --e-navy:#0e2455;
- --e-orange:#d87824;
+ --e-orange:#f6872a;
  --paper:#f6f8fc;
  --ink:#1c2b42;
  --muted:#607088;
