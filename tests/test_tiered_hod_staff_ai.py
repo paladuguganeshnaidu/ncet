@@ -43,7 +43,7 @@ def test_three_level_hod_staff_ai_human_review(client, login, monkeypatch):
     assert uploaded.json()['count'] == 3
 
     listed = client.get('/api/tasks').json()['items']
-    tasks = {level: next(item for item in listed if item['filename'] ==
+    tasks = {level: next(item for item in listed if item['file'] ==
                          f'test-only-{level}-reference.pdf') for level in LEVELS}
     with DBSession() as db:
         staff_id = db.query(User).filter(User.username == 'staff').one().id
