@@ -2,6 +2,9 @@
    Nothing blocks painting or artificially delays submission. */
 (()=>{'use strict';
  if(window.__ncetLoadingInstalled)return;window.__ncetLoadingInstalled=true;
+ // The document workspace already manages its own async forms and notifications.
+ // A second global popup obscures the signed-in dashboard and can outlive login.
+ if(/^\/app\/?$/.test(window.location.pathname))return;
  const originalFetch=window.fetch.bind(window);
  let pending=0,showTimer=0,loader=null;
  const MAX_INDICATOR_MS=12000;
