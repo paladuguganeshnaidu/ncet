@@ -4,6 +4,7 @@ Provider URLs are fixed server constants. Uploaded document text is untrusted da
 an unavailable model or malformed response must never become a fabricated pass.
 """
 import json
+import logging
 import os
 import re
 import time
@@ -16,7 +17,8 @@ from sqlalchemy.orm import Session
 from .database import IntegrationSetting
 
 NVIDIA_URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
-NVIDIA_DEFAULT_MODEL = 'meta/llama-3.1-70b-instruct'
+NVIDIA_DEFAULT_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -69,11 +71,16 @@ def review_json(provider: Provider, system: str, payload: dict, *, max_tokens: i
         'model': provider.model,
         'max_tokens': max_tokens,
         'temperature': 0,
+        'stream': False,
         'messages': [
             {'role': 'system', 'content': system + ' Respond using only one valid JSON object.'},
             {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)},
         ],
     }
+    if provider.url == NVIDIA_URL and provider.model == NVIDIA_DEFAULT_MODEL:
+        # The hosted Nemotron API defaults to streaming and extended reasoning.
+        # Explicit non-streaming, no-reasoning mode fits our bounded JSON parser.
+        body.update(temperature=1.0, top_p=0.95, reasoning_effort='none')
     if provider.url != NVIDIA_URL:
         body['response_format'] = {'type': 'json_object'}
     headers = {'Authorization': 'Bearer ' + provider.key, 'Content-Type': 'application/json'}
@@ -85,7 +92,13 @@ def review_json(provider: Provider, system: str, payload: dict, *, max_tokens: i
                 if response.status_code in (429, 500, 502, 503, 504) and attempt == 0:
                     time.sleep(1)
                     continue
-                response.raise_for_status()
+                try:
+                    response.raise_for_status()
+                except httpx.HTTPStatusError as exc:
+                    # Log metadata only: never the key, prompt, or provider response body.
+                    logger.warning('AI gateway rejected request: provider=%s model=%s status=%s',
+                                   provider.name, provider.model, exc.response.status_code)
+                    raise
                 break
             except httpx.TransportError:
                 if attempt:
