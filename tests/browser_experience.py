@@ -31,7 +31,7 @@ def main():
         assert page.locator('.hero-workflow').is_visible()
         assert page.locator('.workflow-steps li').count()==3
         assert page.locator('.identity-crest').count()==0
-        assert page.locator('.topnav img[src*="ncet-brand"]').count()==1
+        assert page.locator('.topnav .brand img').count()==1  # asset is inlined by load_page
         assert page.locator('.topnav img[src*="naac-brand"]').count()==0
         people=page.locator('.footer-credits a').all()
         assert [a.inner_text().split(' · ')[-1].replace(' ↗','') for a in people]==['Principal','HOD','Developer']
