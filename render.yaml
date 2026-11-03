@@ -29,6 +29,6 @@ services:
       - key: NVIDIA_API_KEY
         sync: false
       - key: NVIDIA_MODEL
-        value: meta/llama-3.1-70b-instruct
+        value: nvidia/nemotron-3-super-120b-a12b
       - key: SCAN_MODE
         value: "off"

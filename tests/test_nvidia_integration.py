@@ -4,7 +4,7 @@ import json
 import pytest
 from cryptography.fernet import Fernet
 
-from app.ai_gateway import NVIDIA_URL, Provider, review_json, select_provider
+from app.ai_gateway import NVIDIA_DEFAULT_MODEL, NVIDIA_URL, Provider, review_json, select_provider
 from app.database import DBSession, IntegrationSetting
 from app.verification import AIItem, AIResponse, Extracted, Rule, build_report, evidence_supported
 
@@ -77,8 +77,41 @@ def test_nvidia_request_uses_fixed_server_endpoint_and_validates_json(monkeypatc
     assert headers['Authorization'] == 'Bearer never-real-secret'
     assert body['model'] == provider.model
     assert 'response_format' not in body
+    assert body['stream'] is False
     assert body['messages'][1]['role'] == 'user'
 
+
+
+def test_nemotron_hosted_json_request_disables_streaming_and_reasoning(monkeypatch):
+    captured = []
+
+    class FakeResponse:
+        status_code = 200
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return {'choices': [{'message': {'content': '{"summary":"Clear", "recommendations":[]}'}}]}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def post(self, url, *, headers, json):
+            captured.append(json)
+            return FakeResponse()
+
+    monkeypatch.setattr('app.ai_gateway.httpx.Client', FakeClient)
+    provider = Provider('NVIDIA NIM', NVIDIA_DEFAULT_MODEL, NVIDIA_URL, 'synthetic-key')
+    response = review_json(provider, 'Return JSON.', {'task_total': 1}, max_tokens=950)
+    assert response['summary'] == 'Clear'
+    body = captured[0]
+    assert body['stream'] is False
+    assert body['reasoning_effort'] == 'none'
+    assert body['temperature'] == 1.0
+    assert body['top_p'] == 0.95
 
 def test_ungrounded_ai_pass_is_manual_review(monkeypatch):
     from app import verification

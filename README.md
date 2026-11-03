@@ -18,7 +18,7 @@ A database-backed, role-enforced, AI-assisted college document-verification appl
 
 **Never commit `.env` or real API keys.** Passwords supplied for the earlier frontend-only demonstration are **not valid** for this backend and are **not reused**. There are no seeded documents or hardcoded live users.
 
-## NVIDIA document assurance (draft branch)
+## NVIDIA document assurance
 
 Set the server-only `NVIDIA_API_KEY` (or configure the encrypted NVIDIA key in the admin workspace) and an available `NVIDIA_MODEL`; the fixed base endpoint is `https://integrate.api.nvidia.com/v1`. No key is exposed in browser code.
 
@@ -39,7 +39,7 @@ On submission the document enters **Verifying**. The worker runs extraction and 
 
 ### AI model behavior and limits
 
-No AI provider key is required. With no key configured, submissions are routed to **Manual Review**. When authorized, `NVIDIA_API_KEY` (model `NVIDIA_MODEL`, default `meta/llama-3.1-70b-instruct`) takes precedence at the fixed `https://integrate.api.nvidia.com/v1/chat/completions` endpoint. An administrator can save the key encrypted in the UI. Existing DeepSeek/OpenRouter keys are considered only if NVIDIA is not configured; a failed NVIDIA call never silently switches provider. The integration requests JSON objects and locally validates response structure, cited rule IDs, result values, confidence, and exact document quotations for AI-generated pass/issue findings. NVIDIA model JSON-mode support varies, so NVIDIA calls use strict JSON prompting and local parsing. Providers do **not** guarantee schema-enforced JSON, and outages route to Manual Review. To control costs, latency and output reliability the application limits extracted input to **110,000 characters**, supports at most **120 PDF pages**, and performs OCR on at most **35 pages** per PDF. Incomplete text extraction never earns an automatic pass. DOCX pagination and signature verification may require human confirmation; this is not a forensic signature-validation or pixel-perfect typography engine. Legacy `.doc` is not supported; convert to `.docx` or PDF.
+No AI provider key is required. With no key configured, submissions are routed to **Manual Review**. When authorized, `NVIDIA_API_KEY` (model `NVIDIA_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`) takes precedence at the fixed `https://integrate.api.nvidia.com/v1/chat/completions` endpoint. An administrator can save the key encrypted in the UI. Existing DeepSeek/OpenRouter keys are considered only if NVIDIA is not configured; a failed NVIDIA call never silently switches provider. The integration requests JSON objects and locally validates response structure, cited rule IDs, result values, confidence, and exact document quotations for AI-generated pass/issue findings. NVIDIA model JSON-mode support varies, so NVIDIA calls use strict JSON prompting and local parsing. Providers do **not** guarantee schema-enforced JSON, and outages route to Manual Review. To control costs, latency and output reliability the application limits extracted input to **110,000 characters**, supports at most **120 PDF pages**, and performs OCR on at most **35 pages** per PDF. Incomplete text extraction never earns an automatic pass. DOCX pagination and signature verification may require human confirmation; this is not a forensic signature-validation or pixel-perfect typography engine. Legacy `.doc` is not supported; convert to `.docx` or PDF.
 
 ### NVIDIA NIM integration (preferred)
 
