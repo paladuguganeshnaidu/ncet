@@ -6,6 +6,7 @@ HOD-controlled. Existing VerifyFlow Document tables are unaffected.
 from __future__ import annotations
 
 import json
+import logging
 import csv
 import io
 import secrets
@@ -25,6 +26,7 @@ from .security import current, csrf_required
 from .storage import read_upload, validate_upload
 from .ai_gateway import select_provider, review_json
 
+logger=logging.getLogger(__name__)
 router=APIRouter(prefix='/api/tasks',tags=['Authenticated department assignments'])
 MAX_TASK_FILES=50
 MAX_BATCH_BYTES=60*1024*1024
@@ -1082,7 +1084,10 @@ def generate_ai_brief(user:User=Depends(csrf_required),db:DbSession=Depends(get_
         summary=raw.get('summary');ideas=raw.get('recommendations')
         if not isinstance(summary,str) or not isinstance(ideas,list):raise ValueError('Invalid AI response')
         recommendations=[x[:250] for x in ideas[:4] if isinstance(x,str)]
-    except (ValueError,httpx.HTTPError,TypeError,KeyError):
+    except (ValueError,httpx.HTTPError,TypeError,KeyError) as exc:
+        # Metadata only; never log prompts, provider bodies or credentials.
+        logger.warning('AI brief unavailable: provider=%s model=%s error_type=%s',
+                       provider.name,provider.model,type(exc).__name__)
         raise HTTPException(503,'AI process recommendations are temporarily unavailable.')
     task_audit(db,user,'task.ai_brief','Aggregate process review generated')
     db.commit()

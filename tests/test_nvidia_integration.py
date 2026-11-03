@@ -113,6 +113,17 @@ def test_nemotron_hosted_json_request_disables_streaming_and_reasoning(monkeypat
     assert body['temperature'] == 1.0
     assert body['top_p'] == 0.95
 
+    lightning = Provider('NVIDIA NIM', 'nvidia/nemotron-3.5-lightning-30b-a3b',
+                         NVIDIA_URL, 'synthetic-key')
+    response = review_json(lightning, 'Return JSON.', {'task_total': 1}, max_tokens=950)
+    assert response['summary'] == 'Clear'
+    lightning_body = captured[1]
+    assert lightning_body['stream'] is False
+    assert lightning_body['temperature'] == 1.0
+    assert lightning_body['top_p'] == 0.95
+    assert lightning_body['chat_template_kwargs']['enable_thinking'] is False
+    assert 'reasoning_effort' not in lightning_body
+
 def test_ungrounded_ai_pass_is_manual_review(monkeypatch):
     from app import verification
     rule = Rule(id='grammar', title='Clear grammar', type='grammar', required=True)
