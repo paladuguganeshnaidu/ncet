@@ -67,7 +67,7 @@ with sync_playwright() as p:
         assert department in page.locator('#acc-dept').inner_text(),department
     assert 'Mechanical Engineering' not in page.locator('#acc-dept').inner_text()
 
-    page.locator('[data-page=integrations]').first.click();page.get_by_text('DeepSeek AI settings').wait_for();assert page.locator('#deepseek-key').count()==1;assert page.get_by_text('New OpenRouter API key').count()==0
+    page.locator('[data-page=integrations]').first.click();page.get_by_text('NVIDIA AI settings').wait_for();assert page.locator('#nvidia-key').count()==1;assert page.get_by_text('New OpenRouter API key').count()==0
     page.screenshot(path=str(ROOT/'tests/ui-admin.png'),full_page=True)
     signout();signin('hod')
     # The CSE HOD can open the department-scoped complaints dashboard but not BCA oversight.
