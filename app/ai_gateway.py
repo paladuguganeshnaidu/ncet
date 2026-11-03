@@ -81,6 +81,11 @@ def review_json(provider: Provider, system: str, payload: dict, *, max_tokens: i
         # The hosted Nemotron API defaults to streaming and extended reasoning.
         # Explicit non-streaming, no-reasoning mode fits our bounded JSON parser.
         body.update(temperature=1.0, top_p=0.95, reasoning_effort='none')
+    if provider.url == NVIDIA_URL and provider.model.startswith('nvidia/nemotron-3.5-'):
+        # Nemotron 3.5 thinking consumes the bounded JSON answer budget by default.
+        # Use its documented chat template option for a direct structured answer.
+        body.update(temperature=1.0, top_p=0.95,
+                    chat_template_kwargs={'enable_thinking': False})
     if provider.url != NVIDIA_URL:
         body['response_format'] = {'type': 'json_object'}
     headers = {'Authorization': 'Bearer ' + provider.key, 'Content-Type': 'application/json'}
