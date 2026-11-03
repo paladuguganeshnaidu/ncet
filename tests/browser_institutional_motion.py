@@ -61,6 +61,11 @@ with sync_playwright() as p:
       };
     })()""")
     page.reload(wait_until='domcontentloaded')
+    # Polling/read-only calls are background work and must not display a global toast.
+    page.evaluate("() => { window.__backgroundRead=fetch('/api/ui-motion-slow'); }")
+    page.wait_for_timeout(650)
+    assert page.locator('.ncet-network-loader').is_hidden()
+    page.evaluate('() => window.__backgroundRead')
     page.evaluate("() => { window.__slowOperation=fetch('/api/ui-motion-slow',{method:'POST'}); }")
     page.locator('.ncet-network-loader:not([hidden])').wait_for(state='visible',timeout=1500)
     assert page.locator('.ncet-network-loader .ncet-loader-dot').count()==1
