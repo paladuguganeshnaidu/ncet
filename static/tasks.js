@@ -87,7 +87,7 @@ function renderDrafts(){
     const d=drafts.get(t.id),state=d?.state||'queued';
     const details=state==='ready'?('<ul>'+d.rules.map(r=>'<li><strong>'+safe(r.title)+'</strong> · '+safe(r.type.replaceAll('_',' '))+(r.value?' · '+safe(r.value):'')+
         (r.instructions?'<p class="subtle">'+safe(r.instructions)+'</p>':'')+'</li>').join('')+'</ul>'):
-      '<p class="subtle">'+safe(d?.error || (state==='processing'?'DeepSeek is analyzing the PDF…':state==='queued'?'Awaiting AI analysis.':'Awaiting analysis.'))+'</p>';
+      '<p class="subtle">'+safe(d?.error || (state==='processing'?'NVIDIA / configured AI is analyzing the PDF…':state==='queued'?'Awaiting AI analysis.':'Awaiting analysis.'))+'</p>';
     return '<details class="draft-card" '+(selectedTasks.length===1?'open':'')+'><summary><strong>'+safe(t.file)+'</strong> · '+safe(state)+' · '+(d?.rules?.length||0)+' proposals</summary>'+
         (d?.summary?'<p>'+safe(d.summary)+'</p>':'')+details+'</details>';
   }).join('');
@@ -177,7 +177,7 @@ $('#per-file-rules').addEventListener('click',event=>{
 });
 addManualRule();setRulesMode();
 
-function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
+function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
 function table(){
  const body=$('#tasks');$('#queue-count').textContent=tasks.length+' tasks';
  $('#check-header').hidden=role!=='hod';
@@ -256,13 +256,13 @@ $('#retry-rules').addEventListener('click',async()=>{
   }catch(err){say(err.message,true)}finally{button.disabled=false}
 });
 
-$('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Replace the stored DeepSeek API key?'))return;const key=$('#ai-key').value;try{await api('/api/tasks/ai/key',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('DeepSeek key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
+$('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Replace the stored NVIDIA API key?'))return;const key=$('#ai-key').value;try{await api('/api/admin/integrations/nvidia',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('NVIDIA key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-select]')){const id=Number(e.target.dataset.select);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts()}});
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op],[data-notification]');if(!btn)return;
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;
 if(btn.dataset.op==='reference'){window.location.href=`/api/tasks/${id}/reference`;return}
-if(btn.dataset.op==='report'){const info=t.report||{};const lines=(info.findings||[]).map(x=>`${x.title||x.rule_id}: ${x.result||'uncertain'}${x.issue?' — '+x.issue:''}`).join('\n');const history=(t.decisions||[]).map(x=>`${x.decision}: ${x.note}`).join('\n');return alert(`${info.summary||'Review summary'}\nScore: ${t.score===null?'Awaiting review':t.score+'%'}\n\n${lines||'No individual findings yet.'}\n\nHOD decisions:\n${history||'Pending decision'}`)}
+if(btn.dataset.op==='report'){const info=t.report||{};const lines=(info.findings||[]).map(x=>`${x.title||x.rule_id}: ${x.result||'uncertain'}${x.issue?' — '+x.issue:''}${x.evidence?' [Quote: '+x.evidence+']':''}`).join('\n');const history=(t.decisions||[]).map(x=>`${x.decision}: ${x.note}`).join('\n');return alert(`${info.summary||'Review summary'}\nScore: ${t.score===null?'Awaiting review':t.score+'%'}\n\n${lines||'No individual findings yet.'}\n\nHOD decisions:\n${history||'Pending decision'}`)}
 if(btn.dataset.op==='deadline'){
  if(role!=='hod')return;
  editingDeadlineTask=id;$('#deadline-task-name').textContent=t.file;

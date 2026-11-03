@@ -611,9 +611,41 @@ def integration_status(user:User=Depends(as_role('admin')),db:DbSession=Depends(
     return {'configured':bool(provider),
             'provider':provider.name if provider else None,
             'model':provider.model if provider else None,
-            'deepseek_configured':bool(provider and provider.name=='DeepSeek'),
+            'nvidia_configured':bool(db.get(IntegrationSetting,'nvidia_key')) or bool(os.getenv('NVIDIA_API_KEY')),
+            'deepseek_configured':bool(db.get(IntegrationSetting,'deepseek_key')) or bool(os.getenv('DEEPSEEK_API_KEY')),
             'openrouter_configured':bool(db.get(IntegrationSetting,'openrouter_key')) or bool(os.getenv('OPENROUTER_API_KEY')),
-            'key_stored':bool(db.get(IntegrationSetting,'deepseek_key') or db.get(IntegrationSetting,'openrouter_key'))}
+            'key_stored':bool(db.get(IntegrationSetting,'nvidia_key') or db.get(IntegrationSetting,'deepseek_key') or db.get(IntegrationSetting,'openrouter_key'))}
+
+@app.put('/api/admin/integrations/nvidia')
+def nvidia_integration_update(body:IntegrationBody,user:User=Depends(as_role_mutation('admin')),
+                              db:DbSession=Depends(get_db)):
+    """Encrypt the NVIDIA key at rest; never return or audit the secret itself."""
+    if not body.api_key.strip():
+        raise HTTPException(422,'API key is required.')
+    try:
+        encrypted=encrypt_key(body.api_key.strip())
+    except (ValueError,TypeError):
+        raise HTTPException(503,'Encryption key missing or invalid. Configure SETTINGS_ENCRYPTION_KEY on the server.')
+    row=db.get(IntegrationSetting,'nvidia_key')
+    if row:
+        row.encrypted_value=encrypted;row.updated_by=user.id;row.updated_at=utcnow()
+    else:
+        db.add(IntegrationSetting(key='nvidia_key',encrypted_value=encrypted,updated_by=user.id))
+    audit(db,user,'integration.nvidia.updated','NVIDIA API key was changed (value is not logged)')
+    db.commit()
+    return {'ok':True,'message':'NVIDIA API key securely stored. Live inference is not yet tested.'}
+
+
+@app.delete('/api/admin/integrations/nvidia')
+def nvidia_integration_delete(user:User=Depends(as_role_mutation('admin')),
+                              db:DbSession=Depends(get_db)):
+    row=db.get(IntegrationSetting,'nvidia_key')
+    if row:
+        db.delete(row)
+    audit(db,user,'integration.nvidia.deleted')
+    db.commit()
+    return {'ok':True,'environment_key_present':bool(os.getenv('NVIDIA_API_KEY'))}
+
 
 @app.put('/api/admin/integrations/openrouter')
 def integration_update(body:IntegrationBody,user:User=Depends(as_role_mutation('admin')),db:DbSession=Depends(get_db)):

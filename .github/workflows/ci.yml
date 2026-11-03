@@ -40,7 +40,7 @@ jobs:
           from pathlib import Path
 
           config = json.loads(Path(os.environ['RUNNER_TEMP'], 'compose.json').read_text())
-          required = {'DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL', 'OPENROUTER_API_KEY', 'OPENROUTER_DEEPSEEK_MODEL'}
+          required = {'NVIDIA_API_KEY', 'NVIDIA_MODEL', 'DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL', 'OPENROUTER_API_KEY', 'OPENROUTER_DEEPSEEK_MODEL'}
           for service in ('web', 'worker'):
               actual = set(config['services'][service].get('environment', {}))
               missing = required - actual

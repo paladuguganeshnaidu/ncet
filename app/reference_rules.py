@@ -129,7 +129,7 @@ def evaluate_draft(draft_id:int) -> None:
         pdf=bytes(task.reference_pdf);filename=task.filename; model=provider.model if provider else ""
     state="failed";summary="";error="";rules=[]
     try:
-        if provider is None:raise ValueError("Configure a DeepSeek key or approved AI provider and retry.")
+        if provider is None:raise ValueError("Configure an approved AI provider (NVIDIA NIM preferred) and retry.")
         extracted=extract_document(filename,pdf)
         if extracted.needs_ocr_review or not extracted.pages or not any(p.strip() for p in extracted.pages):
             raise ValueError("Reference PDF needs a readable text or OCR review.")

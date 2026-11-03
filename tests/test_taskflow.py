@@ -167,7 +167,7 @@ def test_scoring_threshold_requires_actual_provider_and_no_uncertainty(client,lo
     from app.verification import Extracted
     monkeypatch.setattr('app.verification.extract_document',lambda *args:Extracted(['Doc content'],1,False,[]))
     def fake_ai(provider,system,payload,max_tokens=2200):
-        return {'summary':'Reviewed','evaluations':[{'rule_id':f'rule{i}','result':('pass' if i<fake_ai.passed else 'issue'),'confidence':0.98,'evidence':'Document sample'} for i in range(4)]}
+        return {'summary':'Reviewed','evaluations':[{'rule_id':f'rule{i}','result':('pass' if i<fake_ai.passed else 'issue'),'confidence':0.98,'evidence':'Doc content'} for i in range(4)]}
     monkeypatch.setattr(tf,'review_json',fake_ai)
     with TestClient(app) as staff:
         s=login(staff,'staff')

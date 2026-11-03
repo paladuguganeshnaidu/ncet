@@ -71,7 +71,7 @@
   let cleanupActions = [];
   let aiOverview = {};
   let rulebook={version:0,rules:[],history:[]};
-  let integrations={configured:false,deepseek_configured:false,openrouter_configured:false,provider:null,model:null};
+  let integrations={configured:false,nvidia_configured:false,deepseek_configured:false,openrouter_configured:false,provider:null,model:null};
   let verifyReport=null;
   const app = document.getElementById('app');
   const currentRole = () => ({...ROLES[role || 'staff'], name: user?.name || ROLES[role || 'staff'].name, subtitle: user?.department || ROLES[role || 'staff'].subtitle});
@@ -268,23 +268,23 @@
     if(role!=='admin')return overviewHTML();
     const provider=integrations.provider || 'Not configured';
     const ready=Boolean(integrations.configured);
-    const dedicated=Boolean(integrations.deepseek_configured);
-    const fallback=Boolean(integrations.openrouter_configured);
-    return `${pageHeader('SUPER ADMIN / INTEGRATIONS','DeepSeek AI settings','Connect DeepSeek to document review and task verification.')}
+    const dedicated=Boolean(integrations.nvidia_configured);
+    const fallback=Boolean(integrations.deepseek_configured || integrations.openrouter_configured);
+    return `${pageHeader('SUPER ADMIN / INTEGRATIONS','NVIDIA AI settings','Connect NVIDIA NIM to document review and task verification.')}
     <div class="manage-grid"><section class="panel form-panel">
-    <div class="model-name">${icon('sparkle','lg')} <div><strong>DeepSeek AI document review</strong><span>Preferred provider · Direct DeepSeek</span></div></div>
-    <div class="notice" role="status"><strong>${ready ? (dedicated?'DeepSeek configured':'Fallback provider configured') : 'AI provider not configured'}</strong>
+    <div class="model-name">${icon('sparkle','lg')} <div><strong>NVIDIA NIM document review</strong><span>Preferred provider · NVIDIA API Catalog</span></div></div>
+    <div class="notice" role="status"><strong>${ready ? (dedicated?'NVIDIA configured':'Legacy provider configured') : 'AI provider not configured'}</strong>
       <p>Active provider: <b>${txt(provider)}</b>${integrations.model ? ' · '+txt(integrations.model) : ''}.
       ${ready?'Document verification will use the available provider.':'Without an available key, submissions require manual review.'}</p></div>
     <form id="integration-form" autocomplete="off">
-      <div class="field"><label class="field-label" for="deepseek-key">DeepSeek API key</label>
-      <input id="deepseek-key" type="password" name="api_key" class="form-control" minlength="15" maxlength="300" required autocomplete="new-password" placeholder="Paste your DeepSeek API key" /></div>
-      <button class="btn btn-primary" type="submit">${icon('lock','sm')} Save DeepSeek key securely</button>
+      <div class="field"><label class="field-label" for="nvidia-key">NVIDIA API key</label>
+      <input id="nvidia-key" type="password" name="api_key" class="form-control" minlength="15" maxlength="300" required autocomplete="new-password" placeholder="Paste your NVIDIA API key" /></div>
+      <button class="btn btn-primary" type="submit">${icon('lock','sm')} Save NVIDIA key securely</button>
     </form>
     <p class="small muted" style="margin-top:15px">Saved keys are encrypted on the server. A configured key does not guarantee provider connectivity or available usage balance.</p>
-    <details style="margin-top:20px"><summary class="field-label">Optional: OpenRouter fallback</summary>
-      <p class="small muted">Used only when a dedicated DeepSeek key is unavailable. Existing OpenRouter configuration is retained.</p>
-      <p class="small muted">Fallback: ${fallback?'Configured':'Not configured'}</p>
+    <details style="margin-top:20px"><summary class="field-label">Legacy providers (optional)</summary>
+      <p class="small muted">NVIDIA is always preferred when configured. Existing DeepSeek/OpenRouter keys are only considered when NVIDIA is absent; remove obsolete keys before processing sensitive documents.</p>
+      <p class="small muted">Legacy provider: ${fallback?'Configured':'Not configured'}</p>
       <form id="fallback-form" autocomplete="off"><div class="field"><label class="field-label" for="fallback-key">OpenRouter fallback API key</label>
       <input id="fallback-key" type="password" name="api_key" class="form-control" minlength="15" maxlength="300" required autocomplete="new-password" placeholder="OpenRouter API key" /></div>
       <button class="btn btn-secondary" type="submit">Save fallback key</button></form>
@@ -302,6 +302,7 @@
       <div class="modal-top"><div><h2>Verification report</h2><p>${txt(v.document_id)} · Revision ${v.revision||1} · Rules v${v.policy_version||'—'}</p></div><button class="icon-button" data-action="close-modal" aria-label="Close report">${icon('close')}</button></div>
       <div class="modal-body"><div class="report-status">${statusHTML(r.status||v.status||'verifying')} <span class="small muted">${r.rule_count||0} rules · ${r.page_count||0} pages · ${r.ai_used?'AI analysis completed':'No AI response used'}</span></div>
       <p class="detail-text">${txt(r.summary||'The verification worker is still processing this file.')}</p>
+       ${r.authorship_note?`<div class="notice"><strong>Authorship assessment</strong>${txt(r.authorship_note)}</div>`:''}
       ${(r.notes||[]).length?`<div class="notice"><strong>Reviewer notes</strong>${r.notes.map(txt).join('; ')}</div>`:''}
       ${rows.map(item=>`<div class="finding"><div class="finding-top"><strong>${txt(item.title)}</strong><span class="finding-result ${item.result==='issue'?'issue':item.result==='pass'?'passed':'uncertain'}">${txt(item.result)}</span></div>
       <p class="small muted">${txt(item.location||'Location unspecified')} · ${txt(item.source)} · ${Math.round((item.confidence||0)*100)}% confidence</p>
@@ -469,7 +470,7 @@ function cleanupHTML() {
       return;
     }
     if(e.target.id==='rule-form'){e.preventDefault();if(role!=='hod')return;syncRuleForm();try{const result=await api('/api/rules',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({rules:rulebook.rules})});rulebook=await api('/api/rules');render();notify(`Rules saved as version ${result.version}.`);}catch(err){notify(err.message,'error');}return;}
-    if(e.target.id==='integration-form'||e.target.id==='fallback-form'){e.preventDefault();if(role!=='admin')return;const fallback=e.target.id==='fallback-form';const val=e.target.querySelector('[name=api_key]').value.trim();try{await api(fallback?'/api/admin/integrations/openrouter':'/api/tasks/ai/key',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:val})});integrations=await api('/api/admin/integrations');render();notify(fallback?'Fallback key encrypted and saved.':'DeepSeek key encrypted and saved. Provider connectivity must be tested with a document review.');}catch(err){notify(err.message,'error');}return;}
+    if(e.target.id==='integration-form'||e.target.id==='fallback-form'){e.preventDefault();if(role!=='admin')return;const fallback=e.target.id==='fallback-form';const val=e.target.querySelector('[name=api_key]').value.trim();try{await api(fallback?'/api/admin/integrations/openrouter':'/api/admin/integrations/nvidia',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:val})});integrations=await api('/api/admin/integrations');render();notify(fallback?'Fallback key encrypted and saved.':'NVIDIA key encrypted and saved. Provider connectivity must be tested with a document review.');}catch(err){notify(err.message,'error');}return;}
     if(e.target.id==='login-form'){
       e.preventDefault();const data=new FormData(e.target);
       try{const auth=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:String(data.get('username')||'').trim().toLowerCase(),password:String(data.get('password')||''),role:null})});

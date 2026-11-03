@@ -10,28 +10,39 @@ A database-backed, role-enforced, AI-assisted college document-verification appl
 | API | Python 3.13, FastAPI, SQLAlchemy 2, Alembic |
 | Database | PostgreSQL on Render or college-operated Postgres; SQLite for development/tests |
 | Document analysis | PyMuPDF for PDFs, python-docx for DOCX, Tesseract OCR for scanned pages/images |
-| Rule evaluator | Deterministic checks plus optional DeepSeek or OpenRouter DeepSeek semantic review |
+| Rule evaluator | Deterministic checks plus optional NVIDIA NIM semantic review; legacy providers retained |
 | Background processing | Separate Python polling worker, storing queue state and immutable report snapshots in Postgres |
 | File storage | Private PostgreSQL bytes by default; supported private S3/R2 or persistent disk alternatives |
 | Authentication | Argon2id password hashes, HttpOnly sessions, CSRF defense, login throttling, server-side role/department enforcement |
-| Secrets | API key encrypted with Fernet before storage; encryption key kept outside the DB, in Render/server secrets |
+| Secrets | NVIDIA and legacy keys encrypted with Fernet before storage; master key outside the database |
 
 **Never commit `.env` or real API keys.** Passwords supplied for the earlier frontend-only demonstration are **not valid** for this backend and are **not reused**. There are no seeded documents or hardcoded live users.
 
 ## Access and workflow
 
-- **Super Admin** — Creates, deactivates, and resets passwords for Staff, HOD, Principal and IQAC accounts; manages the encrypted OpenRouter key; reads the audit history. Initial administrator created once through an environment secret.
+- **Super Admin** — Creates, deactivates, and resets passwords for Staff, HOD, Principal and IQAC accounts; manages the encrypted NVIDIA NIM key and legacy integration settings; reads the audit history. Initial administrator created once through an environment secret.
 - **HOD** — Creates and manages Staff accounts within their own department (including access and password resets); builds, edits and publishes departmental rulebooks (mandatory headings, phrases, page counts, date, signatures, formatting, writing quality, semantic guidance). Every published version is retained. Reviews documents for their department and approves or rejects with feedback.
 - **Staff** — Uploads PDF, DOCX, TXT, PNG or JPG up to 10 MB, monitors verification, reviews rule-by-rule findings with location and correction guidance, and resubmits corrected versions. Every revision is retained.
 - **Principal / IQAC** — View and download **only documents that the HOD has approved**. Neither role has authority to publish rulebooks or manage users.
 
 On submission the document enters **Verifying**. The worker runs extraction and deterministic checks. If an authorized provider is configured, it may send document text and the HOD policy version bound to that submission for semantic review. Without a provider, the result goes to **Manual Review**. Verified documents enter **Pending HOD Approval**. Confirmed mandatory failures enter **Needs Correction**. Missing rules, unavailable AI/OCR, incomplete analysis and low-confidence interpretations enter **Manual Review** and cannot be silently auto-passed or auto-rejected. Final approval is always human HOD action, not AI action. After approval, Principal and IQAC can see the record.
 
-**External processing notice:** Configuring DeepSeek or OpenRouter and submitting a document can send document text to an external model provider. Obtain institutional authorization, review provider privacy/retention terms, and do not upload confidential student or staff information until approved. Document text is treated as untrusted input, not executable instructions.
+**External processing notice:** Configuring NVIDIA NIM, DeepSeek or OpenRouter and submitting a document can send document text to an external model provider. Obtain institutional authorization, review provider privacy/retention terms, and do not upload confidential student or staff information until approved. Document text is treated as untrusted input, not executable instructions.
 
 ### AI model behavior and limits
 
-No AI provider key is required. With no key configured, submissions are routed to **Manual Review**. If authorized later, a direct DeepSeek key (`DEEPSEEK_API_KEY`, default model `deepseek-flash`) takes precedence; otherwise an OpenRouter key uses `OPENROUTER_DEEPSEEK_MODEL` (default `deepseek/deepseek-v3.2`). The integration requests JSON objects and locally validates response structure, cited rule IDs, result values, and confidence. Providers do **not** guarantee schema-enforced JSON, and outages route to Manual Review. To control costs, latency and output reliability the application limits extracted input to **110,000 characters**, supports at most **120 PDF pages**, and performs OCR on at most **35 pages** per PDF. Incomplete text extraction never earns an automatic pass. DOCX pagination and signature verification may require human confirmation; this is not a forensic signature-validation or pixel-perfect typography engine. Legacy `.doc` is not supported; convert to `.docx` or PDF.
+No AI provider key is required. With no key configured, submissions are routed to **Manual Review**. When authorized, `NVIDIA_API_KEY` (model `NVIDIA_MODEL`, default `meta/llama-3.1-70b-instruct`) takes precedence at the fixed `https://integrate.api.nvidia.com/v1/chat/completions` endpoint. An administrator can save the key encrypted in the UI. Existing DeepSeek/OpenRouter keys are considered only if NVIDIA is not configured; a failed NVIDIA call never silently switches provider. The integration requests JSON objects and locally validates response structure, cited rule IDs, result values, confidence, and exact document quotations for AI-generated pass/issue findings. NVIDIA model JSON-mode support varies, so NVIDIA calls use strict JSON prompting and local parsing. Providers do **not** guarantee schema-enforced JSON, and outages route to Manual Review. To control costs, latency and output reliability the application limits extracted input to **110,000 characters**, supports at most **120 PDF pages**, and performs OCR on at most **35 pages** per PDF. Incomplete text extraction never earns an automatic pass. DOCX pagination and signature verification may require human confirmation; this is not a forensic signature-validation or pixel-perfect typography engine. Legacy `.doc` is not supported; convert to `.docx` or PDF.
+
+### NVIDIA NIM integration (preferred)
+
+1. Obtain an NVIDIA API Catalog key and select an available model ID. Configure `NVIDIA_API_KEY` and `NVIDIA_MODEL` as private environment variables for both web and worker, or save the key under **Super Admin → AI configuration** (Fernet-encrypted).
+2. Use base URL `https://integrate.api.nvidia.com/v1`. The server calls its fixed `/chat/completions` endpoint. Never paste a real key into GitHub, JavaScript, logs or issue comments.
+3. Validate with a synthetic non-confidential reference PDF. Confirm the integration status names NVIDIA NIM and the worker completes; missing quotations must enter Manual Review.
+4. Before real college files, obtain institutional approval for external text processing, verify model availability and quotas, and review NVIDIA privacy/retention terms.
+
+AI output is an **advisory compliance review**, not a human-authorship detector. A high score does not prove individual authorship. HODs must inspect original evidence and drafts before making integrity decisions.
+
+See the [NVIDIA verification plan](docs/NVIDIA_VERIFICATION_PLAN.md) for architecture, threat model, rubric, implementation phases and acceptance tests.
 
 ## Quick local start (development)
 
@@ -148,7 +159,8 @@ The API suite tests permissions, cross-department separation, CSRF, password res
 - `app/main.py`: authenticated REST endpoints, audit and authorization
 - `app/security.py`: sessions, CSRF, Argon2id hashing and roles
 - `app/database.py`: relational schema, connection pooling and indexes
-- `app/verification.py`: extraction/OCR, deterministic rules, OpenRouter and result validation
+- `app/verification.py`: extraction/OCR, deterministic rules, grounded AI evidence validation
+- `app/ai_gateway.py`: NVIDIA NIM and legacy provider selection, fixed server endpoints and strict JSON transport
 - `app/worker.py`: persistent asynchronous verifier queue
 - `app/storage.py`: file magic checks, private download and optional ClamAV
 - `app/bootstrap.py`: one-time account provisioning

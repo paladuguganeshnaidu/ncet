@@ -45,6 +45,8 @@ services:
       SCAN_MODE: ${SCAN_MODE:-clamav}
       CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
       CLAMAV_PORT: ${CLAMAV_PORT:-3310}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_MODEL: ${NVIDIA_MODEL:-meta/llama-3.1-70b-instruct}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
@@ -62,6 +64,8 @@ services:
       DATABASE_URL: postgresql+psycopg://ncet:${POSTGRES_PASSWORD}@database:5432/ncet_verifyflow
       STORAGE_BACKEND: database
       SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:?Set encryption key in private .env}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_MODEL: ${NVIDIA_MODEL:-meta/llama-3.1-70b-instruct}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
