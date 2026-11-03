@@ -18,6 +18,14 @@ A database-backed, role-enforced, AI-assisted college document-verification appl
 
 **Never commit `.env` or real API keys.** Passwords supplied for the earlier frontend-only demonstration are **not valid** for this backend and are **not reused**. There are no seeded documents or hardcoded live users.
 
+## NVIDIA document assurance (draft branch)
+
+Set the server-only `NVIDIA_API_KEY` (or configure the encrypted NVIDIA key in the admin workspace) and an available `NVIDIA_MODEL`; the fixed base endpoint is `https://integrate.api.nvidia.com/v1`. No key is exposed in browser code.
+
+The department assignment flow supports per-rule relative weights (1–100), deterministic minimum/maximum word limits, reference-to-submission comparison, source-evidence checks and a structured HOD report. A score measures checklist adherence, **not who wrote the text**. Missing/unverifiable evidence requires human review. Staff may need to revise work, and HODs may manually approve an advisory flag with a recorded explanation.
+
+The report's text overlap is a bounded descriptive indicator. A supplied template is expected to contain reusable wording; overlap is **not** a plagiarism verdict. Principal/IQAC task endpoints expose only approved tasks. Before production use, verify institutional data-processing authorization, scanner enforcement, DB isolation, TLS, secrets, model access and actual provider output. See [NVIDIA implementation and deployment gates](docs/NVIDIA_VERIFICATION_PLAN.md).
+
 ## Access and workflow
 
 - **Super Admin** — Creates, deactivates, and resets passwords for Staff, HOD, Principal and IQAC accounts; manages the encrypted NVIDIA NIM key and legacy integration settings; reads the audit history. Initial administrator created once through an environment secret.

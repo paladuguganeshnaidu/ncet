@@ -91,12 +91,22 @@
   <form id="task-review-form">
     <h2 id="task-review-title">Review submitted work</h2>
     <p id="task-review-description" class="subtle"></p>
+    <label for="task-review-decision">Final HOD decision
+      <select id="task-review-decision" required><option value="approved">Approve after independent review</option><option value="needs_correction">Request staff correction</option></select>
+    </label>
+    <p class="subtle">Automated flags are recommendations. Approval after a flag requires an independent evidence review and an audit note.</p>
     <label for="task-review-note">Review note <span id="task-review-note-hint" class="subtle"></span>
       <textarea id="task-review-note" minlength="10" maxlength="1500" required aria-describedby="task-review-note-hint"></textarea>
     </label>
     <p id="task-review-error" class="review-error" role="alert" hidden></p>
     <div class="deadline-dialog-actions"><button class="btn secondary" id="task-review-cancel" type="button">Cancel</button><button class="btn" id="task-review-submit" type="submit">Save decision</button></div>
   </form>
+</dialog>
+<dialog id="report-dialog" aria-labelledby="report-title">
+  <h2 id="report-title">Evidence review</h2>
+  <p class="subtle">Only source-supported document checks are presented as findings. Human authorship is not scientifically established from writing style.</p>
+  <div id="report-body" class="report-body"></div>
+  <div class="deadline-dialog-actions"><button class="btn secondary" id="report-close" type="button">Close report</button></div>
 </dialog>
 <div id="toast" role="status" aria-live="polite" hidden></div>
 <script src="/static/tasks.js?v=20261021-per-file-checklists" defer></script><script src="/static/hod-dashboard.js?v=20261021-reminders" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

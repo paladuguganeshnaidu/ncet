@@ -1,6 +1,6 @@
 # NCET VerifyFlow — NVIDIA AI Document Assurance Plan
 
-Status: implementation proposal plus first-provider integration. This document distinguishes features already in the repository from work not yet shipped. Review it with NCET leadership and the privacy/security team before using real institutional data.
+Status: staged implementation in draft PR #1 (NVIDIA provider, relative checklist weights, bounded reference comparison, descriptive document metrics, evidence-rich HOD report, explicit HOD override, and approved-only oversight task access). Larger security and scalability items remain planned. This document distinguishes features already in the repository from work not yet shipped. Review it with NCET leadership and the privacy/security team before using real institutional data.
 
 ## 1. Executive goal
 
@@ -12,9 +12,9 @@ HODs provide reference documents, task instructions and a versioned acceptance c
 | --- | --- | --- |
 | Frontend | Vanilla HTML/CSS/JS under `static/`; `/app` and `/tasks` workspaces | Single cohesive review UX, side-by-side reference comparison, evidence highlight and rubric editor |
 | API / identity | Python 3.13 + FastAPI, Argon2id, CSRF, HttpOnly sessions, department/role checks | MFA/SSO, approval delegation and explicit override reasons |
-| HOD workflow | `app/taskflow.py` reference batches (1–50 PDFs), assignments, task checklist templates, deadlines, decisions | Rubric weights, instruction anchors, multi-document submission bundles |
+| HOD workflow | `app/taskflow.py` reference batches (1–50 PDFs), assignments, weighted task checklists and templates, deadlines, auditable approval overrides | Instruction anchors, multi-document submission bundles |
 | Staff submission | PDF task submissions with durable revisions; separate general-document upload supports PDF/DOCX/TXT/images | Multiple required deliverables per task, progress, change summaries, provenance evidence |
-| Extraction | PyMuPDF, python-docx, Tesseract OCR (`app/verification.py`) | Table/figure extraction, page-region coordinates, DOCX rendering comparison |
+| Extraction | PyMuPDF, python-docx, Tesseract OCR; descriptive words, citation markers, bounded 5-word reference overlap (`app/document_intelligence.py`) | Table/figure extraction, page-region coordinates, DOCX rendering comparison |
 | AI integration | `app/ai_gateway.py`, semantic review and rule drafting | NVIDIA NIM first; per-model capabilities, token budgets, retries/usage monitoring |
 | Data | PostgreSQL, SQLAlchemy, Alembic; private binary storage and versioned rule policies | Review rubric snapshots, evidence spans, cost records, appeal history |
 | Worker | Durable PostgreSQL polling jobs with timeout recovery | Idempotent leases, dead-letter queue, retries, resource budgets |
@@ -26,11 +26,11 @@ HODs provide reference documents, task instructions and a versioned acceptance c
 2. Reference analysis may propose rules, but HOD confirms every rule before assignment. Record the exact rule/template version on each task.
 3. Staff downloads the reference and uploads the completed PDF. Upload gates check role, department, file signature, size and malware scan where enabled.
 4. Worker extracts page text, OCR confidence notes, observed page dimensions/fonts and structural cues.
-5. A deterministic engine verifies literal headings, phrases and page limits. Unverifiable formatting, dates or signatures get 'uncertain'.
+5. A deterministic engine verifies literal headings, phrases, page limits and word limits. Unverifiable formatting, dates or signatures get 'uncertain'.
 6. NVIDIA NIM reviews qualitative requirements. Its returned rule IDs, statuses, confidence and short verbatim quotations are validated locally. Missing or invented evidence becomes 'uncertain'.
-7. Report shows pass/issue/uncertain, page/section, direct quotation, correction advice, extraction limitations and model provenance.
+7. Report dialog shows pass/issue/uncertain, available page/section, direct quotation, correction advice, weighted rubric coverage, descriptive document metrics, limited reference overlap and model provenance.
 8. HOD examines the source, confirms/overrides advisory findings and approves or requests correction. Every revision and final decision is audit logged.
-9. Principal/IQAC access follows only the approved-document policy and scoped aggregate-report permissions.
+9. Principal/IQAC task list and reference downloads are restricted to approved tasks; separate oversight summaries remain aggregate.
 
 ### State handling
 
@@ -149,3 +149,17 @@ Use only synthetic non-confidential documents in early tests. Include a correctl
 - NVIDIA NIM API architecture: https://docs.nvidia.com/nim/large-language-models/latest/api-reference.html
 - Existing code: `app/ai_gateway.py`, `app/verification.py`, `app/taskflow.py`, `app/reference_rules.py`, `app/storage.py`, `app/main.py`, `static/app.js`, `static/tasks.js`, `render.yaml`, `compose.yaml`.
 - Prior source/deployment snapshot: `docs/PRODUCTION_READINESS_AUDIT_2026-10-21.md`. Historical live-state claims in that audit must be freshly verified.
+
+
+## 6. Implemented review enhancements in the draft PR
+
+- Relative rule importance: HOD enters a weight from 1 to 100 for each checklist rule. Total weights are relative, not required to sum to 100. Legacy stored rules default to weight 1. Required failures still block an automated positive recommendation; weighted scores only appear when all rules were assessed and no confidence/OCR uncertainty remains.
+- Deterministic word limits: `min_words` and `max_words` work alongside existing heading, phrase and page checks. Scanned or OCR-limited documents with a detected word-count violation are marked uncertain, not declared noncompliant.
+- Reference comparison: both PDFs are extracted; the AI receives a short, bounded page-labelled reference excerpt and the HOD's original instructions. The report records a SHA-256 hash of the reference and limited shared 5-word passages. Text reuse in a supplied template is expected; this percentage is **never a plagiarism probability or misconduct finding**.
+- Document signals: extracted page count, word count, citation markers and extraction limitations appear in the review dialog. Citation markers are a rough descriptive count; they do not establish attribution quality or source authenticity.
+- Human decision: the HOD can explicitly approve an automated correction suggestion with a logged explanation or request changes. The system cannot verify whether the HOD genuinely read the document.
+- Oversight: Principal and IQAC no longer see unapproved task details or download reference PDFs via the task endpoints. Their aggregate insights remain available.
+
+**Not yet implemented:** reliable plagiarism checking against licensed corpora; table/figure structural alignment; citation-resolution services; opt-in revision-history provenance; secure malware scanning on Render; isolated workers/queues, multi-document uploads, side-by-side PDF annotations, data retention automation, enterprise SSO/MFA, performance/load testing, and a live NVIDIA integration test with approved institutional content. Treat these as independent milestones with privacy, source-grounding and release tests.
+
+The manuscript cannot prove an author is human. This product must make no authorship percentage or punitive verdict.

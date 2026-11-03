@@ -19,7 +19,7 @@ def test_browser():
       page.evaluate("""(role)=>{window.fetch=async(url,opts)=>{
         const u=String(url);let data={};
         if(u.includes('/auth/me'))data={user:{id:1,name:'Faculty Example',role,department:'Computer Applications'},csrf:'demo-token'};
-        else if(u.endsWith('/tasks')){const task=id=>({id,batch_id:1,file:id===1?'Academic_Audit.pdf':'Course_Outcomes.pdf',state:role==='hod'&&!window.__assigned?'unassigned':window.__taskState||'assigned',department:'Computer Applications',assigned_to:'Faculty Example',assigned_staff_id:5,deadline:window.__changedDeadline||window.__assigned?.deadline||null,overdue:false,score:null,report:{},notes:'Please follow requirements',rules:[]});data={items:window.__multi?[task(1),task(2)]:[task(1)]};}
+        else if(u.endsWith('/tasks')){const task=id=>({id,batch_id:1,file:id===1?'Academic_Audit.pdf':'Course_Outcomes.pdf',state:role==='hod'&&!window.__assigned?'unassigned':window.__taskState||'assigned',department:'Computer Applications',assigned_to:'Faculty Example',assigned_staff_id:5,deadline:window.__changedDeadline||window.__assigned?.deadline||null,overdue:false,score:null,report:window.__report||{},notes:'Please follow requirements',rules:[]});data={items:window.__multi?[task(1),task(2)]:[task(1)]};}
         else if(u.includes('/tasks/dashboard')){
           const assigned=Boolean(window.__assigned);
           const eventTime='2026-10-17T10:00:00+00:00';
@@ -66,6 +66,7 @@ def test_browser():
         assert page.locator('#manual-rules').is_visible()
         page.locator('.manual-rule input[type="text"]').first.fill('Include approval block')
         page.locator('.manual-rule input[type="text"]').nth(1).fill('Approved by department head')
+        page.locator('#manual-rules .rule-weight').first.fill('4')
         assert page.locator('#rules').count()==0, 'Legacy line-by-line rule parser must be removed'
         page.locator('#staff-id').select_option('5')
         page.locator('#notes').fill('Complete the academic document following the reference PDF.')
@@ -85,6 +86,7 @@ def test_browser():
         assert data['deadline']==expected_deadline
         assert data['rules'][0]['title']=='Include approval block'
         assert data['rules'][0]['value']=='Approved by department head'
+        assert data['rules'][0]['weight']==4
         page.locator('button[data-op="deadline"]').wait_for(state='visible')
         page.locator('button[data-op="deadline"]').click()
         assert page.locator('#deadline-dialog').is_visible()
@@ -174,6 +176,23 @@ def test_browser():
         page.locator('#task-review-note').fill('Checked against the reference and approved for filing.')
         page.locator('#task-review-submit').click()
         page.wait_for_function("window.__decision && window.__decision.decision==='approved'")
+        assert page.locator('#task-review-dialog').is_hidden()
+        # HOD may independently approve despite an automated correction flag.
+        page.evaluate("window.__taskState='correction_required';window.__report={summary:'Needs evidence review',rubric:{coverage_percent:100,assessed_weight:4,total_weight:4},document_signals:{page_count:1,word_count:47,citation_markers:1},reference_comparison:{available:true,overlap_percent:25,note:'Informational only'},findings:[{rule_id:'r1',title:'Required evidence',result:'issue',evidence:'<img src=x onerror=alert(1)>',issue:'Check the source',source:'ai'}]}")
+        page.locator('#refresh').click()
+        page.locator('button[data-op="report"]').first.wait_for(state='visible')
+        page.locator('button[data-op="report"]').first.click()
+        assert page.locator('#report-dialog').is_visible()
+        assert page.locator('#report-body').get_by_text('25% shared 5-word passages',exact=False).count()==1
+        assert page.locator('#report-body img').count()==0, 'Report evidence must remain plain text'
+        page.locator('#report-close').click()
+        page.locator('button[data-op="decide"]').first.click()
+        assert page.locator('#task-review-decision').input_value()=='needs_correction'
+        page.locator('#task-review-decision').select_option('approved')
+        page.locator('#task-review-note').fill('Personally reviewed evidence and approved an acceptable documented exception.')
+        page.locator('#task-review-submit').click()
+        page.wait_for_function("window.__decision && window.__decision.note.includes('Personally reviewed')")
+        assert page.evaluate('window.__decision.decision')=='approved'
         assert page.locator('#task-review-dialog').is_hidden()
 
       else:

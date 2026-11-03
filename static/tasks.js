@@ -19,7 +19,7 @@ function setMinDeadline(){
 }
 const stateLabel=s=>({unassigned:'Unassigned',assigned:'Assigned',on_hold:'On hold',verifying:'Reviewing',awaiting_hod:'Awaiting HOD',manual_review:'Human review',correction_required:'Corrections needed',approved:'Approved'}[s]||s);
 let drafts=new Map();
-const RULE_TYPES=['required_heading','required_phrase','max_pages','min_pages','date_present','signature','formatting','grammar','semantic','other'];
+const RULE_TYPES=['required_heading','required_phrase','max_pages','min_pages','min_words','max_words','date_present','signature','formatting','grammar','semantic','other'];
 function addManualRule(seed={},host=$('#manual-rules')){
   const row=document.createElement('fieldset');row.className='manual-rule';
   const title=document.createElement('legend');title.textContent='Checklist item';row.append(title);
@@ -30,17 +30,20 @@ function addManualRule(seed={},host=$('#manual-rules')){
   const valueLabel=document.createElement('label');valueLabel.textContent='Expected phrase / value (optional)';const value=document.createElement('input');value.type='text';value.maxLength=400;value.value=seed.value||'';valueLabel.append(value);row.append(valueLabel);
   const instructionsLabel=document.createElement('label');instructionsLabel.textContent='Instructions for reviewer (optional)';const instructions=document.createElement('input');instructions.type='text';instructions.maxLength=1300;instructions.value=seed.instructions||'';instructionsLabel.append(instructions);row.append(instructionsLabel);
   const requiredLabel=document.createElement('label');requiredLabel.className='rule-required';const required=document.createElement('input');required.type='checkbox';required.checked=seed.required!==false;requiredLabel.append(required,document.createTextNode(' Required for acceptance'));row.append(requiredLabel);
-  const remove=document.createElement('button');remove.type='button';remove.className='btn secondary smallbtn';remove.textContent='Remove item';remove.addEventListener('click',()=>{if(host.children.length>1)row.remove();else{titleInput.value='';value.value='';instructions.value='';type.value='required_phrase';required.checked=true;titleInput.focus()}});row.append(remove);host.append(row);
+  const weightLabel=document.createElement('label');weightLabel.textContent='Relative importance (1–100)';const weight=document.createElement('input');weight.type='number';weight.min='1';weight.max='100';weight.step='1';weight.value=String(seed.weight??1);weight.required=true;weight.className='rule-weight';weightLabel.append(weight);row.append(weightLabel);
+  const remove=document.createElement('button');remove.type='button';remove.className='btn secondary smallbtn';remove.textContent='Remove item';remove.addEventListener('click',()=>{if(host.children.length>1)row.remove();else{titleInput.value='';value.value='';instructions.value='';type.value='required_phrase';required.checked=true;weight.value='1';titleInput.focus()}});row.append(remove);host.append(row);
 }
 function ruleDrafts(host){
  const rows=[...host.querySelectorAll('.manual-rule')];
- return rows.map((row,index)=>{const fields=row.querySelectorAll('input,select'),title=fields[0].value.trim(),type=fields[1].value,value=fields[2].value.trim(),instructions=fields[3].value.trim(),required=fields[4].checked;
+ return rows.map((row,index)=>{const fields=row.querySelectorAll('input,select'),title=fields[0].value.trim(),type=fields[1].value,value=fields[2].value.trim(),instructions=fields[3].value.trim(),required=fields[4].checked,weight=Number(fields[5].value);
   const id=(title.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,48)||'rule')+'_'+(index+1);
-  return {id,title,type,required,value,instructions};
+  if(!Number.isInteger(weight)||weight<1||weight>100)throw Error(`Checklist item ${index+1}: weight must be 1–100.`);
+  return {id,title,type,required,value,instructions,weight};
  });
 }
 function manualRules(host=$('#manual-rules')){
  return ruleDrafts(host).map((rule,index)=>{const {title}=rule;
+  if(['min_words','max_words'].includes(rule.type)&&(!/^\d+$/.test(rule.value)||Number(rule.value)<1||Number(rule.value)>100000))throw Error(`Checklist item ${index+1}: enter a whole-number word limit (1–100000).`);
   if(title.length<3)throw Error(`Checklist item ${index+1}: enter a requirement with at least 3 characters.`);
   return rule;
  });
@@ -177,6 +180,34 @@ $('#per-file-rules').addEventListener('click',event=>{
 });
 addManualRule();setRulesMode();
 
+function showReport(task){
+  const info=task.report||{},host=$('#report-body');host.replaceChildren();
+  $('#report-title').textContent='Evidence review — '+task.file;
+  const line=(parent,label,value)=>{const p=document.createElement('p');const b=document.createElement('strong');b.textContent=label+': ';p.append(b,document.createTextNode(String(value??'Not available')));parent.append(p)};
+  line(host,'Review summary',info.summary||'Human review may still be needed.');
+  line(host,'Checklist score',task.score===null?'Not established':task.score+'%');
+  line(host,'Human authorship',info.authorship_note||'Cannot be reliably inferred from a finished PDF.');
+  if(info.rubric){const r=info.rubric;line(host,'Checklist coverage',r.coverage_percent+'%');line(host,'Assessed weight',r.assessed_weight+' / '+r.total_weight);if(r.mandatory_failed?.length)line(host,'Required items not met',r.mandatory_failed.join(', '));if(r.unresolved?.length)line(host,'Items needing review',r.unresolved.join(', '))}
+  if(info.document_signals){const d=info.document_signals;line(host,'Submitted document',d.page_count+' pages · '+d.word_count+' words · '+d.citation_markers+' citation markers'+(d.text_extraction_limited?' · limited OCR/text extraction':''))}
+  if(info.reference_comparison){const r=info.reference_comparison;line(host,'Reference comparison',r.available?r.overlap_percent+'% shared 5-word passages in analyzed text':r.reason||'Not available');line(host,'Important qualification',r.note||'Similarity is not proof of plagiarism.')}
+  const heading=document.createElement('h3');heading.textContent='Checklist findings';host.append(heading);
+  if(!info.findings?.length)line(host,'Status','No findings available yet.');
+  for(const finding of (info.findings||[])){
+    const block=document.createElement('section');block.className='report-finding';
+    const h=document.createElement('h4');h.textContent=(finding.title||finding.rule_id)+' — '+(finding.result||'uncertain');block.append(h);
+    if(finding.issue)line(block,'Issue',finding.issue);
+    if(finding.evidence)line(block,'Quoted submission evidence',finding.evidence);
+    if(finding.location)line(block,'Location',finding.location);
+    if(finding.correction)line(block,'Suggested correction',finding.correction);
+    line(block,'Check source',finding.source||'Not recorded');
+    host.append(block);
+  }
+  if(info.notes?.length){const note=document.createElement('p');note.textContent='Review notes: '+info.notes.join(' · ');host.append(note)}
+  const history=document.createElement('h3');history.textContent='HOD decision history';host.append(history);
+  if(!task.decisions?.length)line(host,'History','Pending HOD decision.');
+  for(const d of (task.decisions||[]))line(host,d.decision+(d.at?' · '+d.at:''),d.note);
+  $('#report-dialog').showModal();
+}
 function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
 function table(){
  const body=$('#tasks');$('#queue-count').textContent=tasks.length+' tasks';
@@ -262,7 +293,7 @@ document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;
 if(btn.dataset.op==='reference'){window.location.href=`/api/tasks/${id}/reference`;return}
-if(btn.dataset.op==='report'){const info=t.report||{};const lines=(info.findings||[]).map(x=>`${x.title||x.rule_id}: ${x.result||'uncertain'}${x.issue?' — '+x.issue:''}${x.evidence?' [Quote: '+x.evidence+']':''}`).join('\n');const history=(t.decisions||[]).map(x=>`${x.decision}: ${x.note}`).join('\n');return alert(`${info.summary||'Review summary'}\nScore: ${t.score===null?'Awaiting review':t.score+'%'}\n\n${lines||'No individual findings yet.'}\n\nHOD decisions:\n${history||'Pending decision'}`)}
+if(btn.dataset.op==='report'){showReport(t);return}
 if(btn.dataset.op==='deadline'){
  if(role!=='hod')return;
  editingDeadlineTask=id;$('#deadline-task-name').textContent=t.file;
@@ -276,6 +307,7 @@ if(btn.dataset.op==='submit'){const input=document.createElement('input');input.
 if(btn.dataset.op==='decide'){
  reviewingTaskId=id;
  const isApproval=t.state==='awaiting_hod';
+ $('#task-review-decision').value=isApproval?'approved':'needs_correction';
  $('#task-review-title').textContent=isApproval?'Approve submitted work':'Request a correction';
  $('#task-review-description').textContent=`${t.file} · ${t.id}. This decision is recorded in the department task history.`;
  $('#task-review-note').value='';$('#task-review-note').placeholder=isApproval?'Explain the approval decision and any follow-up.':'Describe the specific correction the staff member should make.';
@@ -285,6 +317,15 @@ if(btn.dataset.op==='decide'){
 }
 }catch(err){say(err.message,true)}});
 
+$('#report-close').addEventListener('click',()=>$('#report-dialog').close());
+$('#task-review-decision').addEventListener('change',()=>{
+ const approval=$('#task-review-decision').value==='approved';
+ $('#task-review-title').textContent=approval?'Approve submitted work':'Request a correction';
+ $('#task-review-submit').textContent=approval?'Approve task':'Send correction request';
+ $('#task-review-submit').className=approval?'btn':'btn orange';
+ $('#task-review-note').placeholder=approval?'Describe the evidence you personally reviewed and why approval is justified.':'Describe the specific correction the staff member should make.';
+ $('#task-review-note-hint').textContent=approval?'Record your independent review, especially when overriding an automated flag.':'A specific correction is required (at least 10 characters).';
+});
 $('#task-review-cancel').addEventListener('click',()=>$('#task-review-dialog').close());
 $('#task-review-dialog').addEventListener('close',()=>{reviewingTaskId=null;$('#task-review-error').hidden=true});
 $('#task-review-form').addEventListener('submit',async event=>{
@@ -294,7 +335,7 @@ $('#task-review-form').addEventListener('submit',async event=>{
  if(note.length<10){$('#task-review-error').textContent='Enter a review note with at least 10 characters.';$('#task-review-error').hidden=false;$('#task-review-note').focus();return}
  const button=$('#task-review-submit');button.disabled=true;
  try{
-  const decision=task.state==='awaiting_hod'?'approved':'needs_correction';
+  const decision=$('#task-review-decision').value;
   await api(`/api/tasks/${task.id}/decide`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision,note})});
   $('#task-review-dialog').close();say(decision==='approved'?'Task approved and recorded.':'Correction request sent to staff.');await refresh();
  }catch(error){$('#task-review-error').textContent=error.message;$('#task-review-error').hidden=false}

@@ -44,3 +44,14 @@
 .checklist-template-tools{border:1px solid var(--line);border-radius:8px;padding:14px;margin:12px 0;background:#f8fafc}.checklist-template-tools label{margin-bottom:9px}.checklist-template-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.checklist-template-actions .btn{padding:8px 10px}.checklist-template-tools .subtle{display:block}
 .task-next-action{display:block;max-width:370px;margin-top:5px;color:#52647a;font-size:11px;line-height:1.45;white-space:normal}
 @media(max-width:520px){.checklist-template-actions .btn{flex:1 1 140px}}
+
+/* Evidence-first report and relative checklist importance. */
+.rule-weight{width:100%;max-width:125px}
+#report-dialog{width:min(760px,calc(100% - 28px));max-height:min(88vh,900px);overflow:auto;padding:28px;border:1px solid var(--line);border-radius:15px;box-shadow:0 18px 60px #0e245533}
+#report-dialog::backdrop{background:#15233a9c}
+#report-dialog h2{margin-top:0}
+#report-dialog h3{margin-top:22px}
+.report-finding{border:1px solid var(--line);border-left:4px solid var(--orange);padding:12px 16px;margin:12px 0;border-radius:6px;overflow-wrap:anywhere;background:#fff}
+.report-finding h4{margin:0 0 8px}
+.report-finding p,.report-body p{overflow-wrap:anywhere}
+#task-review-decision{width:100%;margin-top:7px}

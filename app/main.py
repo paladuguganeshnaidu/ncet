@@ -575,9 +575,11 @@ def save_rules(body:RuleBookBody,user:User=Depends(as_role_mutation('hod')),db:D
     for rule in body.rules:
         if rule.type in ('min_pages','max_pages') and (not rule.value.isdecimal() or int(rule.value)>2000 or int(rule.value)<1):
             raise HTTPException(422,'Page limits must be integers between 1 and 2000.')
-        if rule.type not in ('required_heading','required_phrase','max_pages','min_pages','date_present','signature','formatting','grammar','semantic','other'):
+        if rule.type in ('min_words','max_words') and (not rule.value.isdecimal() or int(rule.value)>100000 or int(rule.value)<1):
+            raise HTTPException(422,'Word limits must be integers between 1 and 100000.')
+        if rule.type not in ('required_heading','required_phrase','max_pages','min_pages','min_words','max_words','date_present','signature','formatting','grammar','semantic','other'):
             raise HTTPException(422,f'Unsupported rule type: {rule.type}')
-        if rule.type in ('required_heading','required_phrase','max_pages','min_pages') and not rule.value.strip():
+        if rule.type in ('required_heading','required_phrase','max_pages','min_pages','min_words','max_words') and not rule.value.strip():
             raise HTTPException(422,f'A value is required for: {rule.title}')
     # Strong serialization on PostgreSQL: concurrent HOD edits cannot write same version.
     db.query(User).filter(User.id==user.id).with_for_update().first()

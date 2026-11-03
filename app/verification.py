@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass
 from contextvars import ContextVar
 from .ai_gateway import NVIDIA_DEFAULT_MODEL, select_provider
+from .document_intelligence import document_signals
 from pathlib import Path
 from typing import Any
 import fitz
@@ -27,7 +28,7 @@ _PROVIDER_CONTEXT=ContextVar('ncet_document_ai_provider',default=None)
 MAX_CONTEXT_CHARS=110000  # context safety budget; any truncation produces manual review, never auto pass
 MAX_OCR_PAGES=35
 MAX_PAGES=120
-ALLOWED_TYPES={'required_heading','required_phrase','max_pages','min_pages','date_present','signature','formatting','grammar','semantic','other'}
+ALLOWED_TYPES={'required_heading','required_phrase','max_pages','min_pages','min_words','max_words','date_present','signature','formatting','grammar','semantic','other'}
 
 class Rule(BaseModel):
     id: str=Field(min_length=3,max_length=64,pattern=r'^[a-zA-Z0-9_-]+$')
@@ -36,6 +37,7 @@ class Rule(BaseModel):
     required: bool=True
     value: str=Field(default='',max_length=400)
     instructions: str=Field(default='',max_length=1300)
+    weight: int=Field(default=1,ge=1,le=100)
 
 class AIItem(BaseModel):
     rule_id: str
@@ -171,6 +173,19 @@ def deterministic(rules: list[Rule], extracted: Extracted) -> tuple[list[dict],l
                 loc='Document length';suggestion=f'Adjust the document to satisfy {rule.title}.'
             except ValueError:
                 result='uncertain';issue='Rule page limit must be a positive integer.'
+        elif rule.type in ('min_words','max_words'):
+            try:
+                number=int(value)
+                if number<1 or number>100000:raise ValueError()
+                from .document_intelligence import word_count
+                found=word_count(combined)
+                violation=(found<number if rule.type=='min_words' else found>number)
+                result=('uncertain' if extracted.needs_ocr_review else 'issue') if violation else 'pass'
+                issue='' if not violation else f'Found {found} words; {rule.type.replace("_"," ")} is {number}.'
+                loc='Document word count'
+                suggestion=f'Adjust the document to satisfy {rule.title}.'
+            except ValueError:
+                result='uncertain';issue='Word limit must be an integer between 1 and 100000.'
         elif rule.type=='signature':
             result='uncertain';issue='Signature presence or authenticity cannot be reliably established from extracted text.'
             loc='Signature block';suggestion='Ask the HOD to visually inspect the original signature.'
@@ -287,7 +302,7 @@ def build_report(extracted: Extracted,rules: list[Rule],api_key: str|None) -> di
     # An extraction failure must not automatically block staff, nor automatically pass.
     state='needs_correction' if mandatory_issues else 'manual_review' if uncertainty or not ai_used else 'passed'
     return {'status':state,'page_count':extracted.page_count,'ocr_review_required':extracted.needs_ocr_review,'layout_metadata':extracted.layout or {},
-            'rule_count':len(rules),'findings':entries,'notes':reason,'ai_used':ai_used,'model':(_PROVIDER_CONTEXT.get().model if _PROVIDER_CONTEXT.get() else MODEL),
+            'rule_count':len(rules),'document_signals':document_signals(extracted),'findings':entries,'notes':reason,'ai_used':ai_used,'model':(_PROVIDER_CONTEXT.get().model if _PROVIDER_CONTEXT.get() else MODEL),
             'summary':ai.summary if ai else ('Validation requires human review.' if state=='manual_review' else 'Measurable requirements not met.'),
             'ai_error':ai_error,
             'authorship_status':'not_determinable_from_document',
