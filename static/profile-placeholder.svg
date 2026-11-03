@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-labelledby="t">
+<title id="t">Profile photo placeholder</title>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f4f7fb"/><stop offset="1" stop-color="#e8eef6"/></linearGradient></defs>
+<rect width="240" height="240" rx="24" fill="url(#bg)"/>
+<circle cx="120" cy="93" r="35" fill="#abb9ca"/>
+<path d="M49 200c4-42 30-65 71-65s67 23 71 65" fill="#abb9ca"/>
+</svg>

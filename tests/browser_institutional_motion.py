@@ -24,11 +24,11 @@ with sync_playwright() as p:
             assert not errors,(route,width,errors)
             errors.clear()
         page.goto(BASE+'/',wait_until='domcontentloaded')
-        page.locator('.identity-crest').wait_for(state='visible')
-        assert page.locator('.identity-crest').evaluate('(el)=>el.complete && el.naturalWidth>0'),width
-        assert page.locator('.identity-center').evaluate('(el)=>getComputedStyle(el).backgroundColor')=='rgb(255, 255, 255)'
+        page.locator('.hero-workflow').wait_for(state='visible')
+        assert page.locator('.workflow-steps li').count()==3,width
+        assert page.locator('.topnav img[src*="ncet-brand"]').count()==1,width
         assert page.locator('.ncet-campus-photo img').count()==1,width
-        assert page.locator('.ncet-impact-metrics .institutional-counter').count()==4,width
+        assert page.locator('.ncet-impact-band').count()==0,width
         assert page.locator('.footer-credits a').count()==3,width
         if width<=700:
             page.locator('.ncet-menu-toggle').wait_for(state='visible')
@@ -44,9 +44,8 @@ with sync_playwright() as p:
         page.close()
     page=browser.new_page(viewport={'width':390,'height':900})
     page.goto(BASE+'/',wait_until='domcontentloaded')
-    page.locator('.ncet-impact-band').scroll_into_view_if_needed()
-    page.wait_for_timeout(1100)
-    assert [v.inner_text() for v in page.locator('[data-ncet-count]').all()]==['25+','6','3','4']
+    page.locator('.hero-workflow').scroll_into_view_if_needed()
+    assert page.locator('.workflow-steps li').count()==3
     # No artificial spinner: mark appears only while the slow API call is pending.
     # Stub the native fetch BEFORE application scripts wrap it. A synchronous
     # Playwright route.sleep would block the test controller past the shimmer.
@@ -64,14 +63,15 @@ with sync_playwright() as p:
     page.reload(wait_until='domcontentloaded')
     page.evaluate("() => { window.__slowOperation=fetch('/api/ui-motion-slow',{method:'POST'}); }")
     page.locator('.ncet-network-loader:not([hidden])').wait_for(state='visible',timeout=1500)
-    assert page.locator('.ncet-network-loader img').get_attribute('src')=='/static/ncet-brand.svg'
+    assert page.locator('.ncet-network-loader .ncet-loader-dot').count()==1
+    assert page.locator('.ncet-network-loader img').count()==0
     page.evaluate('() => window.__slowOperation')
     page.locator('.ncet-network-loader').wait_for(state='hidden',timeout=2000)
     page.emulate_media(reduced_motion='reduce')
     page.reload(wait_until='domcontentloaded')
-    page.locator('.ncet-impact-band').scroll_into_view_if_needed()
-    assert page.locator('.ncet-counter').first.inner_text()=='25+'
+    page.locator('.hero-workflow').scroll_into_view_if_needed()
+    assert page.locator('.workflow-steps li').count()==3
     assert page.evaluate("matchMedia('(prefers-reduced-motion:reduce)').matches")
     browser.close()
 
-print('NCET MOTION & UI AUDIT PASS: 6 public routes × 6 widths = 36 layouts, genuine logo loader, accessible mobile menu, counters and reduced motion.')
+print('NCET MOTION & UI AUDIT PASS: 6 public routes × 6 widths = 36 layouts, minimal activity indicator, accessible mobile menu and reduced motion.')

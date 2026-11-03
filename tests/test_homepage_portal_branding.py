@@ -25,8 +25,13 @@ def test_homepage_branding_terminology_and_footer_order(client):
     assert "home-revamp.css?v=20261017e" in html
     assert "homepage-polish.css" not in html
     assert "/static/ncet-brand.svg?v=20261017c" in html
-    assert 'width="455" height="225"' in html
-    assert "NCET Student Portal</p>" in html
+    assert 'class="hero-workflow"' in html
+    assert 'class="workflow-steps"' in html
+    assert 'class="identity-panel"' not in html
+    assert 'class="nav-accreditation"' not in html
+    assert 'class="ncet-impact-band"' not in html
+    assert html.count('<img src="/static/ncet-brand.svg') == 1
+    assert "enterprise-minimal.css" in html
     assert "Nagarjuna College of Engineering and Technology" in html
     assert "© 2026 NCET VerifyFlow" in html
     locations=[html.index(label) for label,_ in LINKS]

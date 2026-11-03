@@ -37,7 +37,8 @@ with sync_playwright() as p:
     page=context.new_page();page.set_default_timeout(11000)
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.set_content('<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1" /></head><body><div id="app"></div></body></html>')
-    css=(ROOT/'static/styles.css').read_text()+'\n'+(ROOT/'static/enterprise.css').read_text()
+    css='\n'.join((ROOT/'static'/name).read_text() for name in
+        ('styles.css','enterprise.css','enterprise-minimal.css'))
     js=(ROOT/'static/app.js').read_text()
     for suffix in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','ncms-logo.webp','ncms-emblem.webp','ngi-logo.webp','ncet-crest.webp'):
         asset=ROOT/'static'/suffix
