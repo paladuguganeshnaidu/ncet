@@ -25,6 +25,27 @@ def word_count(text: str) -> int:
     return len(_WORDS.findall(text))
 
 
+def evidence_passages(extracted: Any, max_chars: int = 20_000) -> list[dict[str, Any]]:
+    """Bounded, verbatim submission passages the model can cite by identifier."""
+    passages = []
+    used = 0
+    for page_number, page in enumerate(getattr(extracted, 'pages', []) or [], 1):
+        text = ' '.join(page.split())
+        while text and len(passages) < 80 and used < max_chars:
+            end = min(len(text), 240, max_chars - used)
+            if end < len(text):
+                boundary = text.rfind(' ', 0, end)
+                if boundary >= 40:
+                    end = boundary
+            quote = text[:end].strip()
+            if len(quote) < 10:
+                break
+            passages.append({'id': f'e{len(passages) + 1}', 'page': page_number, 'text': quote})
+            used += len(quote)
+            text = text[end:].lstrip()
+    return passages
+
+
 def document_signals(extracted: Any) -> dict[str, Any]:
     """Report descriptive metrics, not truth or originality verdicts."""
     text = '\n'.join(getattr(extracted, 'pages', []) or [])

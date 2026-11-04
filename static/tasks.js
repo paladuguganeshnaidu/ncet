@@ -200,6 +200,7 @@ function showReport(task){
   const info=task.report||{},host=$('#report-body');host.replaceChildren();
   $('#report-title').textContent='Evidence review — '+task.file;
   const line=(parent,label,value)=>{const p=document.createElement('p');const b=document.createElement('strong');b.textContent=label+': ';p.append(b,document.createTextNode(String(value??'Not available')));parent.append(p)};
+  if(task.latest_revision){const link=document.createElement('a');link.href=`/api/tasks/${task.id}/submission`;link.className='btn secondary';link.textContent='Download staff submission · revision '+task.latest_revision;host.append(link)}
   line(host,'Review summary',info.summary||'Human review may still be needed.');
   line(host,'Review engine',info.ai_used?'AI-assisted checks · '+(info.model||'Configured provider'):'Manual or deterministic review');
   line(host,'Checklist score',task.score===null?'Not established':task.score+'%');
@@ -225,7 +226,7 @@ function showReport(task){
   for(const d of (task.decisions||[]))line(host,d.decision+(d.at?' · '+d.at:''),d.note);
   $('#report-dialog').showModal();
 }
-function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length||t.report?.notes?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
+function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">Reference PDF</button>`;if(t.latest_revision)html+=`<button class="btn secondary smallbtn" data-op="submission" data-id="${t.id}">Staff PDF · v${t.latest_revision}</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length||t.report?.notes?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
 function table(){
  const body=$('#tasks');$('#queue-count').textContent=tasks.length+' tasks';
  $('#check-header').hidden=role!=='hod';
@@ -334,6 +335,7 @@ document.addEventListener('change',e=>{if(e.target.matches('[data-select],[data-
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op],[data-notification]');if(!btn)return;
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;
+if(btn.dataset.op==='submission'){window.location.href=`/api/tasks/${id}/submission`;return}
 if(btn.dataset.op==='reference'){window.location.href=`/api/tasks/${id}/reference`;return}
 if(btn.dataset.op==='report'){showReport(t);return}
 if(btn.dataset.op==='deadline'){
