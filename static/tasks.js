@@ -67,16 +67,18 @@ function renderPerFileChecklists(){
  }
 }
 function updateAllocationChecklistUI(){
- const ai=$('#rules-mode').value==='ai';
- const toggleVisible=!ai&&selected.size>1;
+ const mode=$('#rules-mode').value,ai=mode==='ai',automatic=mode==='auto';
+ $('#auto-review-config').hidden=!automatic;
+ $('#auto-review-instructions').required=automatic;
+ const toggleVisible=!ai&&!automatic&&selected.size>1;
  $('#per-file-toggle-label').hidden=!toggleVisible;
- if(!toggleVisible&&selected.size<2)$('#per-file-toggle').checked=false;
- const usePerFile=!ai&&toggleVisible&&$('#per-file-toggle').checked;
+ if(!toggleVisible)$('#per-file-toggle').checked=false;
+ const usePerFile=!ai&&!automatic&&toggleVisible&&$('#per-file-toggle').checked;
  $('#per-file-help').hidden=!usePerFile;$('#per-file-rules').hidden=!usePerFile;
- $('#manual-rules').hidden=ai||usePerFile;$('#manual-actions').hidden=ai||usePerFile;
- $('#manual-help').hidden=ai||usePerFile;$('#checklist-template-tools').hidden=ai||usePerFile;
+ $('#manual-rules').hidden=ai||automatic||usePerFile;$('#manual-actions').hidden=ai||automatic||usePerFile;
+ $('#manual-help').hidden=ai||automatic||usePerFile;$('#checklist-template-tools').hidden=ai||automatic||usePerFile;
  $('#rules-mode').required=true;$('#review-confirm').required=ai;
- $('#manual-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=!ai&&!usePerFile});
+ $('#manual-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=!ai&&!automatic&&!usePerFile});
  $('#per-file-rules').querySelectorAll('.manual-rule input[type="text"]').forEach(input=>{if(input.closest('.manual-rule').querySelector('label').contains(input))input.required=usePerFile});
  if(ai)renderDrafts();
 }
@@ -251,9 +253,18 @@ $('#ai-brief').addEventListener('click',async()=>{
 $('#batch-files').addEventListener('change',e=>{$('#selected-count').textContent=`${e.target.files.length} files selected`});
 $('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();form.set('title',$('#batch-title').value);for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received.`);e.target.reset();await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
 $('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!selected.size)return say('Tick the PDF rows you want to assign.',true);const staff_id=Number($('#staff-id').value);if(!staff_id)return say('Choose a staff member.',true);try{
- const deadline=parseDeadline($('#assignment-deadline').value),useAI=$('#rules-mode').value==='ai';
+ const deadline=parseDeadline($('#assignment-deadline').value),mode=$('#rules-mode').value,useAI=mode==='ai';
  let rules=[],rules_by_task={};
- if(useAI){if(!$('#review-confirm').checked)return say('Review the AI rule drafts for every selected PDF first.',true)}
+ if(mode==='auto'){
+   const instructions=$('#auto-review-instructions').value.trim();
+   if(instructions.length<10)return say('Explain what the AI should check against the reference PDF.',true);
+   rules=[
+    {id:'reference_alignment',title:'Reference PDF structure and required content',type:'semantic',required:true,value:'',weight:40,instructions:'Check the submission against the uploaded HOD reference PDF. Identify missing sections, mismatched format and incomplete work. HOD review priorities: '+instructions},
+    {id:'claim_evidence',title:'Evidence and factual completeness',type:'semantic',required:true,value:'',weight:30,instructions:'Evaluate whether important factual claims have support in the submitted document. Flag missing, ambiguous or unverifiable evidence. HOD review priorities: '+instructions},
+    {id:'numerical_consistency',title:'Numerical and logical consistency',type:'semantic',required:true,value:'',weight:20,instructions:'Check reported totals, percentages, dates and internal contradictions where applicable; quote exact submitted evidence. HOD review priorities: '+instructions},
+    {id:'writing_quality',title:'Professional writing quality',type:'grammar',required:false,value:'',weight:10,instructions:'Review organization, wording and clarity, quoting the submission where possible.'}
+   ];
+ }else if(useAI){if(!$('#review-confirm').checked)return say('Review the AI rule drafts for every selected PDF first.',true)}
  else if($('#per-file-toggle').checked){
   for(const card of $('#per-file-rules').querySelectorAll('.per-file-checklist'))rules_by_task[Number(card.dataset.taskId)]=manualRules(card.querySelector('.task-rules'));
   if(Object.keys(rules_by_task).length!==selected.size)return say('Add and complete a checklist for every selected PDF.',true);

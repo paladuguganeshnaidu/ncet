@@ -62,7 +62,9 @@ def test_browser():
         assert page.locator('#dash-trend-chart .daily-column').count()==14
         page.locator('[data-select="1"]').check()
         assert '1 unassigned PDFs selected' in page.locator('#selected-ids').inner_text()
-        assert page.locator('#rules-mode').input_value()=='manual'
+        assert page.locator('#rules-mode').input_value()=='auto'
+        assert page.locator('#auto-review-config').is_visible()
+        page.locator('#rules-mode').select_option('manual')
         assert page.locator('#manual-rules').is_visible()
         page.locator('.manual-rule input[type="text"]').first.fill('Include approval block')
         page.locator('.manual-rule input[type="text"]').nth(1).fill('Approved by department head')
