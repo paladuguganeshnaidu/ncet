@@ -55,9 +55,9 @@
 <label for="assignment-deadline">Submission deadline <span class="subtle">(optional)</span>
 <input id="assignment-deadline" type="datetime-local" aria-describedby="assignment-deadline-help">
 <span class="subtle" id="assignment-deadline-help">Uses your device's local time. Staff will see the deadline and overdue status in their task queue.</span>
-</label><div class="draft-review" aria-label="Document review requirements"><h3 style="margin:12px 0">Review requirements</h3>
-<label for="rules-mode">How should requirements be prepared?<select id="rules-mode"><option value="manual">HOD checklist (works without AI)</option><option value="ai">AI suggestions (optional)</option></select></label>
-<p id="manual-help" class="subtle">Write the checklist staff must follow. For a mixed batch, you can set different requirements for each PDF. Staff work can still be submitted without AI; uncertain checks go to HOD human review.</p>
+</label><div class="draft-review" aria-label="Document review requirements"><h3 style="margin:12px 0">AI assessment requirements</h3><p class="subtle">Your uploaded reference PDF defines the expected format. AI reads its headings, structure, instructions and examples when reviewing staff work. No manual checklist is required.</p><div id="auto-review-config"><label for="auto-review-instructions">What should the AI test against this reference PDF?<textarea id="auto-review-instructions" minlength="10" maxlength="800" required placeholder="Example: Check every required section, factual completeness, dates, calculations, supporting evidence, and whether the completed work follows the uploaded PDF format."></textarea></label><p class="subtle">Explain review priorities in normal language. AI findings are advisory; the HOD makes the final decision.</p></div>
+<label for="rules-mode">How should requirements be prepared?<select id="rules-mode"><option value="auto">AI compares the uploaded PDF automatically</option><option value="manual">Advanced: HOD checklist</option><option value="ai">Advanced: review AI rule suggestions</option></select></label>
+<p id="manual-help" class="subtle">Optional advanced controls: define exact checklist items when a deterministic rule is needed. Automatic PDF comparison is recommended for ordinary assignments.</p>
 <label id="per-file-toggle-label" class="per-file-toggle" hidden><input type="checkbox" id="per-file-toggle"> Customize the checklist for each selected PDF</label>
 <p id="per-file-help" class="subtle" hidden>Each PDF gets its own reviewed checklist. Every selected file must have at least one complete requirement before assignment.</p>
 <div id="per-file-rules" class="per-file-rules" hidden></div>
@@ -110,4 +110,4 @@
   <div class="deadline-dialog-actions"><button class="btn secondary" id="report-close" type="button">Close report</button></div>
 </dialog>
 <div id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/static/tasks.js?v=20261021-per-file-checklists" defer></script><script src="/static/hod-dashboard.js?v=20261021-reminders" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>
+<script src="/static/tasks.js?v=20261104-pdf-auto-review" defer></script><script src="/static/hod-dashboard.js?v=20261021-reminders" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>

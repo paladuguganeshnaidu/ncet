@@ -1,0 +1,127 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 5171 >>
+stream
+0.055 0.141 0.333 rg 0 800 595 42 re f
+0.075 0.553 0.600 rg 0 794 595 6 re f
+BT /F2 11 Tf 1 1 1 rg 1 0 0 1 52 815 Tm (NCET VERIFYFLOW / SYNTHETIC QUALITY ASSURANCE) Tj ET
+BT /F2 9.8 Tf 0.075 0.553 0.600 rg 1 0 0 1 53 772 Tm (STAFF SUBMISSION | EASY) Tj ET
+BT /F2 17 Tf 0.055 0.141 0.333 rg 1 0 0 1 53 748 Tm (Faculty Workshop Completion Report) Tj ET
+BT /F1 9 Tf 0.34 0.40 0.47 rg 1 0 0 1 53 729 Tm (Synthetic complete example | Academic QA | 18 October 2026) Tj ET
+0.06 0.56 0.60 rg 52 704 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 707 Tm (01 | Report metadata) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 675 Tm (Report title: Applied Data Analytics Faculty Workshop. Department: Computer Applications. Faculty) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 660.8 Tm (coordinator: Dr. Test Faculty \(synthetic\). Academic year: 2026-27. Workshop: 12-13 October 2026.) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 646.6 Tm (Venue: Academic Computing Laboratory. Submission date: 18 October 2026.) Tj ET
+0.06 0.56 0.60 rg 52 622.4 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 625.4 Tm (02 | Executive summary) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 593.4 Tm (The two-day faculty workshop introduced spreadsheet quality checks, Python-based analysis and) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 579.2 Tm (reporting practices. Forty faculty members were invited, thirty-four registered, thirty attended at) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 565 Tm (least one session and twenty-eight completed the assessment. The report distinguishes participation,) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 550.8 Tm (registration and completion and provides a dated evidence register for internal review. A structured) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 536.6 Tm (feedback survey identified demand for follow-up exercises.) Tj ET
+0.06 0.56 0.60 rg 52 512.4 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 515.4 Tm (03 | Objectives) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 483.4 Tm (Objective 1: Train participants to import and validate sample tabular data. Objective 2: Demonstrate) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 469.2 Tm (data cleaning, grouping and reproducible summary statistics. Objective 3: Evaluate practical) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 455 Tm (understanding using a short post-workshop assessment. Objective 4: Record attendance and operational) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 440.8 Tm (costs transparently.) Tj ET
+0.06 0.56 0.60 rg 52 416.6 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 419.6 Tm (04 | Planning and methodology) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 387.6 Tm (A planning meeting took place on 5 October 2026. Coordinators prepared an agenda and synthetic) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 373.4 Tm (training datasets before the workshop. Day one covered spreadsheet validation, missing values and) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 359.2 Tm (chart interpretation. Day two introduced Python data frames, reproducible calculations and report) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 345 Tm (writing. Attendance was recorded per session and completion required a submitted exercise. The lead) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 330.8 Tm (instructor checked sample outputs against known answers.) Tj ET
+0.06 0.56 0.60 rg 52 306.6 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 309.6 Tm (05 | Activity timeline) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 277.6 Tm (12 October 2026, 09:30-12:30: registration and spreadsheet quality checks. 12 October 2026,) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 263.4 Tm (13:30-16:00: cleaning workshop and case study. 13 October 2026, 09:30-12:30: Python-based analysis.) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 249.2 Tm (13 October 2026, 13:30-16:00: guided exercise, feedback and knowledge check. 18 October 2026: review) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 235 Tm (of documentation and submission of this report.) Tj ET
+0.06 0.56 0.60 rg 52 210.8 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 213.8 Tm (06 | Attendance and quantitative outcomes) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 181.8 Tm (Invited: 40. Registered: 34. Attended at least one session: 30. Completed assessed activity: 28.) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 167.6 Tm (Registration rate: 34/40 = 85.0%. Attendance rate among registrants: 30/34 = 88.2% after rounding.) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 153.4 Tm (Completion rate among attendees: 28/30 = 93.3% after rounding. Each percentage has a stated) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 139.2 Tm (denominator. The four counts describe different stages and are not intended to be added together.) Tj ET
+0.82 0.85 0.89 rg 52 61 491 1 re f
+BT /F1 8 Tf 0.4 0.46 0.52 rg 1 0 0 1 53 45 Tm (NCET VerifyFlow | Synthetic test fixture - not an official institutional record) Tj ET
+BT /F1 8 Tf 0.4 0.46 0.52 rg 1 0 0 1 493 45 Tm (Page 1 of 2) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 3839 >>
+stream
+0.055 0.141 0.333 rg 0 800 595 42 re f
+0.075 0.553 0.600 rg 0 794 595 6 re f
+BT /F2 11 Tf 1 1 1 rg 1 0 0 1 52 815 Tm (NCET VERIFYFLOW / SYNTHETIC QUALITY ASSURANCE) Tj ET
+BT /F2 9.8 Tf 0.075 0.553 0.600 rg 1 0 0 1 53 772 Tm (STAFF SUBMISSION | EASY) Tj ET
+BT /F2 17 Tf 0.055 0.141 0.333 rg 1 0 0 1 53 748 Tm (Faculty Workshop Completion Report) Tj ET
+BT /F1 9 Tf 0.34 0.40 0.47 rg 1 0 0 1 53 729 Tm (Synthetic complete example | Academic QA | 18 October 2026) Tj ET
+0.06 0.56 0.60 rg 52 704 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 707 Tm (07 | Evidence register) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 675 Tm (TEST-E01: synthetic registration ledger, 34 entries, dated 12 October 2026. TEST-E02: synthetic) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 660.8 Tm (day-one attendance ledger, 30 entries. TEST-E03: synthetic assessment log, 28 completed exercises,) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 646.6 Tm (dated 13 October 2026. TEST-E04: synthetic itemized expense worksheet, reconciled on 16 October) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 632.4 Tm (2026. These are fictional QA records represented by summaries in this PDF; the HOD should request) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 618.2 Tm (original attachments before treating them as independently verified.) Tj ET
+0.06 0.56 0.60 rg 52 594 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 597 Tm (08 | Budget and utilization) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 565 Tm (Approved budget: INR 15,000. Venue support: INR 3,200. Learning materials: INR 4,000. Refreshments:) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 550.8 Tm (INR 3,900. Total spent: INR 11,100 because 3,200 + 4,000 + 3,900 = 11,100. Unspent balance: INR) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 536.6 Tm (3,900 because 15,000 - 11,100 = 3,900. The report contains the arithmetic needed to verify this) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 522.4 Tm (reconciliation.) Tj ET
+0.06 0.56 0.60 rg 52 498.2 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 501.2 Tm (09 | Findings, limitations and conclusion) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 469.2 Tm (Twenty-eight completed exercises demonstrated basic use of cleaning and reporting workflows.) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 455 Tm (Feedback highlighted a need for advanced visualization and larger datasets. As this is a synthetic) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 440.8 Tm (QA report, it does not claim externally validated training outcomes. The recommended next step is a) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 426.6 Tm (short follow-up session and independent review of the stated registers. Within the supplied test) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 412.4 Tm (data, the dates and calculations are internally consistent.) Tj ET
+0.06 0.56 0.60 rg 52 388.2 4 17 re f
+BT /F2 12.2 Tf 0.06 0.14 0.33 rg 1 0 0 1 64 391.2 Tm (10 | Declaration and HOD review) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 359.2 Tm (Coordinator: Dr. Test Faculty \(synthetic\). Date: 18 October 2026. Declaration: This document is) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 345 Tm (fabricated solely for software QA. It is not an authentic institutional submission. Signature) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 330.8 Tm (evidence: not provided; HOD should verify any production signature requirement manually. HOD) Tj ET
+BT /F1 10.2 Tf 0.15 0.21 0.30 rg 1 0 0 1 55 316.6 Tm (decision: pending independent review.) Tj ET
+0.82 0.85 0.89 rg 52 61 491 1 re f
+BT /F1 8 Tf 0.4 0.46 0.52 rg 1 0 0 1 53 45 Tm (NCET VerifyFlow | Synthetic test fixture - not an official institutional record) Tj ET
+BT /F1 8 Tf 0.4 0.46 0.52 rg 1 0 0 1 493 45 Tm (Page 2 of 2) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000272 00000 n 
+0000005494 00000 n 
+0000005630 00000 n 
+0000009520 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+9656
+%%EOF
