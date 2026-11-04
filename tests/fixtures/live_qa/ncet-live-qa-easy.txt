@@ -1,0 +1,26 @@
+NCET VERIFYFLOW — SYNTHETIC QA DOCUMENT — EASY
+Date: 2026-11-04
+Department: Computer Applications
+Document type: Monthly laboratory activity report
+TEST DATA ONLY — fictional; not an official college record.
+
+1. Objective
+Summarize planned and completed computer laboratory sessions for a sample month.
+
+2. Scope
+Four weeks of introductory programming laboratory sessions, including attendance and exercise completion.
+
+3. Activities
+Week 1: Variables and input/output — 2 sessions completed.
+Week 2: Conditional statements — 2 sessions completed.
+Week 3: Loops — 2 sessions completed.
+Week 4: Functions — 2 sessions completed.
+
+4. Outcomes
+Eight sessions delivered. Twenty-five sample learners participated; twenty-three finished the practice exercise. No incidents recorded.
+
+5. Sign-off
+Prepared by: Fictional QA Staff Member
+Date: 2026-11-04
+
+Expected review: coherent, complete sections, no factual contradiction. Synthetic authorship cannot verify a human-written claim.
