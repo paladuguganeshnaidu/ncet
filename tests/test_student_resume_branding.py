@@ -72,6 +72,7 @@ def test_portfolio_sections_projects_and_public_links(client):
                   "https://demo.example.org","ncet-brand.svg","ngi-brand.svg","naac-brand.svg"):
         assert label in html,label
     assert 'id="resume-share"' in html and 'id="resume-download"' in html
+    assert f'download="NCET-portfolio-{USN}.pdf"' in html
     assert 'Download portfolio PDF' in html
     assert 'Student sign in · Edit &amp; publish' not in html
     assert 'Students manage this portfolio themselves.' not in html
