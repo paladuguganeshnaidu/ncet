@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory() as td:
    page.get_by_text('End-to-end browser document').first.wait_for()
    page.screenshot(path=str(root/'tests/principal.png'),full_page=True)
    page.locator('[data-page=users]').first.click()
-   page.get_by_text('Provisioned accounts').wait_for()
+   page.get_by_text('Team directory').wait_for()
    page.locator('[data-page=audit]').first.click()
    page.get_by_text('Security audit',exact=True).first.wait_for()
    page.locator('[data-action=logout]').click()

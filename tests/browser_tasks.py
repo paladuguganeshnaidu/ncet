@@ -61,7 +61,7 @@ def test_browser():
         assert page.locator('#dash-stage-chart .stage-ring').is_visible()
         assert page.locator('#dash-trend-chart .daily-column').count()==14
         page.locator('[data-select="1"]').check()
-        assert '1 unassigned PDFs selected' in page.locator('#selected-ids').inner_text()
+        assert '1 reference PDFs selected' in page.locator('#selected-ids').inner_text()
         assert page.locator('#rules-mode').input_value()=='auto'
         assert page.locator('#auto-review-config').is_visible()
         page.locator('#rules-mode').select_option('manual')

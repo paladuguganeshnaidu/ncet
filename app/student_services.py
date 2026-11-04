@@ -13,6 +13,10 @@ from .database import User, AuditLog, DBSession, get_db, utcnow
 from .student_models import BCAStudent, StudentCase, StudentCaseMessage
 from .security import current, csrf_required, as_role, as_role_mutation, hash_password
 
+def utc_stamp(value):
+    return (value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value).isoformat()
+
+
 router=APIRouter(prefix='/api/bca', tags=['BCA student portal'])
 BCA_DEPARTMENT='Computer Applications'
 BCA_DEPARTMENT_NAMES={'bca','computer applications','bachelor of computer applications'}
@@ -104,9 +108,9 @@ def case_access(db,user,ref):
 
 def case_json(case,show_identity=False):
     result={'reference':case.reference,'subject':case.subject,'category':case.category,
-            'description':case.description,'status':case.status,'created_at':case.created_at.isoformat(),
-            'updated_at':case.updated_at.isoformat(),
-            'messages':[{'author':'HOD' if m.actor.role=='hod' else 'Student','body':m.body,'created_at':m.created_at.isoformat()} for m in case.messages]}
+            'description':case.description,'status':case.status,'created_at':utc_stamp(case.created_at),
+            'updated_at':utc_stamp(case.updated_at),
+            'messages':[{'author':'HOD' if m.actor.role=='hod' else 'Student','body':m.body,'created_at':utc_stamp(m.created_at)} for m in case.messages]}
     if show_identity:
         result['student']={'name':case.student.display_name,'usn':case.student.username.upper()}
     return result
@@ -272,11 +276,11 @@ def list_cases(status:str=Query('all',pattern='^(all|submitted|in_review|resolve
                 'resolved':'Reviewed by your HOD. Open the request to read the resolution.',
                 'closed':'This request is closed. Submit a new request if you need further help.'}
     return {'items':[{'reference':x.reference,'subject':x.subject,'category':x.category,
-                      'status':x.status,'created_at':x.created_at.isoformat(),
-                      'updated_at':x.updated_at.isoformat(),
+                      'status':x.status,'created_at':utc_stamp(x.created_at),
+                      'updated_at':utc_stamp(x.updated_at),
                       'next_step':next_steps.get(x.status,''),
                       'latest_hod_reply':(x.latest_hod_reply[:240] if user.role=='student' and x.latest_hod_reply else None),
-                      'latest_hod_reply_at':(x.latest_hod_reply_at.isoformat() if user.role=='student' and x.latest_hod_reply_at else None),
+                      'latest_hod_reply_at':(utc_stamp(x.latest_hod_reply_at) if user.role=='student' and x.latest_hod_reply_at else None),
                       'awaiting_reply':x.status in ('submitted','in_review') and x.last_author_role in (None,'student'),
                       'older_than_7d':x.status in ('submitted','in_review') and x.created_at.replace(tzinfo=x.created_at.tzinfo or timezone.utc)<=utcnow()-timedelta(days=7),
                       **({'student':identities.get(x.student_id,{'name':'Unknown student','usn':''})}

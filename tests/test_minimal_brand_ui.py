@@ -33,13 +33,13 @@ def test_homepage_keeps_real_workflows_without_duplicate_college_marks():
 
 
 def test_no_repeated_brand_as_blank_profile_or_network_spinner():
-    assert 'src="/static/profile-placeholder.svg"' in (STATIC/"student-portal.html").read_text()
-    js=(STATIC/"student-portal.js").read_text()
+    assert 'src="/static/profile-placeholder.svg"' in (STATIC/"student-portal.html").read_text(encoding="utf-8")
+    js=(STATIC/"student-portal.js").read_text(encoding="utf-8")
     assert "img.src='/static/profile-placeholder.svg'" in js
-    loader=(STATIC/"ncet-loading.js").read_text()
+    loader=(STATIC/"ncet-loading.js").read_text(encoding="utf-8")
     assert "ncet-loader-dot" in loader
     assert "mark.src='/static/ncet-brand.svg'" not in loader
-    css=(STATIC/"enterprise-minimal.css").read_text()
+    css=(STATIC/"enterprise-minimal.css").read_text(encoding="utf-8")
     assert "--ncet-gradient:" in css
     assert "prefers-reduced-motion" in css
     assert ":focus-visible" in css

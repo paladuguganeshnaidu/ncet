@@ -2,6 +2,20 @@
 (()=>{'use strict';
 const $=s=>document.querySelector(s), safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me=null,csrf='',tasks=[],staff=[],role='',selected=new Set(),poll=null,checklistTemplates=[],selectedChecklistId='',checklistVersions=[],reviewingTaskId=null;
+function taskDialog(message,needName=false){
+ return new Promise(resolve=>{
+  const dialog=document.createElement('dialog');dialog.className='workspace-confirm';
+  const title=document.createElement('h2');title.textContent=needName?'Name your checklist':'Confirm change';
+  const copy=document.createElement('p');copy.textContent=message;
+  const form=document.createElement('form');form.method='dialog';
+  let input=null;if(needName){const label=document.createElement('label');label.textContent='Checklist name';input=document.createElement('input');input.minLength=3;input.maxLength=100;input.required=true;label.append(input);form.append(label)}
+  const actions=document.createElement('div');actions.className='deadline-dialog-actions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn secondary';cancel.textContent='Cancel';cancel.addEventListener('click',()=>dialog.close('cancel'));
+  const save=document.createElement('button');save.type='submit';save.className='btn';save.textContent=needName?'Save checklist':'Confirm';actions.append(cancel,save);form.append(actions);dialog.append(title,copy,form);document.body.append(dialog);
+  form.addEventListener('submit',event=>{event.preventDefault();dialog.close('confirm')});
+  dialog.addEventListener('close',()=>{const answer=dialog.returnValue==='confirm'?(needName?input.value.trim():true):needName?null:false;dialog.remove();resolve(answer)},{once:true});dialog.showModal();
+ });
+}
 function say(text,error=false){const el=$('#toast');el.hidden=false;el.textContent=text;el.style.background=error?'#973e31':'#0e2455';clearTimeout(el._timer);el._timer=setTimeout(()=>{el.hidden=true},4800)}
 async function api(path,options={}){const method=options.method||'GET';const h={...(options.headers||{})};if(method!=='GET')h['X-CSRF-Token']=csrf;const r=await fetch(path,{...options,headers:h,credentials:'same-origin'});const payload=await r.json().catch(()=>null);if(!r.ok)throw Error(typeof payload?.detail==='string'?payload.detail:`Request failed (${r.status})`);return payload}
 const dueDate=value=>value?new Date(value).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -148,7 +162,7 @@ async function loadChecklistVersions(id,preferredVersion){
 $('#checklist-template-version-select').addEventListener('change',event=>applyChecklistVersion(event.target.value));
 $('#save-checklist-template').addEventListener('click',async()=>{
  if(role!=='hod')return;
- const name=prompt('Name this department checklist (3–100 characters):');if(name===null)return;
+ const name=await taskDialog('Choose a name your department can recognize.',true);if(name===null)return;
  try{
   const rules=manualRules();
   const template=await api('/api/tasks/checklist-templates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,rules})});
@@ -157,7 +171,7 @@ $('#save-checklist-template').addEventListener('click',async()=>{
 });
 $('#revise-checklist-template').addEventListener('click',async()=>{
  const current=checklistTemplates.find(x=>x.id===selectedChecklistId);if(!current)return;
- if(!confirm(`Save the current checklist as version ${current.version+1} of “${current.name}”? Existing task rules and earlier versions stay unchanged.`))return;
+ if(!await taskDialog(`Save the current checklist as version ${current.version+1} of “${current.name}”? Existing task rules and earlier versions stay unchanged.`))return;
  try{
   const result=await api(`/api/tasks/checklist-templates/${encodeURIComponent(current.id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:current.name,rules:manualRules()})});
   await loadChecklistTemplates(result.id);await loadChecklistVersions(result.id,result.version);say(`Saved ${result.name} version ${result.version}.`);
@@ -165,7 +179,7 @@ $('#revise-checklist-template').addEventListener('click',async()=>{
 });
 $('#archive-checklist-template').addEventListener('click',async()=>{
  const current=checklistTemplates.find(x=>x.id===selectedChecklistId);if(!current)return;
- if(!confirm(`Archive “${current.name}”? Existing tasks keep their saved rules.`))return;
+ if(!await taskDialog(`Archive “${current.name}”? Existing tasks keep their saved rules.`))return;
  try{
   await api(`/api/tasks/checklist-templates/${encodeURIComponent(current.id)}`,{method:'DELETE'});
   checklistTemplates=checklistTemplates.filter(x=>x.id!==current.id);renderChecklistTemplates();say('Checklist template archived.');
@@ -187,6 +201,7 @@ function showReport(task){
   $('#report-title').textContent='Evidence review — '+task.file;
   const line=(parent,label,value)=>{const p=document.createElement('p');const b=document.createElement('strong');b.textContent=label+': ';p.append(b,document.createTextNode(String(value??'Not available')));parent.append(p)};
   line(host,'Review summary',info.summary||'Human review may still be needed.');
+  line(host,'Review engine',info.ai_used?'AI-assisted checks · '+(info.model||'Configured provider'):'Manual or deterministic review');
   line(host,'Checklist score',task.score===null?'Not established':task.score+'%');
   line(host,'Human authorship',info.authorship_note||'Cannot be reliably inferred from a finished PDF.');
   if(info.rubric){const r=info.rubric;line(host,'Checklist coverage',r.coverage_percent+'%');line(host,'Assessed weight',r.assessed_weight+' / '+r.total_weight);if(r.mandatory_failed?.length)line(host,'Required items not met',r.mandatory_failed.join(', '));if(r.unresolved?.length)line(host,'Items needing review',r.unresolved.join(', '))}
@@ -210,7 +225,7 @@ function showReport(task){
   for(const d of (task.decisions||[]))line(host,d.decision+(d.at?' · '+d.at:''),d.note);
   $('#report-dialog').showModal();
 }
-function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
+function actions(t){let html=`<button class="btn secondary smallbtn" data-op="reference" data-id="${t.id}">PDF</button>`;if(role==='staff'&&['assigned','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="submit" data-id="${t.id}">Submit</button>`;if(role==='hod'&&['assigned','on_hold'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="hold" data-id="${t.id}" data-value="${t.state==='assigned'}">${t.state==='assigned'?'Hold':'Release'}</button>`;if(role==='hod'&&t.assigned_staff_id&&!['unassigned','approved'].includes(t.state))html+=`<button class="btn secondary smallbtn" data-op="deadline" data-id="${t.id}">Edit deadline</button>`;if(role==='hod'&&['awaiting_hod','manual_review','correction_required'].includes(t.state))html+=`<button class="btn smallbtn" data-op="decide" data-id="${t.id}">Decide</button>`;if(t.report?.summary||t.report?.findings?.length||t.report?.notes?.length)html+=`<button class="btn secondary smallbtn" data-op="report" data-id="${t.id}">Report</button>`;return html;}
 function table(){
  const body=$('#tasks');$('#queue-count').textContent=tasks.length+' tasks';
  $('#check-header').hidden=role!=='hod';
@@ -229,17 +244,33 @@ function table(){
     <td>${t.score===null?'—':safe(t.score)+'%'}</td><td>${actions(t)}</td>
   </tr>`
  }).join('');
- body.innerHTML=rows||'<tr><td colspan="7">No documents to display.</td></tr>';
- $('#selected-ids').textContent=selected.size?`${selected.size} unassigned PDFs selected`:'Select unassigned PDF rows below.';
+ const markup=rows||'<tr><td colspan="7">No documents to display.</td></tr>';if(body.dataset.markup!==markup){body.innerHTML=markup;body.dataset.markup=markup;}
+ $('#selected-ids').textContent=selected.size?`${selected.size} reference PDFs selected`:'Choose the reference PDFs to assign.';const picker=$('#assignment-files');if(picker){const choices=tasks.filter(t=>t.state==='unassigned').map(t=>`<label><input type="checkbox" data-assignment-select="${t.id}" aria-label="Choose ${safe(t.file)}" ${selected.has(t.id)?'checked':''}><span>${safe(t.file)}</span></label>`).join('')||'<p class="subtle">No unassigned PDFs. Add reference files first.</p>';if(picker.dataset.markup!==choices){picker.innerHTML=choices;picker.dataset.markup=choices;}}
 }
 
 function metrics(){const count=s=>tasks.filter(t=>t.state===s).length;const cards=[['Total tasks',tasks.length],['Working / on hold',count('assigned')+count('on_hold')],['Awaiting review',count('awaiting_hod')+count('manual_review')+count('verifying')],['Approved',count('approved')],['Overdue',tasks.filter(t=>t.overdue).length]];$('#metrics').innerHTML=cards.map(([label,value])=>`<div class="metric"><small>${safe(label)}</small><strong>${value}</strong></div>`).join('');}
 async function loadInbox(){const data=await api('/api/tasks/notifications/inbox');$('#unread').textContent=`${data.unread} unread`;$('#inbox').innerHTML=data.items.slice(0,14).map(n=>`<article><strong>${safe(n.text)}</strong><p>${safe(new Date(n.at).toLocaleString())}</p>${n.seen?'':`<button class="ghost" data-notification="${n.id}">Mark read</button>`}</article>`).join('')||'<p class="subtle">No notifications yet.</p>';}
 async function loadInsights(){if(!['admin','hod','principal','iqac'].includes(role))return;const data=await api('/api/tasks/insights/summary');$('#oversight').hidden=false;$('#leaderboard').innerHTML=`<table><thead><tr><th>Staff member</th><th>Approved</th><th>In progress</th><th>In review</th><th>Quality</th></tr></thead><tbody>${data.staff.map(x=>`<tr><td>${safe(x.staff)}</td><td>${x.approved}</td><td>${x.active}</td><td>${x.in_review}</td><td>${x.average_quality===null?'—':safe(x.average_quality)+'%'}</td></tr>`).join('')||'<tr><td colspan="5">No approved work yet.</td></tr>'}</tbody></table>`;}
 async function loadDigests(){if(role!=='hod')return;try{const d=await api('/api/insights/discussions');$('#discussion-digests').hidden=false;$('#digest-list').innerHTML=d.items.slice(0,5).map(x=>`<article><strong>${safe(x.slot)} · ${safe(x.status)}</strong><p>${safe(x.summary)}</p><small>${x.posts} posts · ${x.comments} comments · ${x.review_flags.length} moderation flags</small>${x.review_flags.length?`<p>Needs HOD review: ${safe(x.review_flags.join('; '))}</p>`:''}</article>`).join('')||'<p class="subtle">No recent department discussions to summarize.</p>';}catch(e){/* Other department HOD has no access. */}}
-async function refresh(){try{const data=await api('/api/tasks');tasks=data.items||[];const previous=[...selected].sort((a,b)=>a-b);selected=new Set(previous.filter(id=>tasks.some(t=>t.id===id&&t.state==='unassigned')));const selectionChanged=previous.length!==selected.size;if(selectionChanged&&$('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();table();metrics();await loadDrafts();await loadInbox();await loadInsights();await loadDigests();if(role==='hod')window.dispatchEvent(new CustomEvent('ncet-hod-tasks-refreshed',{detail:{role:'hod'}}));$('#connection').textContent=`Signed in as ${me.name} · ${role.toUpperCase()} · ${me.department}`;}catch(e){say(e.message,true)}}
-async function start(){try{const data=await api('/api/auth/me');me=data.user;role=me.role;csrf=data.csrf;$('#app').hidden=false;$('#heading').textContent=role==='staff'?'My assigned work':role==='hod'?'HOD department dashboard':'Institutional work overview';$('#hod-section').hidden=role!=='hod';$('#metrics').hidden=role==='hod';$('#hod-dashboard').hidden=role!=='hod';$('#admin-ai').hidden=role!=='admin';$('#queue-title').textContent=role==='staff'?'My assigned documents':'Task allocation and review';if(role==='hod'){setMinDeadline();const s=await api('/api/tasks/staff');staff=s.items;$('#staff-id').innerHTML='<option value="">Choose staff</option>'+staff.map(x=>`<option value="${x.id}">${safe(x.name)} (${safe(x.username)})</option>`).join('');await loadChecklistTemplates()};if(role==='admin'){const c=await api('/api/tasks/ai/status');$('#ai-state').textContent=c.configured?`${c.provider} · ${c.model}`:'Not configured'}await refresh();poll=setInterval(refresh,20000);}catch(e){$('#connection').textContent='Please sign in through the NCET workspace to continue.';say(e.message,true);$('#app').hidden=true}}
+let refreshing=null;
+async function refresh(){
+ if(refreshing)return refreshing;
+ refreshing=(async()=>{try{
+  const data=await api('/api/tasks');tasks=data.items||[];
+  const previous=[...selected];selected=new Set(previous.filter(id=>tasks.some(t=>t.id===id&&t.state==='unassigned')));
+  if(previous.length!==selected.size&&$('#per-file-toggle').checked)renderPerFileChecklists();
+  updateAllocationChecklistUI();table();metrics();
+  const results=await Promise.allSettled([loadDrafts(),loadInbox(),loadInsights(),loadDigests()]);
+  if(results.some(result=>result.status==='rejected'))say('Tasks are up to date. Some supporting panels could not refresh; try Refresh.',true);
+  if(role==='hod')window.dispatchEvent(new CustomEvent('ncet-hod-tasks-refreshed',{detail:{role:'hod'}}));
+  $('#connection').textContent=`Signed in as ${me.name} · ${role.toUpperCase()} · ${me.department}`;
+ }catch(e){say(e.message,true)}finally{refreshing=null}})();
+ return refreshing;
+}
+async function start(){try{const data=await api('/api/auth/me');me=data.user;role=me.role;csrf=data.csrf;$('#app').hidden=false;$('#heading').textContent=role==='staff'?'My assigned work':role==='hod'?'HOD department dashboard':'Institutional work overview';$('#hod-section').hidden=role!=='hod';$('#metrics').hidden=role==='hod';$('#hod-dashboard').hidden=role!=='hod';$('#admin-ai').hidden=role!=='admin';$('#queue-title').textContent=role==='staff'?'My assigned documents':'Task allocation and review';if(role==='hod'){setMinDeadline();const s=await api('/api/tasks/staff');staff=s.items;$('#staff-id').innerHTML='<option value="">Choose staff</option>'+staff.map(x=>`<option value="${x.id}">${safe(x.name)} (${safe(x.username)})</option>`).join('');await loadChecklistTemplates()};if(role==='admin'){const c=await api('/api/tasks/ai/status');$('#ai-state').textContent=c.configured?`${c.provider} · ${c.model}`:'Not configured'}await refresh();poll=setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]'))refresh()},30000);}catch(e){$('#connection').textContent='Please sign in through the NCET workspace to continue.';say(e.message,true);$('#app').hidden=true}}
 $('#refresh').addEventListener('click',refresh);
+window.addEventListener('ncet:notifications-read',loadInbox);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&me)refresh()});
 $('#ai-brief').addEventListener('click',async()=>{
   const btn=$('#ai-brief'),host=$('#ai-brief-content');btn.disabled=true;host.textContent='Preparing aggregate workflow suggestions…';
   try {
@@ -251,8 +282,8 @@ $('#ai-brief').addEventListener('click',async()=>{
 });
 
 $('#batch-files').addEventListener('change',e=>{$('#selected-count').textContent=`${e.target.files.length} files selected`});
-$('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();const name=(list[0].name||'Reference PDF').replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();const generated=list.length===1?name:`${name} and ${list.length-1} more PDFs`;const title=$('#batch-title').value.trim()||generated;form.set('title',title.length>=5?title.slice(0,140):'HOD reference PDF batch');for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received.`);e.target.reset();await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
-$('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!selected.size)return say('Tick the PDF rows you want to assign.',true);const staff_id=Number($('#staff-id').value);if(!staff_id)return say('Choose a staff member.',true);try{
+$('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();const name=(list[0].name||'Reference PDF').replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();const generated=list.length===1?name:`${name} and ${list.length-1} more PDFs`;const title=$('#batch-title').value.trim()||generated;form.set('title',title.length>=5?title.slice(0,140):'HOD reference PDF batch');for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received. Choose the files and a staff member to assign.`);e.target.reset();$('#selected-count').textContent='No files selected';await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
+$('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!selected.size)return say('Choose at least one reference PDF to assign.',true);const staff_id=Number($('#staff-id').value);if(!staff_id)return say('Choose a staff member.',true);try{
  const deadline=parseDeadline($('#assignment-deadline').value),mode=$('#rules-mode').value,useAI=mode==='ai';
  let rules=[],rules_by_task={};
  if(mode==='auto'){
@@ -298,8 +329,8 @@ $('#retry-rules').addEventListener('click',async()=>{
   }catch(err){say(err.message,true)}finally{button.disabled=false}
 });
 
-$('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Replace the stored NVIDIA API key?'))return;const key=$('#ai-key').value;try{await api('/api/admin/integrations/nvidia',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('NVIDIA key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
-document.addEventListener('change',e=>{if(e.target.matches('[data-select]')){const id=Number(e.target.dataset.select);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts()}});
+$('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!await taskDialog('Replace the stored NVIDIA API key?'))return;const key=$('#ai-key').value;try{await api('/api/admin/integrations/nvidia',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('NVIDIA key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
+document.addEventListener('change',e=>{if(e.target.matches('[data-select],[data-assignment-select]')){const id=Number(e.target.dataset.select||e.target.dataset.assignmentSelect);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts();table()}});
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op],[data-notification]');if(!btn)return;
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;
@@ -314,7 +345,13 @@ if(btn.dataset.op==='deadline'){
  return;
 }
 if(btn.dataset.op==='hold'){await api(`/api/tasks/${id}/hold?hold=${btn.dataset.value}`,{method:'POST'});say('Task status updated.');return refresh()}
-if(btn.dataset.op==='submit'){const input=document.createElement('input');input.type='file';input.accept='.pdf,application/pdf';input.onchange=async()=>{const file=input.files?.[0];if(!file)return;const data=new FormData();data.set('file',file);try{await api(`/api/tasks/${id}/submit`,{method:'POST',body:data});say('Submitted. Automated checks will run when available; the HOD can review the result.');refresh()}catch(err){say(err.message,true)}};input.click();return}
+if(btn.dataset.op==='submit'){
+ submittingTaskId=id;$('#task-submission-form').reset();$('#submission-error').hidden=true;
+ $('#submission-task').textContent=t.file+(t.deadline?' · Due '+dueDate(t.deadline):'');
+ $('#submission-instructions').textContent=t.notes||'Follow the reference PDF and submit the completed work for HOD review.';
+ $('#submission-reference').href=`/api/tasks/${id}/reference`;
+ $('#submission-dialog').showModal();return;
+}
 if(btn.dataset.op==='decide'){
  reviewingTaskId=id;
  const isApproval=t.state==='awaiting_hod';
@@ -351,5 +388,18 @@ $('#task-review-form').addEventListener('submit',async event=>{
   $('#task-review-dialog').close();say(decision==='approved'?'Task approved and recorded.':'Correction request sent to staff.');await refresh();
  }catch(error){$('#task-review-error').textContent=error.message;$('#task-review-error').hidden=false}
  finally{button.disabled=false}
+});
+let submittingTaskId=null;
+$('#submission-cancel').addEventListener('click',()=>$('#submission-dialog').close());
+$('#submission-dialog').addEventListener('close',()=>{submittingTaskId=null});
+$('#task-submission-form').addEventListener('submit',async event=>{
+ event.preventDefault();if(role!=='staff'||submittingTaskId===null)return;
+ const file=$('#submission-file').files?.[0],error=$('#submission-error'),button=$('#submission-save');
+ if(!file||!file.name.toLowerCase().endsWith('.pdf')||!file.size||file.size>10*1024*1024){error.textContent='Choose a non-empty PDF no larger than 10 MB.';error.hidden=false;return;}
+ button.disabled=true;button.setAttribute('aria-busy','true');error.hidden=true;
+ const data=new FormData();data.set('file',file);
+ try{await api(`/api/tasks/${submittingTaskId}/submit`,{method:'POST',body:data});$('#submission-dialog').close();say('Document submitted. You can follow the review status in your task queue.');await refresh();window.dispatchEvent(new Event('ncet:notifications-refresh'));}
+ catch(err){error.textContent=err.message;error.hidden=false}
+ finally{button.disabled=false;button.removeAttribute('aria-busy')}
 });
 start();})();

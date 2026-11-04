@@ -38,7 +38,7 @@ with sync_playwright() as p:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.set_content('<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1" /></head><body><div id="app"></div></body></html>')
     css='\n'.join((ROOT/'static'/name).read_text() for name in
-        ('styles.css','enterprise.css','enterprise-minimal.css'))
+        ('styles.css','enterprise.css','enterprise-minimal.css','workspace-ui.css'))
     js=(ROOT/'static/app.js').read_text()
     for suffix in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','ncms-logo.webp','ncms-emblem.webp','ngi-logo.webp','ncet-crest.webp'):
         asset=ROOT/'static'/suffix
@@ -63,7 +63,7 @@ with sync_playwright() as p:
         page.locator('#login-form button[type=submit]').click();page.locator('.sidebar-brand').wait_for()
     def signout():page.locator('[data-action=logout]').click();page.locator('#login-user').wait_for()
     signin('admin')
-    page.locator('[data-page=users]').first.click();page.get_by_text('Provisioned accounts').wait_for()
+    page.locator('[data-page=users]').first.click();page.get_by_text('Team directory').wait_for()
     for department in ('Computer Applications','Commerce','Management','Science'):
         assert department in page.locator('#acc-dept').inner_text(),department
     assert 'Mechanical Engineering' not in page.locator('#acc-dept').inner_text()
