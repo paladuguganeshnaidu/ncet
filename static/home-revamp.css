@@ -11,10 +11,12 @@
 .nav-accreditation img{width:51px;height:51px;object-fit:contain}
 .navlinks{margin-left:auto;gap:3px;flex-wrap:nowrap}
 .navlinks a{padding:10px 9px!important;white-space:nowrap;font-size:12px!important}
-.navlinks a.nav-portal-action{background:var(--ncet-orange);color:var(--ncet-blue)!important;
- border:1px solid var(--ncet-orange);border-radius:11px;margin-left:4px;font-weight:800;
+.navlinks a.nav-portal-action{background:var(--ncet-orange)!important;color:var(--ncet-blue)!important;
+ border:1px solid var(--ncet-orange)!important;border-radius:11px;margin-left:4px;font-weight:800;
  padding:11px 15px!important}
-.navlinks a.nav-portal-action:hover{background:#FFA858;box-shadow:0 7px 16px rgba(246,135,42,.18)}
+.navlinks a.nav-portal-action:hover,.navlinks a.nav-portal-action:focus-visible{
+ background:#FFA858!important;border-color:#E3761E!important;color:var(--ncet-blue)!important;
+ box-shadow:0 7px 16px rgba(246,135,42,.18)}
 .experience-hero{background:radial-gradient(circle at 96% 12%,#FBE9DA 0,#FFF8F2 10%,transparent 32%),#F8FAFD!important;
  border-bottom:1px solid #E4E9F0;padding:clamp(46px,5vw,77px) 0!important}
 .experience-grid{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:clamp(22px,4vw,60px)}

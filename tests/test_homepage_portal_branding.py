@@ -22,7 +22,10 @@ def test_homepage_branding_terminology_and_footer_order(client):
     assert "BCA HOD" not in html
     assert "BCA directory" not in html
     assert "your department HOD" in html
-    assert "home-revamp.css?v=20261017e" in html
+    assert "home-revamp.css?v=20261104-signin-contrast" in html
+    assert 'class="nav-portal-action" href="/students/portal">Sign in</a>' in html
+    homepage_css=(STATIC/"home-revamp.css").read_text()
+    assert ".navlinks a.nav-portal-action{background:var(--ncet-orange)!important;color:var(--ncet-blue)!important;" in homepage_css
     assert "homepage-polish.css" not in html
     assert "/static/ncet-brand.svg?v=20261017c" in html
     assert 'class="hero-workflow"' in html
