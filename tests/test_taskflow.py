@@ -386,7 +386,7 @@ def test_staff_submission_downloads_preserve_department_and_approved_version_sco
         db.commit()
     response=client.get(f'/api/tasks/{task_id}/submission')
     assert response.status_code==200 and response.content.endswith(b'2')
-    assert response.headers['cache-control']=='private, no-store'
+    assert response.headers['cache-control']=='no-store'
     assert client.get(f'/api/tasks/{task_id}/submission?revision=1').content.endswith(b'1')
     assert client.get('/api/tasks').json()['items'][0]['latest_revision']==2
     for role,expected in [('staff',200),('staff2',404),('hod2',404),('principal',404),('iqac',404)]:
