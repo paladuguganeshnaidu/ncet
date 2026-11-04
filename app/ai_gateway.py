@@ -85,7 +85,8 @@ def review_json(provider: Provider, system: str, payload: dict, *, max_tokens: i
         # Nemotron 3.5 thinking consumes the bounded JSON answer budget by default.
         # Use its documented chat template option for a direct structured answer.
         body.update(temperature=1.0, top_p=0.95,
-                    chat_template_kwargs={'enable_thinking': False})
+                    chat_template_kwargs={'enable_thinking': False},
+                    response_format={'type': 'json_object'})
     if provider.url != NVIDIA_URL:
         body['response_format'] = {'type': 'json_object'}
     headers = {'Authorization': 'Bearer ' + provider.key, 'Content-Type': 'application/json'}
@@ -97,33 +98,50 @@ def review_json(provider: Provider, system: str, payload: dict, *, max_tokens: i
                 if response.status_code in (429, 500, 502, 503, 504) and attempt == 0:
                     time.sleep(1)
                     continue
+                # Some hosted revisions expose the model before JSON mode. Retry
+                # on the same provider, with strict prompting and local validation.
+                if response.status_code == 422 and 'response_format' in body and attempt == 0:
+                    body.pop('response_format')
+                    continue
                 try:
                     response.raise_for_status()
                 except httpx.HTTPStatusError as exc:
-                    # Log metadata only: never the key, prompt, or provider response body.
                     logger.warning('AI gateway rejected request: provider=%s model=%s status=%s',
                                    provider.name, provider.model, exc.response.status_code)
                     raise
-                break
             except httpx.TransportError:
                 if attempt:
                     raise
                 time.sleep(1)
-    choices = response.json().get('choices', [])
-    if not choices or not isinstance(choices[0], dict):
-        raise ValueError('AI response has no completion choice.')
-    message = choices[0].get('message') or {}
-    raw = message.get('content') if isinstance(message, dict) else None
-    if isinstance(raw, list):
-        raw = ''.join(chunk.get('text', '') for chunk in raw if isinstance(chunk, dict))
-    if not isinstance(raw, str):
-        raise ValueError('AI response was not JSON text.')
-    content = raw.strip()
-    if content.startswith(chr(96) * 3):
-        content = re.sub(r'^\x60{3}(?:json)?\s*|\s*\x60{3}$', '', content, flags=re.I).strip()
-    if len(content) > 100_000:
-        raise ValueError('AI response is too large.')
-    parsed = json.loads(content)
-    if not isinstance(parsed, dict):
-        raise ValueError('AI response is not a JSON object.')
-    return parsed
+                continue
+            choices = response.json().get('choices', [])
+            if not choices or not isinstance(choices[0], dict):
+                raise ValueError('AI response has no completion choice.')
+            choice = choices[0]
+            message = choice.get('message') or {}
+            raw = message.get('content') if isinstance(message, dict) else None
+            if isinstance(raw, list):
+                raw = ''.join(chunk.get('text', '') for chunk in raw if isinstance(chunk, dict))
+            reason = 'truncated' if choice.get('finish_reason') == 'length' else 'invalid_json'
+            try:
+                if choice.get('finish_reason') == 'length':
+                    raise ValueError('AI response exceeded its output budget.')
+                if not isinstance(raw, str):
+                    raise ValueError('AI response was not JSON text.')
+                content = raw.strip()
+                if content.startswith(chr(96) * 3):
+                    content = re.sub(r'^\x60{3}(?:json)?\s*|\s*\x60{3}$', '', content, flags=re.I).strip()
+                if len(content) > 100_000:
+                    raise ValueError('AI response is too large.')
+                parsed = json.loads(content)
+                if not isinstance(parsed, dict):
+                    raise ValueError('AI response is not a JSON object.')
+                return parsed
+            except (ValueError, TypeError):
+                # Metadata only: no prompt, credentials, reasoning, or source text.
+                logger.warning('AI output rejected: provider=%s model=%s reason=%s output_chars=%s budget=%s',
+                               provider.name, provider.model, reason,
+                               len(raw) if isinstance(raw, str) else 0, body['max_tokens'])
+                if attempt:
+                    raise
+                body['max_tokens'] = min(8192, max(4096, body['max_tokens'] * 2))
