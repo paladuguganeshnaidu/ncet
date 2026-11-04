@@ -251,7 +251,7 @@ $('#ai-brief').addEventListener('click',async()=>{
 });
 
 $('#batch-files').addEventListener('change',e=>{$('#selected-count').textContent=`${e.target.files.length} files selected`});
-$('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();form.set('title',$('#batch-title').value);for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received.`);e.target.reset();await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
+$('#batch-form').addEventListener('submit',async e=>{e.preventDefault();const list=$('#batch-files').files;if(!list.length)return say('Select PDF reference files.',true);if(list.length>50)return say('Maximum 50 PDFs per batch.',true);const total=[...list].reduce((a,f)=>a+f.size,0);if(total>60*1024*1024)return say('Split batches exceeding 60 MB.',true);const b=e.target.querySelector('button[type=submit]');b.disabled=true;try{const form=new FormData();const name=(list[0].name||'Reference PDF').replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();const generated=list.length===1?name:`${name} and ${list.length-1} more PDFs`;const title=$('#batch-title').value.trim()||generated;form.set('title',title.length>=5?title.slice(0,140):'HOD reference PDF batch');for(const f of list)form.append('files',f);const result=await api('/api/tasks/batches',{method:'POST',body:form});say(`${result.count} PDFs received.`);e.target.reset();await refresh()}catch(err){say(err.message,true)}finally{b.disabled=false}});
 $('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!selected.size)return say('Tick the PDF rows you want to assign.',true);const staff_id=Number($('#staff-id').value);if(!staff_id)return say('Choose a staff member.',true);try{
  const deadline=parseDeadline($('#assignment-deadline').value),mode=$('#rules-mode').value,useAI=mode==='ai';
  let rules=[],rules_by_task={};
@@ -270,7 +270,7 @@ $('#assign-form').addEventListener('submit',async e=>{e.preventDefault();if(!sel
   if(Object.keys(rules_by_task).length!==selected.size)return say('Add and complete a checklist for every selected PDF.',true);
  }else rules=manualRules();
  const ids=[...selected];
- const result=await api('/api/tasks/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_ids:ids,staff_id,notes:$('#notes').value,use_generated_rules:useAI,confirmed_task_ids:useAI?ids:[],rules,rules_by_task,deadline})});
+ const result=await api('/api/tasks/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_ids:ids,staff_id,notes:$('#notes').value.trim()||(mode==='auto'?'Complete and submit a PDF following the HOD reference format. Review priorities: '+$('#auto-review-instructions').value.trim():'Complete the assigned reference and submit a finished PDF for HOD review.'),use_generated_rules:useAI,confirmed_task_ids:useAI?ids:[],rules,rules_by_task,deadline})});
  selected.clear();$('#assignment-deadline').value='';
  say(`${result.assigned} assignments sent to staff inbox.`);await refresh();
 }catch(err){say(err.message,true)}});
