@@ -81,6 +81,7 @@ def main():
   page.locator('#case-description').fill('Please review the updated Computer Science laboratory schedule.')
   page.locator('#new-case button[type=submit]').click()
   page.wait_for_function('window.__requests.length===1')
+  page.wait_for_function("document.querySelector('#alert').innerText.includes('your department HOD')")
   assert 'your department HOD' in page.locator('#alert').inner_text()
   assert 'CSE lab schedule review' in page.locator('#case-list').inner_text()
   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
