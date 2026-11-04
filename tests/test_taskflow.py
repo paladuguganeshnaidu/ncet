@@ -351,3 +351,54 @@ def test_invalid_word_limit_and_weight_rejected_by_assignment(client,login):
     for rule in invalids:
         resp=client.post('/api/tasks/assign',headers={'X-CSRF-Token':token},json={**base,'rules':[rule]})
         assert resp.status_code==422,resp.text
+
+def test_model_source_identifiers_use_real_submission_text_and_reject_invented_ids(client,login,monkeypatch):
+    import app.taskflow as tf
+    from app.verification import Extracted
+    token=login(client,'hod');task_id=_batch(client,token,1)[0]
+    rules=[{'id':'check'+str(i),'title':'Source check '+str(i),'type':'semantic','required':True,'value':'','instructions':'Check the submitted source.'} for i in range(2)]
+    assert client.post('/api/tasks/assign',headers={'X-CSRF-Token':token},json={'task_ids':[task_id],'staff_id':_staff_id(),'notes':'Synthetic source-citation test.','rules':rules}).status_code==200
+    monkeypatch.setattr(tf,'select_provider',lambda db:Provider('NVIDIA','test-model','https://integrate.api.nvidia.com/v1/chat/completions','test-key'))
+    monkeypatch.setattr('app.verification.extract_document',lambda name,data:Extracted(['The submitted document contains this exact source evidence.'],1,False,[]))
+    def model(provider,system,payload,max_tokens=2200):
+        source=payload['evidence_passages'][0]
+        return {'evaluations':[
+            {'rule_id':'check0','result':'pass','confidence':.99,'evidence_id':source['id'],'evidence':'A model paraphrase must never replace the selected document text.'},
+            {'rule_id':'check1','result':'pass','confidence':.99,'evidence_id':'invented-source','evidence':source['text']}]}
+    monkeypatch.setattr(tf,'review_json',model)
+    with TestClient(app) as staff:
+        staff_token=login(staff,'staff')
+        assert staff.post(f'/api/tasks/{task_id}/submit',headers={'X-CSRF-Token':staff_token},files={'file':('completed.pdf',PDF,'application/pdf')}).status_code==201
+    assert run_task_once()
+    result=client.get('/api/tasks').json()['items'][0]
+    findings={item['rule_id']:item for item in result['report']['findings']}
+    assert findings['check0']['evidence']=='The submitted document contains this exact source evidence.'
+    assert findings['check0']['result']=='pass' and findings['check0']['location'].startswith('Page 1')
+    assert findings['check1']['result']=='uncertain' and findings['check1']['confidence']==0
+    assert result['state']=='manual_review' and result['score'] is None
+
+def test_staff_submission_downloads_preserve_department_and_approved_version_scope(client,login):
+    token=login(client,'hod');task_id=_batch(client,token,1)[0]
+    assert client.post('/api/tasks/assign',headers={'X-CSRF-Token':token},json={'task_ids':[task_id],'staff_id':_staff_id(),'notes':'Download access regression.','rules':RULE}).status_code==200
+    with DBSession() as db:
+        for revision in (1,2):
+            db.add(TaskSubmission(task_id=task_id,uploaded_by=_staff_id(),revision=revision,filename=f'staff-v{revision}.pdf',content=PDF+str(revision).encode(),state='completed'))
+        db.commit()
+    response=client.get(f'/api/tasks/{task_id}/submission')
+    assert response.status_code==200 and response.content.endswith(b'2')
+    assert response.headers['cache-control']=='no-store'
+    assert client.get(f'/api/tasks/{task_id}/submission?revision=1').content.endswith(b'1')
+    assert client.get('/api/tasks').json()['items'][0]['latest_revision']==2
+    for role,expected in [('staff',200),('staff2',404),('hod2',404),('principal',404),('iqac',404)]:
+        with TestClient(app) as member:
+            login(member,role)
+            assert member.get(f'/api/tasks/{task_id}/submission').status_code==expected
+    with DBSession() as db:
+        db.get(TaskItem,task_id).state='approved';db.commit()
+    for role in ('principal','iqac'):
+        with TestClient(app) as member:
+            login(member,role)
+            assert member.get(f'/api/tasks/{task_id}/submission').content.endswith(b'2')
+            assert member.get(f'/api/tasks/{task_id}/submission?revision=1').status_code==404
+    with TestClient(app) as anonymous:
+        assert anonymous.get(f'/api/tasks/{task_id}/submission').status_code==401

@@ -69,3 +69,14 @@ def test_document_signals_are_descriptive_not_authorship_predictions():
     assert signals['citation_markers'] >= 2
     assert signals['word_count'] > 0
     assert 'human_score' not in signals and 'plagiarism_score' not in signals
+
+def test_submission_passages_are_verbatim_bounded_and_page_scoped():
+    from app.document_intelligence import evidence_passages
+    from app.verification import evidence_supported
+    extracted=Extracted(['Source evidence on page one. '*40,'Second page evidence with a different detail.'],2,False,[])
+    passages=evidence_passages(extracted,max_chars=500)
+    assert passages and sum(len(item['text']) for item in passages)<=500
+    assert all(len(item['text'])<=240 for item in passages)
+    assert all(evidence_supported([extracted.pages[item['page']-1]],item['text']) for item in passages)
+    assert len({item['id'] for item in passages})==len(passages)
+    assert evidence_passages(extracted,max_chars=0)==[]
