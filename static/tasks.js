@@ -245,7 +245,7 @@ function table(){
   </tr>`
  }).join('');
  const markup=rows||'<tr><td colspan="7">No documents to display.</td></tr>';if(body.dataset.markup!==markup){body.innerHTML=markup;body.dataset.markup=markup;}
- $('#selected-ids').textContent=selected.size?`${selected.size} reference PDFs selected`:'Choose the reference PDFs to assign.';const picker=$('#assignment-files');if(picker){const choices=tasks.filter(t=>t.state==='unassigned').map(t=>`<label><input type="checkbox" data-select="${t.id}" aria-label="Choose ${safe(t.file)}" ${selected.has(t.id)?'checked':''}><span>${safe(t.file)}</span></label>`).join('')||'<p class="subtle">No unassigned PDFs. Add reference files first.</p>';if(picker.dataset.markup!==choices){picker.innerHTML=choices;picker.dataset.markup=choices;}}
+ $('#selected-ids').textContent=selected.size?`${selected.size} reference PDFs selected`:'Choose the reference PDFs to assign.';const picker=$('#assignment-files');if(picker){const choices=tasks.filter(t=>t.state==='unassigned').map(t=>`<label><input type="checkbox" data-assignment-select="${t.id}" aria-label="Choose ${safe(t.file)}" ${selected.has(t.id)?'checked':''}><span>${safe(t.file)}</span></label>`).join('')||'<p class="subtle">No unassigned PDFs. Add reference files first.</p>';if(picker.dataset.markup!==choices){picker.innerHTML=choices;picker.dataset.markup=choices;}}
 }
 
 function metrics(){const count=s=>tasks.filter(t=>t.state===s).length;const cards=[['Total tasks',tasks.length],['Working / on hold',count('assigned')+count('on_hold')],['Awaiting review',count('awaiting_hod')+count('manual_review')+count('verifying')],['Approved',count('approved')],['Overdue',tasks.filter(t=>t.overdue).length]];$('#metrics').innerHTML=cards.map(([label,value])=>`<div class="metric"><small>${safe(label)}</small><strong>${value}</strong></div>`).join('');}
@@ -330,7 +330,7 @@ $('#retry-rules').addEventListener('click',async()=>{
 });
 
 $('#ai-form').addEventListener('submit',async e=>{e.preventDefault();if(!await taskDialog('Replace the stored NVIDIA API key?'))return;const key=$('#ai-key').value;try{await api('/api/admin/integrations/nvidia',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});e.target.reset();say('NVIDIA key securely stored.');const s=await api('/api/tasks/ai/status');$('#ai-state').textContent=s.model}catch(err){say(err.message,true)}});
-document.addEventListener('change',e=>{if(e.target.matches('[data-select]')){const id=Number(e.target.dataset.select);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts();table()}});
+document.addEventListener('change',e=>{if(e.target.matches('[data-select],[data-assignment-select]')){const id=Number(e.target.dataset.select||e.target.dataset.assignmentSelect);e.target.checked?selected.add(id):selected.delete(id);$('#selected-ids').textContent=`${selected.size} unassigned PDFs selected`;if($('#per-file-toggle').checked)renderPerFileChecklists();updateAllocationChecklistUI();renderDrafts();table()}});
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-op],[data-notification]');if(!btn)return;
 try{if(btn.dataset.notification){await api(`/api/tasks/notifications/${Number(btn.dataset.notification)}/read`,{method:'POST'});return refresh()}
 const id=Number(btn.dataset.id),t=tasks.find(t=>t.id===id);if(!t)return;
