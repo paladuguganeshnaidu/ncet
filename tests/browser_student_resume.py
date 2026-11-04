@@ -48,9 +48,12 @@ assert 'Student Project' in html and 'Programming Certificate' in html
 
 with sync_playwright() as p:
     browser=launch_chromium(p,headless=True)
+    context=browser.new_context(viewport={'width':320,'height':850},device_scale_factor=1,
+                                accept_downloads=True)
     switches=[]
     for width in (320,375,390,768,1024,1440):
-        page=browser.new_page(viewport={'width':width,'height':850},device_scale_factor=1)
+        page=context.new_page()
+        page.set_viewport_size({'width':width,'height':850})
         page.add_init_script("window.__copiedProfile='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedProfile=text}}})")
         errors=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
@@ -125,6 +128,7 @@ with sync_playwright() as p:
         assert page.locator('#resume-tab-stage').evaluate('(el)=>el.style.height')==''
         assert not errors,(width,errors)
         page.close()
+    context.close()
     # Without JavaScript, all sections remain indexable and readable.
     nojs=browser.new_context(java_script_enabled=False,viewport={'width':390,'height':850})
     page=nojs.new_page()
