@@ -41,14 +41,20 @@ with DBSession() as db:
     db.commit()
 with TestClient(app) as client:
     html=client.get('/students/profile/1NC24CS150').text
+    portfolio_pdf=client.get('/students/profile/1NC24CS150/portfolio.pdf')
+    assert portfolio_pdf.status_code==200 and portfolio_pdf.content.startswith(b'%PDF-')
+    portfolio_pdf_bytes=portfolio_pdf.content
 assert 'Student Project' in html and 'Programming Certificate' in html
 
 with sync_playwright() as p:
     browser=launch_chromium(p,headless=True)
+    context=browser.new_context(viewport={'width':320,'height':850},device_scale_factor=1,
+                                accept_downloads=True)
     switches=[]
     for width in (320,375,390,768,1024,1440):
-        page=browser.new_page(viewport={'width':width,'height':850},device_scale_factor=1)
-        page.add_init_script("window.__copiedProfile='';window.__printCount=0;Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedProfile=text}}});window.print=()=>window.__printCount++")
+        page=context.new_page()
+        page.set_viewport_size({'width':width,'height':850})
+        page.add_init_script("window.__copiedProfile='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedProfile=text}}})")
         errors=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
         def serve(route):
@@ -62,6 +68,8 @@ with sync_playwright() as p:
                 route.fulfill(status=200,body=file.read_bytes(),headers={'content-type':mime})
             elif location=='/students/profile/1NC24CS150':
                 route.fulfill(status=200,body=html,headers={'content-type':'text/html; charset=utf-8'})
+            elif location=='/students/profile/1NC24CS150/portfolio.pdf':
+                route.fulfill(status=200,body=portfolio_pdf_bytes,headers={'content-type':'application/pdf','content-disposition':'attachment; filename="NCET-portfolio-1NC24CS150.pdf"'})
             else:route.fulfill(status=404,body='Not found')
         page.route('http://ncet.test/**',serve)
         page.goto('http://ncet.test/students/profile/1NC24CS150',wait_until='load')
@@ -81,15 +89,18 @@ with sync_playwright() as p:
         assert page.locator('.resume-anchors[role="tablist"]').count()==1
         assert page.locator('.resume-section:not([hidden])').count()==1
         assert page.locator('#about').is_visible()
-        assert page.get_by_role('link',name='Student sign in · Edit & publish').get_attribute('href')=='/students/portal#showcase-box'
-        assert 'Students manage this portfolio themselves.' in page.locator('.resume-owner-prompt').inner_text()
+        assert page.get_by_role('link',name='Download portfolio PDF').get_attribute('href')=='/students/profile/1NC24CS150/portfolio.pdf'
+        assert page.locator('.resume-owner-prompt').count()==0
+        assert page.get_by_role('link',name='Student sign in · Edit & publish').count()==0
         assert page.locator('.resume-project-grid .resume-project').count()==1
         assert page.locator('.resume-project-kicker').inner_text()=='PROJECT 01'
         page.get_by_role('button',name='Share portfolio').click()
         page.wait_for_function("document.querySelector('#resume-action-status').textContent.includes('copied')")
         assert page.evaluate('window.__copiedProfile')=='https://ncet-verifyflow.onrender.com/students/profile/1NC24CS150'
-        page.get_by_role('button',name='Save as PDF').click()
-        assert page.evaluate('window.__printCount')==1
+        with page.expect_download() as download_info:
+            page.get_by_role('link',name='Download portfolio PDF').click()
+        download=download_info.value
+        assert download.suggested_filename=='NCET-portfolio-1NC24CS150.pdf'
         page.locator('a[href="#projects"]').click()
         assert page.url.endswith('#projects'),page.url
         assert page.locator('#projects').is_visible()
@@ -116,6 +127,7 @@ with sync_playwright() as p:
         assert page.locator('#resume-tab-stage').evaluate('(el)=>el.style.height')==''
         assert not errors,(width,errors)
         page.close()
+    context.close()
     # Without JavaScript, all sections remain indexable and readable.
     nojs=browser.new_context(java_script_enabled=False,viewport={'width':390,'height':850})
     page=nojs.new_page()
@@ -141,3 +153,4 @@ print(f'Critical CSS+JS bytes (uncompressed): previous={before}, updated={after}
 print(f'Critical stylesheet/script requests: previous=6, updated=3')
 print(f'Tab switch browser timings, 18 interactions: median={median(switches):.0f} ms, p95={p95:.0f} ms')
 print('NCET résumé audit passed: six widths, six sections, reduced motion, keyboard/history, no-JS fallback, all institutional images loaded.')
+

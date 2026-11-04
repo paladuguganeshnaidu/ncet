@@ -141,9 +141,59 @@ for(const tab of document.querySelectorAll('[data-student-tab]')){
   $('student-tab-'+next+'-button').focus();
  });
 }
+const PROFILE_PHOTO_SOURCE_LIMIT=10_000_000,PROFILE_PHOTO_TARGET=145_000;
+let preparedProfilePhoto=null,profilePhotoPreviewUrl='',profilePhotoAvailable=false,profilePhotoPreparing=false,profilePhotoUploading=false,photoPreparationId=0;
+function clearProfilePhotoPreview(){
+ if(profilePhotoPreviewUrl)URL.revokeObjectURL(profilePhotoPreviewUrl);
+ profilePhotoPreviewUrl='';preparedProfilePhoto=null;
+}
+function previewProfilePhoto(blob){
+ if(profilePhotoPreviewUrl)URL.revokeObjectURL(profilePhotoPreviewUrl);
+ profilePhotoPreviewUrl=URL.createObjectURL(blob);
+ const img=$('showcase-photo-preview');img.src=profilePhotoPreviewUrl;img.alt='Preview of your selected profile photo';
+ show('showcase-photo-fallback',false);
+}
+function canvasBlob(canvas,type,quality){
+ return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('This photo could not be prepared. Try another image.')),type,quality));
+}
+async function compressProfilePhoto(file){
+ if(file.size>PROFILE_PHOTO_SOURCE_LIMIT)throw new Error('Choose a photo smaller than 10 MB.');
+ const sourceUrl=URL.createObjectURL(file),image=new Image();
+ try{
+  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('This photo could not be opened. Choose a JPEG, PNG or WebP image.'));image.src=sourceUrl});
+  const sourceWidth=image.naturalWidth,sourceHeight=image.naturalHeight;
+  if(sourceWidth<32||sourceHeight<32||sourceWidth*sourceHeight>20_000_000)
+   throw new Error('Choose a clear photo up to 20 megapixels.');
+  const canvas=document.createElement('canvas'),context=canvas.getContext('2d',{alpha:false});
+  if(!context)throw new Error('Photo preview is not supported in this browser.');
+  const scale=Math.min(1,1280/Math.max(sourceWidth,sourceHeight));
+  canvas.width=Math.max(1,Math.round(sourceWidth*scale));canvas.height=Math.max(1,Math.round(sourceHeight*scale));
+  context.fillStyle='#f4f6f9';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+  const probe=await canvasBlob(canvas,'image/webp',0.84);
+  const outputType=probe.type==='image/webp'?'image/webp':'image/jpeg';
+  const sizes=[1280,1024,800,640,512,400];
+  for(const edge of sizes){
+   const fit=Math.min(1,edge/Math.max(sourceWidth,sourceHeight));
+   canvas.width=Math.max(1,Math.round(sourceWidth*fit));canvas.height=Math.max(1,Math.round(sourceHeight*fit));
+   context.fillStyle='#f4f6f9';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+   const qualities=[0.84,0.72,0.60,0.48,0.38];
+   for(const quality of qualities){
+    const blob=edge===sizes[0]&&quality===0.84&&probe.type===outputType?probe:await canvasBlob(canvas,outputType,quality);
+    if(blob.type===outputType&&blob.size<PROFILE_PHOTO_TARGET){
+     const ext=outputType==='image/webp'?'webp':'jpg';
+     return new File([blob],'profile-photo.'+ext,{type:outputType,lastModified:Date.now()});
+    }
+   }
+  }
+  throw new Error('This image could not be reduced below 150 KB. Choose another photo.');
+ }finally{URL.revokeObjectURL(sourceUrl)}
+}
 function setProfilePhoto(available){
+ profilePhotoAvailable=available;
  const img=$('showcase-photo-preview');
- if(available){
+ if(profilePhotoPreviewUrl){
+  img.src=profilePhotoPreviewUrl;img.alt='Preview of your selected profile photo';
+ }else if(available){
   img.src='/api/bca/showcase/me/photo?ts='+Date.now();
   img.alt='Your saved student profile photo';
  }else{
@@ -153,25 +203,51 @@ function setProfilePhoto(available){
  show('remove-showcase-photo',available);
  show('showcase-photo-fallback',!available);
 }
+$('showcase-photo').addEventListener('change',async event=>{
+ if(profilePhotoUploading)return;
+ const file=event.target.files[0],button=$('showcase-photo-form').querySelector('[type=submit]');
+ const preparation=++photoPreparationId;profilePhotoPreparing=false;button.disabled=false;button.removeAttribute('aria-busy');
+ clearProfilePhotoPreview();
+ if(!file){setProfilePhoto(profilePhotoAvailable);$('photo-upload-status').textContent='Your photo appears publicly only if you publish your profile.';return}
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)){
+  event.target.value='';setProfilePhoto(profilePhotoAvailable);return notify('Choose a JPEG, PNG or WebP photo.',true);
+ }
+ if(file.size===0||file.size>PROFILE_PHOTO_SOURCE_LIMIT){
+  event.target.value='';setProfilePhoto(profilePhotoAvailable);return notify('Choose a photo smaller than 10 MB.',true);
+ }
+ profilePhotoPreparing=true;button.disabled=true;button.setAttribute('aria-busy','true');
+ previewProfilePhoto(file);$('photo-upload-status').textContent='Preparing a smaller photo and preview…';
+ try{
+  const optimized=await compressProfilePhoto(file);
+  if(preparation!==photoPreparationId)return;
+  preparedProfilePhoto=optimized;previewProfilePhoto(preparedProfilePhoto);
+  $('photo-upload-status').textContent='Photo ready · '+Math.ceil(preparedProfilePhoto.size/1024)+' KB. Upload to save it.';
+ }catch(error){
+  if(preparation!==photoPreparationId)return;
+  clearProfilePhotoPreview();event.target.value='';setProfilePhoto(profilePhotoAvailable);
+  $('photo-upload-status').textContent=error.message;notify(error.message,true);
+ }finally{if(preparation===photoPreparationId){profilePhotoPreparing=false;button.disabled=false;button.removeAttribute('aria-busy')}}
+});
 $('showcase-photo-form').addEventListener('submit',async e=>{
  e.preventDefault();
  const file=$('showcase-photo').files[0];
  if(!file)return notify('Choose a photo to upload.',true);
- const acceptable=['image/png','image/jpeg','image/webp'];
- if(!acceptable.includes(file.type))return notify('Use JPEG, PNG or WebP.',true);
- if(file.size===0 || file.size>=150000)return notify('Choose a photo strictly under 150 KB.',true);
+ if(profilePhotoPreparing)return notify('Your photo is still being prepared. Please wait a moment.',true);
+ if(profilePhotoUploading)return;
+ if(!preparedProfilePhoto)return notify('Choose a photo and wait for the preview to finish.',true);
  const btn=e.target.querySelector('[type=submit]');
+ profilePhotoUploading=true;$('showcase-photo').disabled=true;
  btn.disabled=true;btn.setAttribute('aria-busy','true');
  $('photo-upload-status').textContent='Uploading and optimizing photo…';
  try{
-  const data=new FormData();data.set('file',file);
+  const data=new FormData();data.set('file',preparedProfilePhoto);
   await api('/api/bca/showcase/me/photo',{method:'PUT',body:data});
-  $('showcase-photo').value='';
+  $('showcase-photo').value='';clearProfilePhotoPreview();
   setProfilePhoto(true);
-  $('photo-upload-status').textContent='Photo saved. It appears publicly only while your profile is published.';
+  $('photo-upload-status').textContent='Photo saved · under 150 KB. It appears publicly only while your profile is published.';
   notify('Profile photo uploaded.');
  }catch(err){$('photo-upload-status').textContent=err.message;notify(err.message,true)}
- finally{btn.disabled=false;btn.removeAttribute('aria-busy')}
+ finally{profilePhotoUploading=false;$('showcase-photo').disabled=false;btn.disabled=false;btn.removeAttribute('aria-busy')}
 });
 $('remove-showcase-photo').addEventListener('click',async ()=>{
  if(!confirm('Remove your saved profile photo?'))return;
@@ -179,6 +255,7 @@ $('remove-showcase-photo').addEventListener('click',async ()=>{
  btn.disabled=true;btn.setAttribute('aria-busy','true');
  try{
   await api('/api/bca/showcase/me/photo',{method:'DELETE'});
+  $('showcase-photo').value='';clearProfilePhotoPreview();
   setProfilePhoto(false);
   $('photo-upload-status').textContent='Photo removed.';
   notify('Photo removed from your student profile.');
@@ -212,3 +289,4 @@ function addProjectEditor(project={}){
  list.appendChild(wrapper);
 }
 $('add-showcase-project').addEventListener('click',()=>addProjectEditor());
+

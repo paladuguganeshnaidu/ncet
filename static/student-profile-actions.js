@@ -23,5 +23,5 @@
       announce('Copy the portfolio link from your browser address bar.');
     }
   });
-  document.getElementById('resume-print')?.addEventListener('click', () => window.print());
 })();
+

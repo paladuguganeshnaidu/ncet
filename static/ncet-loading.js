@@ -7,7 +7,7 @@
  if(/^\/app\/?$/.test(window.location.pathname))return;
  const originalFetch=window.fetch.bind(window);
  let pending=0,showTimer=0,loader=null;
- const MAX_INDICATOR_MS=12000;
+ const MAX_INDICATOR_MS=2000;
  const skip=url=>/\/api\/(?:auth\/me|alerts|notifications)/.test(url);
  function ensure(){
   if(loader)return loader;
@@ -61,7 +61,7 @@
    if(event.defaultPrevented)return;
    start();
    const form=event.target;form.dataset.ncetNavigating='true';
-   setTimeout(()=>{delete form.dataset.ncetNavigating;finish()},8000);
+   setTimeout(()=>{delete form.dataset.ncetNavigating;finish()},2000);
   });
  },true);
  window.addEventListener('pageshow',()=>{
@@ -69,3 +69,4 @@
   showTimer=0;if(loader)loader.hidden=true;
  });
 })();
+
