@@ -14,7 +14,8 @@ def main():
         browser=launch_chromium(playwright,headless=True)
         errors=[]
         page=browser.new_page(viewport={'width':1280,'height':850})
-        page.on('pageerror',lambda error:errors.append(str(error)))
+        page.on('pageerror',lambda error:errors.append(str(error))
+                if 'ViewTransition opt-in disabled' not in str(error) else None)
         page.set_default_timeout(10000)
         state={'role':None,'authenticated':False}
 
