@@ -10,6 +10,7 @@ JS=ROOT/'static'/'student-portal.js'
 MOCK=r"""() => {
  let signed=false,submitted=false;
  window.__requests=[];
+ window.__uploadedPhotoSize=0;
  window.fetch=async(input,options={})=>{
   const url=String(input),method=options.method||'GET';let body={},status=200;
   if(url==='/api/auth/me'){
@@ -20,6 +21,9 @@ MOCK=r"""() => {
   }else if(url==='/api/bca/me')body={usn:'1NC24CSE901',branch:'Computer Science & Engineering',semester:5,must_change_password:false};
   else if(url.startsWith('/api/bca/cases?'))body={items:submitted?[{reference:'NCET-BCA-CSE001',subject:'CSE lab schedule review',category:'academics',status:'submitted',created_at:new Date().toISOString()}]:[],counts:{submitted:submitted?1:0,in_review:0,resolved:0,closed:0},all_total:submitted?1:0,total:submitted?1:0,has_more:false};
   else if(url==='/api/bca/showcase/me'&&method==='GET')body={usn:'1NC24CSE901',full_name:'Student CSE',department:'Computer Science & Engineering',mobile:'',email:'',about:'',interests:[],projects:[],skills:[],social_links:{},certificates:[],published:false,photo_available:false};
+  else if(url==='/api/bca/showcase/me/photo'&&method==='PUT'){
+   const photo=options.body.get('file');window.__uploadedPhotoSize=photo.size;body={ok:true,size_bytes:photo.size};
+  }
   else if(url==='/api/bca/cases'&&method==='POST'){
    const data=JSON.parse(options.body);window.__requests.push(data);submitted=true;body={reference:'NCET-BCA-CSE001',status:'submitted'};
   }else if(url==='/api/bca/cases/NCET-BCA-CSE001')body={reference:'NCET-BCA-CSE001',subject:'CSE lab schedule review',category:'academics',description:'Please review the updated Computer Science laboratory schedule.',status:'submitted',messages:[],created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
@@ -40,7 +44,19 @@ def main():
   html=html.replace('<link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017">','<style>'+ (ROOT/'static'/'responsive-upgrade.css').read_text(encoding='utf-8')+'</style>')
   html=html.replace('<link rel="stylesheet" href="/static/student-redesign.css?v=20261017b">','<style>'+ (ROOT/'static'/'student-redesign.css').read_text(encoding='utf-8')+'</style>')
   html=html.replace('<link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017">','<style>'+ (ROOT/'static'/'ncet-brand-system.css').read_text(encoding='utf-8')+'</style>')
-  html=html.replace('<script src="/static/student-portal.js?v=20261021-department" defer></script><script src="/static/notifications.js" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script>','')
+  html=html.replace('<script src="/static/student-portal.js?v=20261104-photo-preview" defer></script><script src="/static/notifications.js?v=20261104" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script>','')
+  def serve_assets(route):
+   location=route.request.url.split('student.test',1)[-1].split('?',1)[0]
+   if location=='/api/bca/showcase/me/photo':
+    route.fulfill(status=200,body=(ROOT/'static'/'ncet-brand.png').read_bytes(),headers={'content-type':'image/png'});return
+   if location.startswith('/static/'):
+    file=(ROOT/'static'/location.removeprefix('/static/')).resolve()
+    if file.is_relative_to((ROOT/'static').resolve()) and file.is_file():
+     mime={'.png':'image/png','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml'}.get(file.suffix.lower(),'application/octet-stream')
+     route.fulfill(status=200,body=file.read_bytes(),headers={'content-type':mime});return
+   route.fulfill(status=404,body='Not found')
+  page.route('http://student.test/**',serve_assets)
+  page.goto('http://student.test/')
   page.set_content(html)
   page.evaluate(MOCK)
   page.add_script_tag(content=JS.read_text(encoding='utf-8'))
@@ -51,6 +67,15 @@ def main():
   assert page.locator('#who').inner_text()=='1NC24CSE901 · Computer Science & Engineering · Semester 5'
   page.locator('[data-student-tab=profile]').click()
   assert page.locator('#showcase-dept').input_value()=='Computer Science & Engineering'
+  page.set_input_files('#showcase-photo',str(ROOT/'static'/'ncet-brand.png'))
+  page.wait_for_function("document.querySelector('#photo-upload-status').textContent.startsWith('Photo ready')")
+  assert page.locator('#showcase-photo-preview').get_attribute('src').startswith('blob:')
+  page.wait_for_function("document.querySelector('#showcase-photo-preview').naturalWidth>0")
+  page.locator('#showcase-photo-form button[type=submit]').click()
+  page.wait_for_function('window.__uploadedPhotoSize>0')
+  assert page.evaluate('window.__uploadedPhotoSize')<150000
+  page.wait_for_function("document.querySelector('#photo-upload-status').textContent.includes('Photo saved')")
+  page.wait_for_function("document.querySelector('#showcase-photo-preview').naturalWidth>0")
   page.locator('[data-student-tab=requests]').click()
   page.locator('#case-subject').fill('CSE lab schedule review')
   page.locator('#case-description').fill('Please review the updated Computer Science laboratory schedule.')
@@ -61,6 +86,7 @@ def main():
   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
   assert not errors,errors
   browser.close()
- print('STUDENT PORTAL UI PASS: CSE department labels, request submission, mobile layout')
+ print('STUDENT PORTAL UI PASS: CSE labels, automatic photo preview/compression, request submission, mobile layout')
 
 if __name__=='__main__':main()
+
