@@ -214,7 +214,7 @@ $('student-removal-confirm-form').addEventListener('submit',async event=>{
   selectedStudentUsns.clear();discardRemovalPreview();
   if(result.action==='disable')$('show-disabled-students').checked=false;
   await loadRoster();
-  notify(result.affected+' student account'+(result.affected===1?'':'s')+' '+(result.action==='delete'?'permanently deleted.':'removed from sign-in; sessions ended, public portfolios hidden and records retained.'));
+  notify(result.affected+' student account'+(result.affected===1?'':'s')+' '+(result.action==='delete'?'permanently deleted.':'disabled; sign-in removed, sessions ended, public portfolios hidden and records retained.'));
  }catch(err){removalError(err.message);if(err.message.includes('Preview again')||err.message.includes('Selection or record state'))discardRemovalPreview();}
  finally{removalBusy=false;$('execute-student-removal').disabled=false;form.querySelector('[name=current_password]').value='';}
 });
