@@ -158,3 +158,44 @@ def test_bad_nvidia_json_is_rejected(monkeypatch):
     provider = Provider('NVIDIA NIM', 'meta/llama-3.1-70b-instruct', NVIDIA_URL, 'fake-key')
     with pytest.raises(json.JSONDecodeError):
         review_json(provider, 'Reviewer', {'document': 'Text'})
+
+def test_truncated_completion_is_retried_without_accepting_partial_json(monkeypatch):
+    calls=[]
+    class Reply:
+        status_code=200
+        def raise_for_status(self): pass
+        def json(self):
+            return {'choices':[{'finish_reason':'length' if len(calls)==1 else 'stop',
+                               'message':{'content':'{"summary":"Complete on retry","evaluations":[]}'}}]}
+    class Client:
+        def __init__(self,*args,**kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+        def post(self,url,*,headers,json):
+            calls.append({'url':url,'budget':json['max_tokens']})
+            return Reply()
+    monkeypatch.setattr('app.ai_gateway.httpx.Client',Client)
+    provider=Provider('NVIDIA NIM','nvidia/nemotron-3.5-lightning-30b-a3b',NVIDIA_URL,'synthetic-key')
+    assert review_json(provider,'Reviewer',{},max_tokens=4096)['summary']=='Complete on retry'
+    assert len(calls)==2 and calls[1]['budget']>calls[0]['budget']
+    assert {call['url'] for call in calls}=={NVIDIA_URL}
+
+
+def test_hosted_json_mode_rejection_retries_same_provider_with_local_validation(monkeypatch):
+    calls=[]
+    class Reply:
+        @property
+        def status_code(self): return 422 if len(calls)==1 else 200
+        def raise_for_status(self): assert self.status_code==200
+        def json(self): return {'choices':[{'finish_reason':'stop','message':{'content':'{"summary":"Validated"}'}}]}
+    class Client:
+        def __init__(self,*args,**kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+        def post(self,url,*,headers,json):
+            calls.append({'url':url,'json_mode':'response_format' in json})
+            return Reply()
+    monkeypatch.setattr('app.ai_gateway.httpx.Client',Client)
+    provider=Provider('NVIDIA NIM','nvidia/nemotron-3.5-lightning-30b-a3b',NVIDIA_URL,'synthetic-key')
+    assert review_json(provider,'Reviewer',{})['summary']=='Validated'
+    assert calls==[{'url':NVIDIA_URL,'json_mode':True},{'url':NVIDIA_URL,'json_mode':False}]
