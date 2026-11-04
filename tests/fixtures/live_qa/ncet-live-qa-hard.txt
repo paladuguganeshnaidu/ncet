@@ -1,0 +1,33 @@
+NCET VERIFYFLOW — SYNTHETIC QA DOCUMENT — HARD
+Date: 2026-11-04
+Department: Computer Applications
+Document type: Department accreditation evidence audit
+TEST DATA ONLY — deliberately inconsistent, not an official college record.
+
+1. Purpose
+Demonstrate whether document review detects missing proof, contradictory figures, unsupported claims, and incomplete formatting.
+
+2. Population summary
+Total student records reviewed: 120.
+Passed: 94.
+Requires improvement: 29.
+Not assessed: 8.
+These categories are presented as mutually exclusive, but sum to 131 rather than 120.
+
+3. Achievement claims
+The report claims 100% faculty workshop participation, yet states that 17 of 23 faculty attended.
+A pass rate of 90% is claimed despite the stated 94 passes out of 120 records, which is about 78.3%.
+
+4. Evidence references
+Evidence A: attendance register, not supplied.
+Evidence B: verification spreadsheet, not supplied.
+Evidence C: committee meeting minutes, not supplied.
+No independent source links or signed approvals are available.
+
+5. Risk and safeguards
+The report declares that no personal information was processed, but section 2 describes analysis of student-level records without any anonymization method.
+
+6. Conclusion
+The submission is ready for unconditional approval. (This claim conflicts with the data-quality issues and missing evidence above.)
+
+Expected review: flag arithmetic contradictions, unsupported metrics, missing attachments, and privacy-process ambiguity. Avoid claiming to determine whether a human or AI authored the text.
