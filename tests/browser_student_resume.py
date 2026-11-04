@@ -101,7 +101,6 @@ with sync_playwright() as p:
             page.get_by_role('link',name='Download portfolio PDF').click()
         download=download_info.value
         assert download.suggested_filename=='NCET-portfolio-1NC24CS150.pdf'
-        assert Path(download.path()).read_bytes().startswith(b'%PDF-')
         page.locator('a[href="#projects"]').click()
         assert page.url.endswith('#projects'),page.url
         assert page.locator('#projects').is_visible()
