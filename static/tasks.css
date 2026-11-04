@@ -55,3 +55,21 @@
 .report-finding h4{margin:0 0 8px}
 .report-finding p,.report-body p{overflow-wrap:anywhere}
 #task-review-decision{width:100%;margin-top:7px}
+
+/* A clear, low-noise task journey; the actual work precedes analytics. */
+.task-workflow-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 22px;align-items:stretch}
+.task-workflow-nav.staff{grid-template-columns:minmax(0,1fr);max-width:560px}
+.task-workflow-nav a{display:flex;align-items:center;gap:12px;min-width:0;min-height:76px;text-decoration:none;padding:14px 16px;background:#fff;border:1px solid #dce4ed;border-radius:11px;color:#0e2455;transition:border-color .16s,box-shadow .16s,transform .16s}
+.task-workflow-nav a:hover{border-color:#7d9cb8;box-shadow:0 6px 18px #0e24550f;transform:translateY(-1px);text-decoration:none}
+.task-workflow-nav a:focus-visible{outline:3px solid #f6872a;outline-offset:2px}
+.task-workflow-nav .step-no{font-size:12px;font-weight:800;letter-spacing:.04em;color:#345c86;background:#eef3f9;display:grid;place-items:center;min-width:36px;height:36px;border-radius:10px}
+.task-workflow-nav strong{font-size:13px;display:block;line-height:1.35}
+.task-workflow-nav small{display:block;font-size:11px;color:#65788d;margin-top:3px;font-weight:500}
+#upload-reference,#assign-tasks,#review-tasks,#dashboard-overview{scroll-margin-top:24px}
+.section-anchor{height:0;scroll-margin-top:24px}
+#hod-section>.panel{align-self:start}
+#hod-section .panel header{margin-bottom:14px}
+#hod-section details>summary{cursor:pointer;margin-bottom:12px}
+@media(max-width:1030px){.task-workflow-nav{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.task-workflow-nav{grid-template-columns:1fr}.task-workflow-nav a{min-height:61px;padding:11px 13px}}
+@media(prefers-reduced-motion:reduce){.task-workflow-nav a{transition:none}}
