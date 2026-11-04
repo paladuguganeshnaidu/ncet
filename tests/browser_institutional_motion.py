@@ -80,6 +80,8 @@ with sync_playwright() as p:
     # The logged-in document workspace has its own form progress state and must
     # not show a stale page-wide toast even for a slow authenticated mutation.
     page.goto(BASE+'/app',wait_until='domcontentloaded')
+    # Do not import the global loader at all: cached scripts can outlive code fixes.
+    assert page.locator('script[src*="ncet-loading.js"]').count()==0
     page.evaluate("() => { window.__appMutation=fetch('/api/ui-motion-slow',{method:'POST'}); }")
     page.wait_for_timeout(650)
     assert page.locator('.ncet-network-loader').count()==0
