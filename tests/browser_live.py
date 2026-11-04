@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory() as td:
         def signout():page.locator('[data-action=logout]').click();page.locator('#login-user').wait_for()
         signin('admin')
         page.locator('[data-page=users]').first.click()
-        page.get_by_text('Provisioned accounts').wait_for()
+        page.get_by_text('Team directory').wait_for()
         assert page.get_by_text('NCET staff').first.is_visible()
         page.locator('[data-page=integrations]').first.click()
         page.get_by_text('AI model configuration').wait_for()

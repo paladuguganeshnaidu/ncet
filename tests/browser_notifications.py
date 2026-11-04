@@ -30,8 +30,9 @@ def main():
             {id:'a-1',text:'New BCA student request',category:'complaints',link:'/bca/oversight',seen:false,at:'2026-10-16T10:00:00+00:00'},
             {id:'t-1',text:'A task was assigned',category:'tasks',link:'/tasks',seen:false,at:'2026-10-16T11:00:00+00:00'}
           ]};
-          window.setInterval=(callback,interval)=>{window.__notificationTimer={callback,interval};return 1;};
-          window.clearInterval=()=>{};
+          window.__clock=Date.now();Date.now=()=>window.__clock;
+          window.setTimeout=(callback,interval)=>{window.__notificationTimer={callback,interval};return 1;};
+          window.clearTimeout=()=>{};
           window.fetch=async url=>{
             if(String(url).includes('/api/auth/me')) {
               window.__authCalls++;
@@ -47,17 +48,17 @@ def main():
         page.add_script_tag(content=(STATIC/'notifications.js').read_text(encoding='utf-8'))
         page.locator('#ncet-alerts').wait_for(state='visible')
         assert '2 new' in page.locator('#alert-count').inner_text()
-        assert page.evaluate('window.__notificationTimer.interval')==1500
+        assert page.evaluate('window.__notificationTimer.interval')==30000
         assert page.evaluate('window.__authCalls')==1
         assert page.evaluate('window.__inboxCalls')==1
         page.locator('#alert-toggle').click()
         assert page.locator('.alert-entry').count()==2
         assert page.locator('a[href="/bca/oversight"]').count()==1
         page.locator('a[href="/tasks"]').evaluate('(element)=>element.focus()')
-        page.evaluate('window.__notificationTimer.callback()')
+        page.evaluate('window.__clock+=31000;window.__notificationTimer.callback()')
         assert page.locator('a[href="/tasks"]').evaluate('(element)=>element===document.activeElement')
         page.evaluate("window.__noticeResponse={unread:3,items:[]}")
-        page.evaluate('window.__notificationTimer.callback()')
+        page.evaluate('window.__clock+=31000;window.__notificationTimer.callback()')
         page.get_by_text('3 new').wait_for()
         assert page.evaluate('window.__authCalls')==1
         # Opening the panel can race with the interval; the updated badge verifies polling.

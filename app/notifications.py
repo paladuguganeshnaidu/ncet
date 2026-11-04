@@ -1,5 +1,5 @@
 """Persistent in-app alerts, scoped to accounts and roles."""
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
@@ -46,10 +46,22 @@ def inbox(user:User=Depends(current),db:Session=Depends(get_db)):
     from .taskflow import TaskNotification
     current_items=db.query(AppNotification).filter(AppNotification.recipient_id==user.id).order_by(AppNotification.id.desc()).limit(80).all()
     tasks=db.query(TaskNotification).filter(TaskNotification.user_id==user.id).order_by(TaskNotification.id.desc()).limit(50).all()
-    items=[{'id':f'a-{n.id}','text':n.text,'link':n.link,'category':n.category,'seen':n.seen,'at':n.created_at.isoformat()} for n in current_items]
-    items.extend({'id':f't-{n.id}','text':n.text,'link':'/tasks','category':'tasks','seen':n.seen,'at':n.created_at.isoformat()} for n in tasks)
+    stamp=lambda value: value.replace(tzinfo=timezone.utc).isoformat() if value.tzinfo is None else value.isoformat()
+    items=[{'id':f'a-{n.id}','text':n.text,'link':n.link,'category':n.category,'seen':n.seen,'at':stamp(n.created_at)} for n in current_items]
+    items.extend({'id':f't-{n.id}','text':n.text,'link':'/tasks','category':'tasks','seen':n.seen,'at':stamp(n.created_at)} for n in tasks)
     items.sort(key=lambda n:n['at'],reverse=True)
-    return {'unread':sum(not n['seen'] for n in items),'items':items[:100]}
+    unread=db.query(func.count(AppNotification.id)).filter_by(recipient_id=user.id,seen=False).scalar()
+    unread+=db.query(func.count(TaskNotification.id)).filter_by(user_id=user.id,seen=False).scalar()
+    return {'unread':unread,'items':items[:100]}
+
+
+@router.post('/api/alerts/read-all')
+def read_all(user:User=Depends(csrf_required),db:Session=Depends(get_db)):
+    from .taskflow import TaskNotification
+    db.query(AppNotification).filter_by(recipient_id=user.id,seen=False).update({'seen':True})
+    db.query(TaskNotification).filter_by(user_id=user.id,seen=False).update({'seen':True})
+    db.commit()
+    return {'ok':True}
 
 
 @router.post('/api/alerts/{notification_id}/read')
