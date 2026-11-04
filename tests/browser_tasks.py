@@ -10,7 +10,7 @@ def test_browser():
     for role in ('hod','staff','principal','iqac','admin'):
       page=browser.new_page(viewport={'width':390 if role=='staff' else 1366,'height':840})
       errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-      html=(BASE/'tasks.html').read_text(encoding='utf-8').replace('<link rel="stylesheet" href="/static/tasks.css?v=20261021-per-file-checklists">','<style>'+ (BASE/'tasks.css').read_text(encoding='utf-8')+'</style>')
+      html=(BASE/'tasks.html').read_text(encoding='utf-8').replace('<link rel="stylesheet" href="/static/tasks.css?v=20261104-task-workflow">','<style>'+ (BASE/'tasks.css').read_text(encoding='utf-8')+'</style>')
       html=html.replace('<script src="/static/tasks.js" defer></script>','')
       html=html.replace('<script src="/static/hod-dashboard.js?v=20261017f" defer></script>','')
       html=html.replace('<link rel="stylesheet" href="/static/hod-dashboard.css?v=20261017f">',
@@ -53,6 +53,13 @@ def test_browser():
       page.locator('#tasks strong[title="Academic_Audit.pdf"]').wait_for()
       assert page.get_by_text('Academic audit assigned').count()==1
       if role=='hod':
+        assert page.locator('#hod-workflow-nav').is_visible()
+        assert page.locator('#staff-workflow-nav').is_hidden()
+        assert page.locator('#upload-reference').is_visible()
+        assert page.locator('#assign-tasks').is_visible()
+        assert page.locator('#review-tasks').is_visible()
+        assert page.locator('#hod-workflow-nav a').count()==4
+        assert page.locator('#upload-reference').bounding_box()['y'] < page.locator('#hod-dashboard').bounding_box()['y']
         assert page.locator('#hod-section').is_visible()
         assert page.locator('#hod-dashboard').is_visible()
         page.locator('#dashboard-metrics [data-dash-status="all"] strong').wait_for()
@@ -201,6 +208,9 @@ def test_browser():
         assert page.locator('#hod-section').is_hidden()
         assert page.locator('#hod-dashboard').is_hidden()
       if role=='staff':
+        assert page.locator('#staff-workflow-nav').is_visible()
+        assert page.locator('#hod-workflow-nav').is_hidden()
+        assert page.locator('#review-tasks').is_visible()
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
         assert page.locator('.deadline-cell').count()==1
         assert page.locator('button[data-op="deadline"]').count()==0
