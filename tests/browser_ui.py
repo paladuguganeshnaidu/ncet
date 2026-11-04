@@ -43,8 +43,10 @@ with sync_playwright() as p:
     assert "window.location.assign('/tasks')" in js
     # Keep the embedded workspace interaction suite in one document. The real
     # login destination is exercised against the running app in browser_live.
-    js=js.replace("window.location.assign('/tasks');",
-                  "window.dispatchEvent(new CustomEvent('ncet:test-login-landing',{detail:'/tasks'}));")
+    # For this isolated suite, continue rendering the document workspace after
+    # login so its role-specific controls can be tested without a second page.
+    js=js.replace("window.location.assign('/tasks');return;",
+                  "page='overview';if(role==='admin')accounts=(await api('/api/users')).items;await refreshDocs();window.dispatchEvent(new Event('ncet:session-changed'));return;")
     for suffix in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','ncms-logo.webp','ncms-emblem.webp','ngi-logo.webp','ncet-crest.webp'):
         asset=ROOT/'static'/suffix
         if asset.exists():
@@ -113,3 +115,4 @@ with sync_playwright() as p:
     assert not errors,errors
     print('UI SMOKE PASS: 5 roles, Super Admin, HOD rules, Staff upload, verification report, Principal/IQAC isolation, mobile. JS errors:',errors)
     browser.close()
+
