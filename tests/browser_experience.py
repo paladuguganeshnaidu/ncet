@@ -136,6 +136,10 @@ def main():
         assert [x.inner_text() for x in page.locator("#roster .entry strong").all()]==[
             "Student Charlie","Student Alpha","Student Beta"]
         assert page.evaluate("window.__priorityChanges.map(x=>x.stars)")==[3,0]
+        for width in (320,390,768):
+            page.set_viewport_size({"width":width,"height":900})
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"),width
+        page.set_viewport_size({"width":1440,"height":900})
 
         # Super Admin manages all branches; keep its student desk labels and
         # export names department-neutral while retaining BCA labels for staff.
