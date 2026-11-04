@@ -1,6 +1,6 @@
 """Private BCA enrollment and student cases; never included in public search endpoints."""
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, UniqueConstraint, Index, Boolean
+from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, UniqueConstraint, Index, Boolean, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base, utcnow
 
@@ -12,6 +12,17 @@ class BCAStudent(Base):
     semester: Mapped[int] = mapped_column(Integer)
     must_change_password: Mapped[bool] = mapped_column(Boolean,default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=utcnow)
+
+class StudentPriority(Base):
+    """Private, department-scoped importance set by an HOD for one student."""
+    __tablename__='bca_student_priorities'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey('users.id',ondelete='CASCADE'),unique=True,index=True)
+    department: Mapped[str] = mapped_column(String(160),index=True)
+    stars: Mapped[int] = mapped_column(Integer)
+    updated_by_hod_id: Mapped[int | None] = mapped_column(ForeignKey('users.id',ondelete='SET NULL'),nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),default=utcnow)
+    __table_args__=(CheckConstraint('stars >= 1 AND stars <= 3',name='ck_bca_student_priority_stars'),)
 
 class StudentCase(Base):
     __tablename__ = 'student_cases'

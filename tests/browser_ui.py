@@ -40,6 +40,11 @@ with sync_playwright() as p:
     css='\n'.join((ROOT/'static'/name).read_text() for name in
         ('styles.css','enterprise.css','enterprise-minimal.css','workspace-ui.css'))
     js=(ROOT/'static/app.js').read_text()
+    assert "window.location.assign('/tasks')" in js
+    # Keep the embedded workspace interaction suite in one document. The real
+    # login destination is exercised against the running app in browser_live.
+    js=js.replace("window.location.assign('/tasks');",
+                  "window.dispatchEvent(new CustomEvent('ncet:test-login-landing',{detail:'/tasks'}));")
     for suffix in ('ncet-brand.svg','ngi-brand.svg','naac-brand.svg','ncms-logo.webp','ncms-emblem.webp','ngi-logo.webp','ncet-crest.webp'):
         asset=ROOT/'static'/suffix
         if asset.exists():

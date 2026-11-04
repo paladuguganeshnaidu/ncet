@@ -36,6 +36,10 @@ with tempfile.TemporaryDirectory() as td:
             page.locator('#login-user').fill(username)
             page.locator('#login-pass').fill('BrowserTest2026Secure!')
             page.locator('#login-form button[type=submit]').click()
+            page.wait_for_url(BASE+'/tasks')
+            assert page.locator('#heading').inner_text()=='Task management'
+            # The embedded document workspace stays available as a secondary page.
+            page.goto(BASE+'/app')
             page.locator('.sidebar-brand').wait_for()
         def signout():page.locator('[data-action=logout]').click();page.locator('#login-user').wait_for()
         signin('admin')

@@ -478,7 +478,9 @@ function cleanupHTML() {
     if(e.target.id==='login-form'){
       e.preventDefault();const data=new FormData(e.target);
       try{const auth=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:String(data.get('username')||'').trim().toLowerCase(),password:String(data.get('password')||''),role:null})});
-        user=auth.user;role=user.role;csrf=auth.csrf;authError='';page='overview';if(role==='admin')accounts=(await api('/api/users')).items;await refreshDocs();window.dispatchEvent(new Event('ncet:session-changed'));notify(`Welcome, ${currentRole().name}.`);}
+        user=auth.user;role=user.role;csrf=auth.csrf;authError='';
+        if(['admin','hod','staff','principal','iqac'].includes(role)){window.location.assign('/tasks');return;}
+        page='overview';if(role==='admin')accounts=(await api('/api/users')).items;await refreshDocs();window.dispatchEvent(new Event('ncet:session-changed'));notify(`Welcome, ${currentRole().name}.`);}
       catch(err){authError=err.message;const attempted=String(data.get('username')||'').trim();render();const usernameField=document.getElementById('login-user');if(usernameField){usernameField.value=attempted;document.getElementById('login-pass')?.focus();}}return;
     }
     if(e.target.id==='submit-document'){

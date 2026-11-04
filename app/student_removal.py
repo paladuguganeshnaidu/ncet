@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session as DbSession
 from .database import Base, User, Session, AuditLog, LoginFailure, get_db, utcnow
 from .security import csrf_required, verify_password
 from .student_services import BCA_DEPARTMENT_NAMES
-from .student_models import BCAStudent
+from .student_models import BCAStudent, StudentPriority
 from .student_profiles import StudentShowcase
 
 router = APIRouter(prefix='/api/bca/students/removal',
@@ -35,7 +35,7 @@ PREVIEW_TTL = 300
 # These are strictly dependent/ephemeral records or user-owned portfolio data.
 # All other future user-FKs become blockers automatically (fail closed).
 DELETE_OWNED = frozenset({
-    'sessions', 'bca_students', 'bca_student_showcases',
+    'sessions', 'bca_students', 'bca_student_showcases', 'bca_student_priorities',
     'app_notifications', 'task_notifications',
 })
 
@@ -223,6 +223,7 @@ def execute(body: Execute, request: Request, actor: User = Depends(csrf_required
             for model, column in ((AppNotification, AppNotification.recipient_id),
                                   (TaskNotification, TaskNotification.user_id),
                                   (StudentShowcase, StudentShowcase.student_id),
+                                  (StudentPriority, StudentPriority.student_id),
                                   (BCAStudent, BCAStudent.user_id)):
                 db.query(model).filter(column.in_(ids)).delete(synchronize_session=False)
             db.query(User).filter(User.id.in_(ids), User.role=='student').delete(synchronize_session=False)

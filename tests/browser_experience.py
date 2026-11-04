@@ -93,6 +93,49 @@ def main():
         assert "1NC24BCA901" in exported and "1NC24BCA902" in exported
         assert "temporary_password" not in exported
         assert "email" not in exported and "mobile" not in exported
+        assert page.locator("#roster .priority-star").count()==0
+
+        # HODs can set and clear compact 0–3 star priorities; the roster updates
+        # immediately, with equal and unrated students remaining in USN order.
+        load_page(page,"bca-management.html")
+        page.evaluate("""() => {
+          const students=[
+            {usn:'1NC24CS901',name:'Student Alpha',branch:'Computer Science & Engineering',
+             branch_name:'Computer Science & Engineering',semester:3,active:true,priority_stars:0},
+            {usn:'1NC24CS902',name:'Student Beta',branch:'Computer Science & Engineering',
+             branch_name:'Computer Science & Engineering',semester:3,active:true,priority_stars:0},
+            {usn:'1NC24CS903',name:'Student Charlie',branch:'Computer Science & Engineering',
+             branch_name:'Computer Science & Engineering',semester:3,active:true,priority_stars:1}
+          ];
+          window.__priorityChanges=[];
+          window.fetch=async(url,opts={})=>{
+            const path=String(url);let data={items:[]};
+            if(path.endsWith('/api/auth/me'))data={csrf:'mock-csrf',user:{role:'hod',name:'Demo HOD',department:'Computer Science & Engineering'}};
+            else if(path.endsWith('/api/academic/departments'))data={items:[{code:'Computer Science & Engineering',name:'Computer Science & Engineering',active:true}]};
+            else if(path.endsWith('/api/bca/students'))data={items:students.slice().sort((a,b)=>b.priority_stars-a.priority_stars||a.usn.localeCompare(b.usn))};
+            else if(path.includes('/priority')&&opts.method==='PUT'){
+              const usn=decodeURIComponent(path.split('/').at(-2)),stars=JSON.parse(opts.body).stars;
+              const row=students.find(item=>item.usn===usn);row.priority_stars=stars;
+              window.__priorityChanges.push({usn,stars});data={usn,priority_stars:stars};
+            }
+            return new Response(JSON.stringify(data),{status:200,headers:{'Content-Type':'application/json'}});
+          };
+        }""")
+        page.add_script_tag(content=(STATIC/"bca-management.js").read_text(encoding="utf-8"))
+        page.locator("#desk").wait_for(state="visible")
+        assert page.locator("#priority-hint").is_visible()
+        assert page.locator("#roster .priority-star").count()==9
+        assert [x.inner_text() for x in page.locator("#roster .entry strong").all()]==[
+            "Student Charlie","Student Alpha","Student Beta"]
+        page.locator('.priority-star[data-priority-usn="1NC24CS902"][data-stars="3"]').click()
+        page.wait_for_function("document.querySelector('#roster .entry strong')?.textContent==='Student Beta'")
+        assert [x.inner_text() for x in page.locator("#roster .entry strong").all()]==[
+            "Student Beta","Student Charlie","Student Alpha"]
+        page.locator('.priority-star[data-priority-usn="1NC24CS902"][data-stars="3"]').click()
+        page.wait_for_function("document.querySelector('#roster .entry strong')?.textContent==='Student Charlie'")
+        assert [x.inner_text() for x in page.locator("#roster .entry strong").all()]==[
+            "Student Charlie","Student Alpha","Student Beta"]
+        assert page.evaluate("window.__priorityChanges.map(x=>x.stars)")==[3,0]
 
         # Super Admin manages all branches; keep its student desk labels and
         # export names department-neutral while retaining BCA labels for staff.

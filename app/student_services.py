@@ -10,7 +10,7 @@ from sqlalchemy import func, or_, select, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession, selectinload
 from .database import User, AuditLog, DBSession, get_db, utcnow
-from .student_models import BCAStudent, StudentCase, StudentCaseMessage
+from .student_models import BCAStudent, StudentCase, StudentCaseMessage, StudentPriority
 from .security import current, csrf_required, as_role, as_role_mutation, hash_password
 
 def utc_stamp(value):
@@ -128,6 +128,9 @@ class CaseStatus(BaseModel):
     status: str
     note: str = Field(default='',max_length=1000)
 
+class StudentPriorityUpdate(BaseModel):
+    stars: int = Field(ge=0,le=3)
+
 
 @router.get('/me')
 def get_student_profile(user:User=Depends(as_role('student')),db:DbSession=Depends(get_db)):
@@ -180,14 +183,61 @@ def list_students(actor:User=Depends(as_role('staff','hod','admin')),db:DbSessio
     if actor.role!='admin':
         student_roster_department(db,actor)
         query=query.filter(User.department.in_(department_scope_values(db,actor.department)))
-    items=query.order_by(BCAStudent.usn).limit(1000).all()
+    priority_scope=set()
+    if actor.role=='hod':
+        priority_scope=department_scope_values(db,actor.department)
+        query=query.outerjoin(StudentPriority,and_(
+            StudentPriority.student_id==BCAStudent.user_id,
+            StudentPriority.department.in_(priority_scope)))
+        items=query.order_by(func.coalesce(StudentPriority.stars,0).desc(),BCAStudent.usn.asc()).limit(1000).all()
+    else:
+        items=query.order_by(BCAStudent.usn).limit(1000).all()
     from .departments import AcademicDepartment
     branch_codes={u.department for u,_ in items if u.department}
     branch_names={d.code:d.name for d in db.query(AcademicDepartment.code,AcademicDepartment.name)
                   .filter(AcademicDepartment.code.in_(branch_codes)).all()} if branch_codes else {}
-    return {'items':[{'usn':p.usn,'name':u.display_name,
-                      'branch':u.department,'branch_name':branch_names.get(u.department,u.department),
-                      'semester':p.semester,'active':u.active} for u,p in items]}
+    priority_values={}
+    if actor.role=='hod' and items:
+        student_ids=[u.id for u,_ in items]
+        priority_values=dict(db.query(StudentPriority.student_id,StudentPriority.stars)
+            .filter(StudentPriority.student_id.in_(student_ids),
+                    StudentPriority.department.in_(priority_scope)).all())
+    result=[]
+    for u,p in items:
+        item={'usn':p.usn,'name':u.display_name,
+              'branch':u.department,'branch_name':branch_names.get(u.department,u.department),
+              'semester':p.semester,'active':u.active}
+        if actor.role=='hod':item['priority_stars']=priority_values.get(u.id,0)
+        result.append(item)
+    return {'items':result}
+
+@router.put('/students/{usn}/priority')
+def update_student_priority(usn:str,body:StudentPriorityUpdate,
+                            actor:User=Depends(as_role_mutation('hod')),
+                            db:DbSession=Depends(get_db)):
+    """Set or clear a private 0–3 star priority for a HOD's own department."""
+    department=student_roster_department(db,actor)
+    scope=department_scope_values(db,actor.department)
+    found=(db.query(User,BCAStudent).join(BCAStudent,BCAStudent.user_id==User.id)
+           .filter(User.role=='student',User.department.in_(scope),
+                   BCAStudent.usn==usn.strip().upper()).first())
+    if not found:raise HTTPException(404,'Student not found in your department.')
+    student,profile=found
+    priority=db.query(StudentPriority).filter(StudentPriority.student_id==student.id).first()
+    if body.stars==0:
+        if priority:db.delete(priority)
+    elif priority:
+        priority.stars=body.stars
+        priority.department=student.department or department
+        priority.updated_by_hod_id=actor.id
+        priority.updated_at=utcnow()
+    else:
+        db.add(StudentPriority(student_id=student.id,department=student.department or department,
+                               stars=body.stars,updated_by_hod_id=actor.id))
+    db.add(AuditLog(actor_id=actor.id,event='student.priority.updated',
+                    detail=f'{profile.usn}: {body.stars} star(s)'))
+    db.commit()
+    return {'usn':profile.usn,'priority_stars':body.stars}
 
 @router.get('/cases')
 def list_cases(status:str=Query('all',pattern='^(all|submitted|in_review|resolved|closed)$'),

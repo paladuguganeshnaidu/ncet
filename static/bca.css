@@ -25,3 +25,14 @@
 .social-grid label{font-size:12px;font-weight:650;color:#344763}
 .social-grid input{display:block;margin-top:5px;width:100%;max-width:100%;min-height:42px}
 @media(max-width:720px){.social-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Compact department-only importance stars. */
+.roster-entry-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.roster-entry-head strong{min-width:0;overflow-wrap:anywhere}
+.roster-entry-meta{margin:5px 0 8px;overflow-wrap:anywhere}
+.priority-stars{display:inline-flex;align-items:center;gap:1px;margin-inline:auto 10px;white-space:nowrap}
+.priority-star{appearance:none;border:0;background:transparent;color:#64748b;font-size:14px;line-height:1;padding:4px 2px;min-width:18px;border-radius:4px;transition:color .16s ease,transform .16s ease}
+.priority-star[data-filled="true"]{color:#d88120}
+.priority-star:hover{transform:scale(1.14)}
+.priority-star:focus-visible{outline:2px solid #b8540e;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.priority-star{transition:none}.priority-star:hover{transform:none}}
