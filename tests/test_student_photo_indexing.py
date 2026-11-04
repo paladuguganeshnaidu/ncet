@@ -26,6 +26,11 @@ def sample_photo():
     Image.new("RGB",(160,160),(35,120,80)).save(output,format="PNG")
     return output.getvalue()
 
+def large_sample_photo():
+    output=io.BytesIO()
+    Image.effect_noise((1024,1024),100).convert("RGB").save(output,format="PNG")
+    return output.getvalue()
+
 def test_photo_private_until_publish_and_remove(client):
     headers=setup_student(client)
     assert client.get("/students/profile/"+USN+"/photo").status_code==404
@@ -60,11 +65,14 @@ def test_photo_private_until_publish_and_remove(client):
     assert delete.status_code==200
     assert client.get("/api/bca/showcase/me/photo").status_code==404
 
-def test_photo_rejects_oversize_and_malformed(client):
+def test_photo_compresses_large_images_and_rejects_malformed(client):
     headers=setup_student(client)
-    huge=client.put("/api/bca/showcase/me/photo",headers=headers,
-        files={"file":("large.png",b"x"*(150000),"image/png")})
-    assert huge.status_code==413
+    large=large_sample_photo()
+    assert len(large)>150000
+    compressed=client.put("/api/bca/showcase/me/photo",headers=headers,
+        files={"file":("large.png",large,"image/png")})
+    assert compressed.status_code==200,compressed.text
+    assert compressed.json()["size_bytes"]<150000
     malformed=client.put("/api/bca/showcase/me/photo",headers=headers,
         files={"file":("fake.png",b"not-a-real-image","image/png")})
     assert malformed.status_code==422
@@ -72,7 +80,7 @@ def test_photo_rejects_oversize_and_malformed(client):
         files={"file":("test.svg",b"<svg/>","image/svg+xml")})
     assert svg.status_code==422
     with DBSession() as db:
-        assert db.query(StudentShowcase).count()==0
+        assert db.query(StudentShowcase).one().photo_bytes is not None
 
 def test_student_directory_server_pagination(client):
     with DBSession() as db:
@@ -97,3 +105,4 @@ def test_student_directory_server_pagination(client):
     assert sitemap.status_code==200
     assert "1NC24BCA030" in sitemap.text
     assert "1NC24BCA000" in sitemap.text
+

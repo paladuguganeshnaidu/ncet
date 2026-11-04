@@ -43,3 +43,15 @@ def test_no_repeated_brand_as_blank_profile_or_network_spinner():
     assert "--ncet-gradient:" in css
     assert "prefers-reduced-motion" in css
     assert ":focus-visible" in css
+
+
+def test_shared_chrome_uses_ncet_colors_and_request_feedback_is_brief():
+    css=(STATIC/"institutional-ui.css").read_text(encoding="utf-8")
+    assert ":where(.topnav,.topbar,.site-header,.resume-site-header)" in css
+    assert "border-bottom:3px solid var(--ncet-orange)" in css
+    assert ".about-footer" in css and "border-top:3px solid var(--ncet-orange)" in css
+    assert ".student-removal-review" in css
+    loader=(STATIC/"ncet-loading.js").read_text(encoding="utf-8")
+    assert "const MAX_INDICATOR_MS=2000" in loader
+    assert "setTimeout(()=>{delete form.dataset.ncetNavigating;finish()},2000)" in loader
+

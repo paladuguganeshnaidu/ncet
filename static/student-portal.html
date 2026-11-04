@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="/static/notifications.css?v=20261104">
 <link rel="stylesheet" href="/static/responsive-upgrade.css?v=20261017">
 <link rel="stylesheet" href="/static/student-redesign.css?v=20261017b">
-<link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261017" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d"><style>
+<link rel="stylesheet" href="/static/ncet-brand-system.css?v=20261017"><script src="/static/ncet-loading.js?v=20261104-brief-request" defer></script><link rel="stylesheet" href="/static/institutional-ui.css?v=20261104-orange-chrome"><style>
 .student-case-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:17px 0}
 .student-case-filters label{font-size:12px;color:#526781;font-weight:700;display:grid;gap:5px}
 .student-case-filters input,.student-case-filters select{min-width:0;width:100%;padding:9px 11px;border:1px solid #d2deeb;border-radius:8px;background:#fff;color:#233955;font-size:13px}
@@ -86,7 +86,7 @@
 <div class="student-profile-intro"><div><span class="eyebrow">YOUR STUDENT PORTFOLIO</span><h2>Make your work discoverable</h2><p>Share your skills, photo and work publicly only when you're ready. Contact details and private requests stay private.</p></div><a class="btn" href="/students/directory">Browse student directory ↗</a></div>
 <section class="panel student-photo-panel">
 <div class="student-avatar-wrap"><img id="showcase-photo-preview" src="/static/profile-placeholder.svg" alt="Your profile photo preview" width="108" height="108"><span id="showcase-photo-fallback" class="small muted">No photo yet</span></div>
-<div class="student-photo-fields"><h3>Profile photo</h3><p class="muted small">Optional · JPEG, PNG or WebP · strictly under 150 KB. We resize and remove image metadata before storing.</p>
+<div class="student-photo-fields"><h3>Profile photo</h3><p class="muted small">Optional · JPEG, PNG or WebP up to 10 MB. We resize and optimize it below 150 KB, then show a preview. It appears publicly only when you publish your portfolio.</p>
 <form id="showcase-photo-form" class="photo-controls"><label class="student-file-label" for="showcase-photo">Choose photo<input id="showcase-photo" name="file" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
 <button class="btn btn-navy" type="submit">Upload photo</button><button id="remove-showcase-photo" type="button" class="btn hidden">Remove</button></form>
 <span id="photo-upload-status" class="small muted" role="status">Your photo appears publicly only if you publish your profile.</span></div>
@@ -128,4 +128,5 @@
 </section>
 </div></main>
 <footer class="student-footer"><div class="container"><span>© 2026 NCET VerifyFlow · Student Portal</span><span><a href="/students">Students</a> · <a href="/students/directory">Published portfolios</a> · <a href="/about">About</a></span></div></footer>
-<script src="/static/student-portal.js?v=20261104-workspace" defer></script><script src="/static/notifications.js?v=20261104" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>
+<script src="/static/student-portal.js?v=20261104-photo-preview" defer></script><script src="/static/notifications.js?v=20261104" defer></script><script src="/static/institutional-ui.js?v=20261017d" defer></script></body></html>
+

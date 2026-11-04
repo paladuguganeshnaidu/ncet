@@ -1,5 +1,6 @@
 """Public institutional résumé sections, image assets, and profile security regressions."""
 from pathlib import Path
+import fitz
 
 from app.database import DBSession, User
 from app.student_models import BCAStudent
@@ -70,16 +71,33 @@ def test_portfolio_sections_projects_and_public_links(client):
                   "Python Skills","AI Agents","https://github.com/example/ncet-verification",
                   "https://demo.example.org","ncet-brand.svg","ngi-brand.svg","naac-brand.svg"):
         assert label in html,label
-    assert 'Student sign in · Edit &amp; publish' in html
-    assert 'href="/students/portal#showcase-box"' in html
-    assert 'id="resume-share"' in html and 'id="resume-print"' in html
-    assert 'Students manage this portfolio themselves.' in html
+    assert 'id="resume-share"' in html and 'id="resume-download"' in html
+    assert 'Download portfolio PDF' in html
+    assert 'Student sign in · Edit &amp; publish' not in html
+    assert 'Students manage this portfolio themselves.' not in html
+    assert 'Sign in to add or update projects, skills, credentials and links' not in html
     assert '<dt>Last updated</dt>' in html
     assert "application/ld+json" in html
     assert "<lastmod>" in client.get("/sitemap.xml").text
+    pdf=client.get("/students/profile/"+USN+"/portfolio.pdf")
+    assert pdf.status_code==200,pdf.text[:300]
+    assert pdf.headers["content-type"]=="application/pdf"
+    assert pdf.headers["content-disposition"]=='attachment; filename="NCET-portfolio-'+USN+'.pdf"'
+    assert pdf.content.startswith(b"%PDF-")
+    with fitz.open(stream=pdf.content,filetype="pdf") as portfolio:
+        pdf_text="\n".join(page.get_text() for page in portfolio)
+    for label in ("College Demo Student","NCET Project Repository","Python Skills","Computer Science"):
+        assert label in pdf_text,label
     for confidential in ("private@institution.example","+919988776655"):
         assert confidential not in html
         assert confidential not in str(public)
+        assert confidential not in pdf_text
+
+def test_portfolio_card_width_is_expanded(client):
+    css=(BASE/"static"/"resume-profile.css").read_text(encoding="utf-8")
+    assert ".resume-container{max-width:1280px;" in css
+    assert ".ncet-profile-page .resume-site-inner{max-width:1280px;" in css
+
 
 def test_unsafe_external_links_and_contact_fields_rejected(client):
     token=make_student(client)
@@ -105,3 +123,5 @@ def test_unpublishing_removes_projects_from_public_search(client):
     assert client.put("/api/bca/showcase/me",headers=token,json=data).status_code==200
     assert client.get("/students/profile/"+USN).status_code==404
     assert USN not in client.get("/sitemap.xml").text
+    assert client.get("/students/profile/"+USN+"/portfolio.pdf").status_code==404
+

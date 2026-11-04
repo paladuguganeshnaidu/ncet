@@ -8,6 +8,7 @@
 .student-removal-option{display:grid;gap:8px;margin:15px 0 11px;font-size:12px;font-weight:700;color:#304562}
 .student-removal-option select{width:100%;min-height:44px;border:1px solid #cbd6e5;border-radius:9px;background:#fff;color:#142e53;padding:10px 12px}
 .student-removal-warning{border-left:3px solid #b05a23;background:#fff6ee;color:#854821;padding:11px 13px;border-radius:7px;font-size:12px;line-height:1.6}
+.student-removal-note{border-left:3px solid #f6872a;background:#fff7f0;color:#35445b;padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.65}
 .student-removal-review{border-top:1px solid #dae4ef;margin-top:20px;padding-top:18px}
 .student-removal-review h4{color:#0e2455;margin:0 0 12px;font-size:15px}
 .student-removal-review form{display:grid;gap:14px}
@@ -28,3 +29,4 @@
 .roster-inactive-label{display:flex;align-items:center;gap:6px;font-size:12px;color:#3a567b}
 .student-removal-panel :is(button,select,input,textarea):focus-visible{outline:2px solid #f6872a;outline-offset:2px}
 @media(max-width:620px){.student-removal-head{flex-direction:column}.student-removal-counter{align-self:start}.student-removal-tools .btn{flex:1}.student-removal-panel{padding:13px}}
+

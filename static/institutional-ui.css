@@ -194,3 +194,23 @@ img.ncet-campus-fallback{object-fit:contain!important;background:#fff!important;
 @media(prefers-reduced-motion:reduce){
  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
 }
+
+/* Consistent NCET chrome and panel accents across public and signed-in pages. */
+:where(.topnav,.topbar,.site-header,.resume-site-header){
+ border-bottom:3px solid var(--ncet-orange)!important
+}
+:where(.footer,.about-footer,.student-footer,.workspace-footer,.resume-footer,body>footer){
+ background-color:var(--ncet-blue)!important;color:#F4F7FC!important;
+ border-top:3px solid var(--ncet-orange)!important
+}
+:where(.footer,.about-footer,.student-footer,.workspace-footer,.resume-footer,body>footer) :where(p,small,span,li){
+ color:#E2E9F4!important
+}
+:where(.footer,.about-footer,.student-footer,.workspace-footer,.resume-footer,body>footer) :where(h2,h3,a){
+ color:#FFFFFF!important
+}
+:where(.panel,.form-panel,.student-form-panel,.student-list-panel,.student-thread,
+ .student-photo-panel,.student-auth-card,.student-removal-panel,.student-removal-review){
+ border-top:3px solid var(--ncet-orange)!important
+}
+

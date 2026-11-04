@@ -87,6 +87,31 @@ def test_disable_selected_revokes_sessions_hides_profiles_and_retains_cases(clie
     assert any(x['usn']==users[0][0] and x['active'] is False for x in roster)
 
 
+def test_hod_can_remove_one_or_a_group_without_erasing_records(client):
+    students=create_students()
+    with DBSession() as db:
+        hod=db.query(User).filter_by(username='hod').one()
+        hod.department='Computer Applications'
+        hod.password_hash=hash_password('SecurePassword-123!')
+        db.commit()
+    with TestClient(app) as department_hod:
+        authenticated=department_hod.post('/api/auth/login',json={
+            'username':'hod','role':'hod','password':'SecurePassword-123!'})
+        assert authenticated.status_code==200,authenticated.text
+        csrf=authenticated.json()['csrf']
+        for selection in ([students[0][0]],[students[1][0],students[2][0]]):
+            checked=preview(department_hod,csrf,selection)
+            assert checked.status_code==200,checked.text
+            assert checked.json()['count']==len(selection)
+            assert checked.json()['mode']=='disable'
+            result=execute(department_hod,csrf,checked.json(),selection)
+            assert result.status_code==200,result.text
+            assert result.json()['affected']==len(selection)
+    with DBSession() as db:
+        retained=db.query(User).filter(User.id.in_([item[1] for item in students])).all()
+        assert len(retained)==3 and all(not user.active for user in retained)
+
+
 def test_preview_signature_expiry_batch_integrity_confirmation_and_wrong_password(client,login):
     ids=create_students()
     token=login(client,'admin')
@@ -200,3 +225,4 @@ def test_hod_department_boundary_and_non_student_usn(client,login):
     with DBSession() as db:
         person=db.get(User,ids[1][1]);person.department='Mechanical Engineering';db.commit()
     assert preview(client,token,[ids[1][0]]).status_code==404
+

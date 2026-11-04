@@ -10,6 +10,7 @@ import json
 import re
 import secrets
 import zipfile
+import fitz
 from PIL import Image, ImageOps, UnidentifiedImageError
 from datetime import datetime
 from html import escape
@@ -409,7 +410,8 @@ def edit_showcase(body:ShowcaseEdit,user:User=Depends(csrf_required),db:DbSessio
     return {'ok':True,'published':profile.published,'public_url':f'/students/profile/{student.usn}' if profile.published else None}
 
 
-PHOTO_LIMIT=150_000  # uploaded file must be strictly smaller than 150 KB (decimal)
+PHOTO_LIMIT=150_000  # stored, optimized image must be strictly smaller than 150 KB (decimal)
+PHOTO_SOURCE_LIMIT=10_000_000  # bound decoding work before Pillow inspects the image
 ALLOWED_PHOTO_FORMATS={'PNG','JPEG','WEBP'}
 
 
@@ -423,11 +425,13 @@ async def upload_profile_photo(
     if student.must_change_password:
         raise HTTPException(403,'Change your temporary password before uploading a photo.')
     if file.content_type not in ('image/png','image/jpeg','image/webp'):
-        raise HTTPException(422,'Choose a PNG, JPEG or WebP photo under 150 KB.')
-    raw=await file.read(PHOTO_LIMIT+1)
+        raise HTTPException(422,'Choose a JPEG, PNG or WebP photo.')
+    raw=await file.read(PHOTO_SOURCE_LIMIT+1)
     await file.close()
-    if not raw or len(raw)>=PHOTO_LIMIT:
-        raise HTTPException(413,'Profile photo must be smaller than 150 KB.')
+    if not raw:
+        raise HTTPException(422,'The selected photo is empty.')
+    if len(raw)>PHOTO_SOURCE_LIMIT:
+        raise HTTPException(413,'Choose a photo smaller than 10 MB so it can be prepared safely.')
     try:
         with Image.open(io.BytesIO(raw)) as incoming:
             if incoming.format not in ALLOWED_PHOTO_FORMATS:
@@ -436,13 +440,17 @@ async def upload_profile_photo(
                 raise HTTPException(422,'Photo dimensions must be between 32 and 2500 pixels.')
             incoming.load()
             image=ImageOps.exif_transpose(incoming).convert('RGB')
-            image.thumbnail((640,640),Image.Resampling.LANCZOS)
             photo=None
-            for quality in (83,72,60,48):
-                out=io.BytesIO()
-                image.save(out,format='WEBP',quality=quality,method=4)
-                if len(out.getvalue())<PHOTO_LIMIT:
-                    photo=out.getvalue()
+            for edge in (640,560,480,400,320):
+                optimized=image.copy()
+                optimized.thumbnail((edge,edge),Image.Resampling.LANCZOS)
+                for quality in (84,74,64,54,44):
+                    out=io.BytesIO()
+                    optimized.save(out,format='WEBP',quality=quality,method=4)
+                    if len(out.getvalue())<PHOTO_LIMIT:
+                        photo=out.getvalue()
+                        break
+                if photo is not None:
                     break
             if photo is None:
                 raise HTTPException(422,'Photo could not fit under 150 KB. Choose a smaller image.')
@@ -637,8 +645,8 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <link rel="icon" href="/static/ncet-brand.svg">
 <script type="application/ld+json">{json_ld}</script>
 <link rel="preload" as="image" href="/static/ncet-brand.svg" fetchpriority="high">
-<link rel="stylesheet" href="/static/resume-profile.css?v=20261022-student-owned-portfolio">
-<link rel="stylesheet" href="/static/institutional-ui.css?v=20261017d">
+<link rel="stylesheet" href="/static/resume-profile.css?v=20261104-pdf-card">
+<link rel="stylesheet" href="/static/institutional-ui.css?v=20261104-orange-chrome">
 <script src="/static/student-profile-tabs.js?v=20261017" defer></script>
 </head><body class="ncet-profile-page">
 <a class="skip-link" href="#student-resume">Skip to portfolio</a>
@@ -661,10 +669,8 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <p class="resume-usn"><strong>USN</strong> {sid}</p></div></div>
 <div class="resume-action-bar" aria-label="Portfolio actions">
 <button type="button" class="resume-action resume-share" id="resume-share" data-share-url="{escape(canonical,quote=True)}">Share portfolio</button>
-<button type="button" class="resume-action resume-print" id="resume-print">Save as PDF</button>
-<a class="resume-action resume-manage" href="/students/portal#showcase-box">Student sign in · Edit &amp; publish</a>
+<a class="resume-action resume-download" id="resume-download" href="/students/profile/{sid}/portfolio.pdf" download>Download portfolio PDF</a>
 <span class="resume-action-status" id="resume-action-status" role="status" aria-live="polite"></span></div>
-<p class="resume-owner-prompt">Students manage this portfolio themselves. <a href="/students/portal#showcase-box">Sign in to add or update projects, skills, credentials and links, then publish changes or make the page private</a>. Email, mobile and academic requests remain private.</p>
 <dl class="resume-highlights" aria-label="Portfolio overview">
 <div><dt>Skills</dt><dd>{len(info['skills'])}</dd></div><div><dt>Projects</dt><dd>{len(info['projects'])}</dd></div>
 <div><dt>Credentials</dt><dd>{len(info['certificates'])}</dd></div><div class="resume-highlight-note"><dt>Last updated</dt><dd>{escape(updated_label)}</dd></div></dl>
@@ -689,8 +695,202 @@ def public_profile_html(usn:str,db:DbSession=Depends(get_db)):
 <span>NCET VerifyFlow · Academic collaboration & student success</span>
 <a href="/students">Student Portal</a></footer>
 <script src="/static/institutional-ui.js?v=20261017d" defer></script>
-<script src="/static/student-profile-actions.js?v=20261022-student-portfolio-actions" defer></script>
+<script src="/static/student-profile-actions.js?v=20261104-pdf-card" defer></script>
 </body></html>''',headers={'Cache-Control':'no-store'})
+
+
+def _portfolio_pdf(info:dict,photo_bytes:bytes|None)->bytes:
+    """Build a downloadable PDF from the same public allowlist as the HTML portfolio."""
+    document=fitz.open()
+    width,height=fitz.paper_rect('a4').width,fitz.paper_rect('a4').height
+    margin=46
+    navy=(14/255,36/255,85/255)
+    orange=(246/255,135/255,42/255)
+    ink=(35/255,48/255,68/255)
+    muted=(94/255,110/255,131/255)
+    line=(222/255,229/255,238/255)
+    regular=fitz.Font('helv')
+    bold=fitz.Font('hebo')
+    name=str(info['name'])
+
+    def safe_text(value):
+        cleaned=[]
+        for char in str(value or ''):
+            if char in '\r\n\t':
+                char=' '
+            if char.isspace():
+                cleaned.append(' ')
+            elif char.isprintable() and regular.has_glyph(ord(char)):
+                cleaned.append(char)
+            else:
+                cleaned.append('?')
+        return re.sub(r'\s+',' ',''.join(cleaned)).strip()
+
+    page=None
+    y=0
+
+    def new_page(first=False):
+        nonlocal page,y
+        page=document.new_page(width=width,height=height)
+        if first:
+            page.draw_rect(fitz.Rect(0,0,width,146),color=navy,fill=navy)
+            page.draw_rect(fitz.Rect(0,142,width,146),color=orange,fill=orange)
+            page.insert_text((margin,29),'NCET VERIFYFLOW',fontname='hebo',fontsize=9,color=(1,1,1))
+            page.insert_text((margin,48),'STUDENT PORTFOLIO',fontname='helv',fontsize=8,color=(.83,.88,.95))
+            photo_left=width-margin-84
+            photo_rect=fitz.Rect(photo_left,28,width-margin,112)
+            page.draw_rect(photo_rect,color=(1,1,1),fill=(1,1,1),width=1)
+            if photo_bytes:
+                try:
+                    with Image.open(io.BytesIO(photo_bytes)) as incoming:
+                        avatar=ImageOps.exif_transpose(incoming).convert('RGB')
+                        avatar.thumbnail((320,320),Image.Resampling.LANCZOS)
+                        encoded=io.BytesIO()
+                        avatar.save(encoded,format='JPEG',quality=86,optimize=True)
+                    page.insert_image(photo_rect+(-3,-3,3,3),stream=encoded.getvalue(),keep_proportion=True)
+                except (UnidentifiedImageError,OSError,ValueError):
+                    pass
+            name_width=photo_left-margin-15
+            name_size=25
+            while name_size>14 and bold.text_length(safe_text(name),name_size)>name_width:
+                name_size-=1
+            page.insert_text((margin,82),safe_text(name),fontname='hebo',fontsize=name_size,color=(1,1,1))
+            meta=' · '.join((safe_text(info.get('department')),f"Semester {info.get('semester')}",
+                             'USN '+safe_text(info.get('usn'))))
+            page.insert_textbox(fitz.Rect(margin,93,photo_left-12,132),meta,
+                                fontname='helv',fontsize=9,color=(.87,.9,.96),lineheight=1.2)
+            y=168
+        else:
+            page.draw_rect(fitz.Rect(0,0,width,60),color=navy,fill=navy)
+            page.draw_rect(fitz.Rect(0,56,width,60),color=orange,fill=orange)
+            page.insert_text((margin,25),'NCET VERIFYFLOW · STUDENT PORTFOLIO',
+                             fontname='hebo',fontsize=8,color=(1,1,1))
+            page.insert_text((margin,45),safe_text(name),fontname='helv',fontsize=10,color=(.87,.9,.96))
+            y=82
+
+    def wrap(text,available,size,is_bold):
+        font=bold if is_bold else regular
+        result=[]
+        for paragraph in str(text or '').splitlines() or ['']:
+            current=''
+            for word in safe_text(paragraph).split():
+                pieces=[]
+                if font.text_length(word,size)<=available:
+                    pieces=[word]
+                else:
+                    piece=''
+                    for char in word:
+                        if piece and font.text_length(piece+char,size)>available:
+                            pieces.append(piece);piece=char
+                        else:
+                            piece+=char
+                    if piece:pieces.append(piece)
+                for piece in pieces:
+                    candidate=(current+' '+piece).strip()
+                    if current and font.text_length(candidate,size)>available:
+                        result.append(current);current=piece
+                    else:
+                        current=candidate
+            if current:result.append(current)
+        return result or ['']
+
+    def add_text(text,size=9.5,color=ink,is_bold=False,indent=0,after=5):
+        nonlocal y,page
+        line_height=size*1.42
+        face='hebo' if is_bold else 'helv'
+        for row in wrap(text,width-2*margin-indent,size,is_bold):
+            if y+line_height>height-44:
+                new_page()
+            page.insert_text((margin+indent,y+size),row,fontname=face,fontsize=size,color=color)
+            y+=line_height
+        y+=after
+
+    def add_section(title):
+        nonlocal y,page
+        if y+32>height-44:
+            new_page()
+        label=safe_text(title).upper()
+        page.insert_text((margin,y+11),label,fontname='hebo',fontsize=10,color=navy)
+        page.draw_line((margin,y+18),(width-margin,y+18),color=line,width=.8)
+        page.draw_line((margin,y+18),(margin+28,y+18),color=orange,width=2.4)
+        y+=27
+
+    new_page(first=True)
+    cards=[('SKILLS',len(info.get('skills',[]))),('PROJECTS',len(info.get('projects',[]))),
+           ('CREDENTIALS',len(info.get('certificates',[]))),('LAST UPDATED',
+            (info.get('updated_at') or '')[:10] or '—')]
+    gap=8
+    card_width=(width-2*margin-gap*3)/4
+    card_y=y
+    for index,(label,value) in enumerate(cards):
+        x=margin+index*(card_width+gap)
+        rect=fitz.Rect(x,card_y,x+card_width,card_y+52)
+        page.draw_rect(rect,color=line,fill=(.98,.985,.995),width=.8)
+        page.draw_rect(fitz.Rect(x,card_y,x+3,card_y+52),color=orange,fill=orange)
+        page.insert_text((x+11,card_y+23),safe_text(value),fontname='hebo',fontsize=14,color=navy)
+        page.insert_text((x+11,card_y+41),label,fontname='hebo',fontsize=6.6,color=muted)
+    y=card_y+69
+
+    add_section('About')
+    add_text(info.get('about') or 'No summary has been added yet.',size=9.5,after=8)
+
+    add_section('Skills')
+    add_text(' · '.join(info.get('skills',[])) or 'No skills have been shared yet.',size=9.5,after=8)
+
+    add_section('Projects')
+    projects=info.get('projects',[])
+    if projects:
+        for number,project in enumerate(projects,1):
+            add_text(f"{number:02d}  {project.get('title','Student project')}",size=10.2,
+                     color=navy,is_bold=True,after=3)
+            add_text(project.get('description') or 'Student project',size=9,indent=10,after=2)
+            technologies=project.get('technologies',[])
+            if technologies:add_text('Technologies: '+' · '.join(technologies),size=8.2,color=muted,indent=10,after=2)
+            links=[label+': '+project[key] for key,label in (('github_url','GitHub'),('live_url','Live project')) if project.get(key)]
+            if links:add_text(' | '.join(links),size=8.2,color=muted,indent=10,after=8)
+    else:
+        add_text('No projects have been shared yet.',size=9.5,after=8)
+
+    add_section('Certifications')
+    certificates=info.get('certificates',[])
+    if certificates:
+        for certificate in certificates:
+            add_text(certificate.get('title','Credential')+' · '+certificate.get('issuer',''),
+                     size=9.2,is_bold=True,after=2)
+            if certificate.get('proof_url'):add_text('Proof: '+certificate['proof_url'],size=8.2,color=muted,indent=10,after=6)
+    else:
+        add_text('No credentials have been shared yet.',size=9.5,after=8)
+
+    add_section('Interests and public links')
+    add_text('Interests: '+' · '.join(info.get('interests',[])) if info.get('interests') else 'Interests: not shared',
+             size=9.2,after=3)
+    links=info.get('social_links',{})
+    add_text(' | '.join(platform.title()+': '+url for platform,url in links.items()) if links else 'Public links: not shared',
+             size=8.7,after=4)
+
+    pages=len(document)
+    for index,current_page in enumerate(document,1):
+        current_page.draw_line((margin,height-31),(width-margin,height-31),color=line,width=.7)
+        current_page.insert_text((margin,height-17),'NCET VerifyFlow · Student-published information',
+                                 fontname='helv',fontsize=7.5,color=muted)
+        current_page.insert_text((width-margin-38,height-17),f'{index} / {pages}',
+                                 fontname='helv',fontsize=7.5,color=muted)
+    document.set_metadata({'title':'NCET Student Portfolio · '+safe_text(name),
+                           'author':'NCET VerifyFlow','subject':'Student-published portfolio'})
+    output=document.tobytes(deflate=True)
+    document.close()
+    return output
+
+
+@router.get('/students/profile/{usn}/portfolio.pdf',include_in_schema=False)
+def public_profile_pdf(usn:str,db:DbSession=Depends(get_db)):
+    info=public_one(usn,db)
+    record=(public_query(db).filter(BCAStudent.usn==info['usn']).first())
+    photo_bytes=record[2].photo_bytes if record else None
+    pdf=_portfolio_pdf(info,photo_bytes)
+    return Response(pdf,media_type='application/pdf',headers={
+        'Content-Disposition':f'attachment; filename="NCET-portfolio-{info["usn"]}.pdf"',
+        'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'})
 
 
 @router.get('/students/directory',include_in_schema=False)
@@ -734,3 +934,4 @@ def published_sitemap_paths(db:DbSession)->list[str]:
           .join(StudentShowcase,StudentShowcase.student_id==User.id)
           .filter(User.active.is_(True),BCAStudent.must_change_password.is_(False),
                   StudentShowcase.published.is_(True)).order_by(BCAStudent.usn).limit(10000).all())]
+
