@@ -8,7 +8,7 @@ The existing service belongs to the workspace associated with `1nc24cs150@ncetma
 
 ## Service settings
 
-- GitHub: `https://github.com/hackerncet/tuxnestsite` — `main` branch
+- GitHub: `https://github.com/paladuguganeshnaidu/ncet` — `main` branch
 - Runtime: Docker, `./Dockerfile`, root directory blank
 - Region: Oregon, matching the existing external PostgreSQL endpoint
 - Health check: `/healthz`
@@ -48,6 +48,10 @@ Preserve this key for all deployments; changing it without migrating stored sett
 5. Test rules → a non-sensitive document upload → AI verification → HOD approval → Principal/IQAC visibility.
 6. Confirm documents survive a service restart and that logs do not expose secrets.
 
+## Recovering an expired Render PostgreSQL database
+
+Free Render PostgreSQL expires after 30 days. Render documents a 14-day grace period to upgrade the existing instance before it and its data are deleted. See https://render.com/docs/free#free-postgres. If the database is suspended, restore the existing database through its dashboard before redeploying. Obtain approval for paid compute. Do not replace the database with an empty instance or switch to ephemeral SQLite to make a health check pass: accounts, submissions and uploaded documents may be lost or unavailable. Keep the existing encryption key unchanged. Once the instance is available, confirm the connection using a read-only `SELECT 1`, export a secure backup, deploy `main`, and verify `/healthz` and authenticated workflows. Configure the service's HTTP Health Check Path to `/healthz` in Render Settings if it is blank; this route checks the database.
+
 ## Troubleshooting
 
 | Problem | What to verify |
@@ -55,7 +59,7 @@ Preserve this key for all deployments; changing it without migrating stored sett
 | Render Dashboard **Access denied** | Render login account and service ownership |
 | Missing `DATABASE_URL` | Set variable on the correct Render service |
 | TLS / `sslmode=require` failure | Add TLS option to *external* PostgreSQL URL |
-| Database connect timeout | Database is running, credentials rotated correctly, network allows access |
+| Database connect timeout or internal hostname not resolving | Check PostgreSQL status and expiry first, then credentials and network access |
 | POST /login returns 403 | Set exact HTTPS `PUBLIC_ORIGIN` without `/app` |
 | Invalid Fernet key | Generate a valid `SETTINGS_ENCRYPTION_KEY` |
 | No administrator | Set `NCET_BOOTSTRAP_ADMIN_PASSWORD` for initial creation |
