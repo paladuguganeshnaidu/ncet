@@ -1,0 +1,31 @@
+NCET VERIFYFLOW — SYNTHETIC QA DOCUMENT — MEDIUM
+Date: 2026-11-04
+Department: Computer Applications
+Document type: Faculty development workshop report
+TEST DATA ONLY — fictional; not an official college record.
+
+1. Objective
+Conduct a two-day faculty workshop on responsible educational AI use, prompt evaluation, and data privacy.
+
+2. Plan
+Day 1: Privacy briefing, model basics, hands-on demonstrations.
+Day 2: Rubric alignment, failure analysis, peer assessment.
+
+3. Execution summary
+Thirty-five staff were invited. Twenty-nine registered. Twenty-six attended the opening session; twenty-four attended the closing exercise.
+
+4. Outcomes
+Participants developed five draft rubric templates. A survey from twenty respondents reported that sixteen found the workshop useful.
+
+5. Financial summary
+Allocated budget: INR 12,000. Venue: INR 2,500. Training materials: INR 4,000. Refreshments: INR 3,200. Unspent balance: INR 2,300. The totals reconcile.
+
+6. Evidence
+Attendance sheet: mentioned but NOT attached.
+Photographs: mentioned but NOT attached.
+Survey raw data: omitted.
+
+7. Improvement plan
+Collect attachments and survey source data before departmental sign-off.
+
+Expected review: adequate structure and numerically consistent, but missing evidence and partial documentation should be flagged. AI authorship must remain undetermined.
